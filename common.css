@@ -140,6 +140,7 @@ th,td{
   border-bottom:1px solid #eee;
   padding:10px;
   text-align:center;
+  vertical-align:middle;
   font-size:.95rem;
 }
 th{
@@ -236,4 +237,11 @@ form input[type="date"] {
   width: 100% !important;
   max-width: 260px; /* 담당자/건물 input과 길이 통일 */
   min-width: 180px;
+}
+
+/* ✅ 관리자 테이블 텍스트 가로 정렬 통일 */
+#returnsTable td, #returnsTable th {
+  text-align:center !important;
+  vertical-align:middle !important;
+  white-space:nowrap;
 }
