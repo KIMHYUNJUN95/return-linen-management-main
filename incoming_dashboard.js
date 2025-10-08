@@ -1,75 +1,107 @@
 import { app, auth, db } from "./auth.js";
-import { collection, getDocs, orderBy, query, where } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { collection, getDocs, updateDoc, deleteDoc, doc, orderBy, query, where } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 const ADMIN_EMAIL = "rlaguswns95@haru-tokyo.com";
 let currentUserEmail = null;
 let allData = [];
+let currentId = null;
 
 onAuthStateChanged(auth, async (user) => {
-  if (!user) location.href = "signup.html";
-  else {
-    currentUserEmail = user.email;
-    await loadData();
-  }
+  if (!user) { location.href = "signup.html"; return; }
+  currentUserEmail = user.email;
+  await loadReturns();
 });
-
-async function loadData() {
-  let q;
-  if (currentUserEmail === ADMIN_EMAIL)
-    q = query(collection(db, "incoming"), orderBy("date", "desc"));
-  else
-    q = query(collection(db, "incoming"), where("userEmail", "==", currentUserEmail), orderBy("date", "desc"));
-
-  const snap = await getDocs(q);
-  allData = [];
-  snap.forEach((doc) => allData.push({ id: doc.id, ...doc.data() }));
-  render(allData);
-}
-
-function render(data) {
-  const tbody = document.getElementById("tbody");
-  tbody.innerHTML = "";
-  data.forEach((d) => {
-    const first = d.items?.[0] || {};
-    const tr = document.createElement("tr");
-    tr.innerHTML = `<td>${d.buildingId || "-"}</td><td>${d.date || "-"}</td><td>${d.staffName || "-"}</td><td>${first.linenType || "-"}</td><td>${first.receivedCount ?? "-"}</td>`;
-    tbody.appendChild(tr);
-  });
-}
 
 document.getElementById("btnLogout").onclick = async () => {
   await signOut(auth);
   location.href = "signup.html";
 };
 
-document.getElementById("btnFilter").onclick = () => {
-  const s = document.getElementById("startDate").value;
-  const e = document.getElementById("endDate").value;
-  const b = document.getElementById("buildingFilter").value;
-  const filtered = allData.filter((d) => {
-    const okDate = (!s || d.date >= s) && (!e || d.date <= e);
-    const okBld = b === "전체" || d.buildingId === b;
-    return okDate && okBld;
+const tbody = document.getElementById("tbody");
+
+async function loadReturns() {
+  let q;
+  if (currentUserEmail === ADMIN_EMAIL) {
+    q = query(collection(db, "returns"), orderBy("date", "desc"));
+  } else {
+    q = query(collection(db, "returns"), where("userEmail", "==", currentUserEmail), orderBy("date", "desc"));
+  }
+  const snap = await getDocs(q);
+  allData = [];
+  snap.forEach(docSnap => allData.push({ id: docSnap.id, ...docSnap.data() }));
+  render(allData);
+}
+
+function render(data) {
+  tbody.innerHTML = "";
+  data.forEach(d => {
+    const first = d.items?.[0] || {};
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>${d.buildingId || "-"}</td>
+      <td>${d.date || "-"}</td>
+      <td>${d.staffName || "-"}</td>
+      <td>${first.linenType || "-"}</td>
+      <td>${first.defectCount ?? "-"}</td>
+      <td class="${d.status === "resolved" ? "status-resolved" : "status-pending"}">${d.status === "resolved" ? "완료" : "대기"}</td>
+      <td><button class="btnDetail" data-id="${d.id}">상세</button></td>
+      <td><button class="btnEdit" data-id="${d.id}">수정</button></td>
+      <td><button class="btnDel" data-id="${d.id}">삭제</button></td>
+    `;
+    tbody.appendChild(tr);
   });
-  render(filtered);
+  document.querySelectorAll(".btnDetail").forEach(b => b.onclick = openDetail);
+  document.querySelectorAll(".btnEdit").forEach(b => b.onclick = openEdit);
+  document.querySelectorAll(".btnDel").forEach(b => b.onclick = delItem);
+}
+
+async function openDetail(e) {
+  const id = e.currentTarget.dataset.id;
+  const data = allData.find(d => d.id === id);
+  if (!data) return;
+  alert(`건물: ${data.buildingId}\n담당자: ${data.staffName}\n날짜: ${data.date}\n상태: ${data.status === "resolved" ? "완료" : "대기"}`);
+}
+
+async function openEdit(e) {
+  currentId = e.currentTarget.dataset.id;
+  const d = allData.find(x => x.id === currentId);
+  if (!d) return;
+
+  document.getElementById("editBuilding").value = d.buildingId || "";
+  document.getElementById("editDate").value = d.date || "";
+  document.getElementById("editStaff").value = d.staffName || "";
+  document.getElementById("editLinen").value = d.items?.[0]?.linenType || "";
+  document.getElementById("editQty").value = d.items?.[0]?.defectCount || "";
+  document.getElementById("editStatus").value = d.status || "pending";
+
+  document.getElementById("detailModal").style.display = "flex";
+}
+
+document.getElementById("btnCloseModal").onclick = () => {
+  document.getElementById("detailModal").style.display = "none";
 };
 
-document.getElementById("btnExcel").onclick = () => {
-  const wb = XLSX.utils.table_to_book(document.getElementById("incomingTable"), { sheet: "Incoming" });
-  XLSX.writeFile(wb, "haru_incoming.xlsx");
+document.getElementById("btnSave").onclick = async () => {
+  if (!currentId) return;
+  const updated = {
+    buildingId: document.getElementById("editBuilding").value,
+    date: document.getElementById("editDate").value,
+    staffName: document.getElementById("editStaff").value,
+    status: document.getElementById("editStatus").value,
+    items: [{
+      linenType: document.getElementById("editLinen").value,
+      defectCount: parseInt(document.getElementById("editQty").value)
+    }]
+  };
+  await updateDoc(doc(db, "returns", currentId), updated);
+  alert("수정 완료되었습니다.");
+  document.getElementById("detailModal").style.display = "none";
+  await loadReturns();
 };
 
-document.getElementById("btnPDF").onclick = async () => {
-  const wrapper = document.getElementById("incomingTable").parentElement;
-  const canvas = await html2canvas(wrapper, { scale: 2 });
-  const img = canvas.toDataURL("image/png");
-  const { jsPDF } = window.jspdf;
-  const pdf = new jsPDF("p", "pt", "a4");
-  const pw = pdf.internal.pageSize.getWidth();
-  const iw = pw - 40;
-  const ih = (canvas.height * iw) / canvas.width;
-  pdf.text("HARU 린넨 입고 내역", 20, 20);
-  pdf.addImage(img, "PNG", 20, 40, iw, ih);
-  pdf.save("haru_incoming.pdf");
-};
+async function delItem(e) {
+  if (!confirm("정말 삭제하시겠습니까?")) return;
+  await deleteDoc(doc(db, "returns", e.currentTarget.dataset.id));
+  await loadReturns();
+}
