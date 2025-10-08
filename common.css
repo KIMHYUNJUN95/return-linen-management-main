@@ -1,284 +1,77 @@
 /* =============================
-   🌐 HARU Linen Management
-   Responsive Design Full Version
+   HARU Linen Management - Common CSS (Responsive)
    ============================= */
-
-/* 기본 폰트 및 전체 배경 */
-body {
-  margin: 0;
-  padding: 0;
-  font-family: "Noto Sans KR", sans-serif;
-  background-color: #fafafa;
-  color: #333;
+:root{
+  --brand:#1a73e8; --text:#333; --muted:#666; --bg:#fafafa; --card:#fff;
+  --border:#ddd; --good:#2e7d32; --warn:#ef6c00; --danger:#e53935;
 }
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;font-family:"Noto Sans KR",system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:var(--bg);color:var(--text)}
 
-/* -----------------------------
-   헤더 (로고 + 메뉴 + 로그아웃)
-   ----------------------------- */
-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  flex-wrap: wrap; /* 자동 줄바꿈 */
-  padding: 10px 20px;
-  background: white;
-  border-bottom: 1px solid #ddd;
-  position: relative;
+/* Header */
+header{
+  position:relative;
+  display:flex; justify-content:center; align-items:center;
+  flex-wrap:wrap;
+  gap:8px;
+  padding:12px 16px; background:#fff; border-bottom:1px solid var(--border);
 }
-
-/* HARU 로고 중앙 정렬 */
-.logo {
-  flex: 1 1 100%;
-  text-align: center;
-  font-weight: bold;
-  font-size: 1.8rem;
-  color: #1a73e8;
-  margin: 5px 0 10px 0;
+.logo{flex:1 1 100%; text-align:center; font-weight:800; font-size:1.8rem; color:var(--brand)}
+nav{display:flex; gap:10px; flex-wrap:wrap; justify-content:center; width:100%}
+nav a{color:var(--text); text-decoration:none; padding:7px 14px; border-radius:8px; transition:.2s; font-weight:600}
+nav a:hover, nav a.active{background:var(--brand); color:#fff}
+.logout-btn{
+  position:absolute; top:10px; right:12px;
+  background:#222; color:#fff; border:none; border-radius:8px; padding:6px 12px; cursor:pointer; font-weight:600
 }
 
-/* 네비게이션 메뉴 */
-nav {
-  display: flex;
-  justify-content: center;
-  flex: 1 1 100%;
-  gap: 12px;
-  flex-wrap: wrap;
-}
+/* Main */
+main{max-width:1100px; margin:0 auto; padding:18px}
+h2{text-align:center; margin:8px 0 16px}
 
-nav a {
-  text-decoration: none;
-  color: #333;
-  padding: 6px 14px;
-  border-radius: 6px;
-  transition: 0.2s;
-  font-weight: 500;
+/* Forms */
+form label{display:block; font-weight:700; margin-top:10px}
+form input, form select{
+  width:100%; padding:10px; border:1px solid #ccc; border-radius:8px; margin-top:6px; background:#fff
 }
+button{border:none; border-radius:10px; padding:10px 14px; cursor:pointer; font-weight:700; transition:.2s}
+button.primary{background:var(--brand); color:#fff}
+button.secondary{background:#e9e9e9}
+button.danger{background:var(--danger); color:#fff}
+button.ghost{background:#f4f6fb}
+button:disabled{opacity:.6; cursor:not-allowed}
 
-nav a.active,
-nav a:hover {
-  background: #1a73e8;
-  color: white;
-}
+/* Cards / Sections */
+.card{background:var(--card); border:1px solid var(--border); border-radius:12px; box-shadow:0 2px 8px rgba(0,0,0,.03); padding:14px}
 
-/* 로그아웃 버튼 오른쪽 상단 고정 */
-.logout-btn {
-  position: absolute;
-  top: 12px;
-  right: 18px;
-  background: #333;
-  color: white;
-  border: none;
-  border-radius: 6px;
-  padding: 6px 12px;
-  cursor: pointer;
-  font-size: 0.95rem;
-  transition: 0.2s;
-}
-.logout-btn:hover {
-  background: #000;
-}
+/* Table */
+.table-wrap{overflow-x:auto; background:#fff; border:1px solid var(--border); border-radius:12px}
+table{width:100%; border-collapse:collapse; background:#fff}
+th,td{border-bottom:1px solid #eee; padding:10px; text-align:center; font-size:.95rem}
+th{background:#f8f9fb; font-weight:800}
+.status-resolved{color:var(--good); font-weight:800}
+.status-pending{color:var(--warn); font-weight:800}
 
-/* -----------------------------
-   메인 공통
-   ----------------------------- */
-main {
-  padding: 20px;
-  max-width: 1200px;
-  margin: 0 auto;
-}
+/* Filter box */
+.filter-box{display:flex; flex-wrap:wrap; gap:10px; justify-content:center; align-items:center; background:#f5f7fb; padding:12px; border-radius:12px; border:1px solid var(--border) }
+.filter-box label{font-weight:800}
+.filter-box button{padding:8px 12px}
 
-h2 {
-  text-align: center;
-  color: #333;
-  margin-bottom: 20px;
-}
+/* Modal */
+#detailModal{position:fixed; inset:0; display:none; justify-content:center; align-items:center; background:rgba(0,0,0,.4); z-index:50}
+.modal-content{width:min(92vw,380px); background:#fff; border-radius:14px; padding:16px; border:1px solid var(--border)}
+.modal-content h3{text-align:center; margin:6px 0 10px}
+.modal-content input,.modal-content select{width:100%; margin-top:6px}
 
-/* -----------------------------
-   필터 박스
-   ----------------------------- */
-.filter-box {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  justify-content: center;
-  align-items: center;
-  margin: 10px auto 20px auto;
-  background: #f5f5f5;
-  padding: 10px;
-  border-radius: 8px;
-  max-width: 900px;
-}
+/* Footer */
+footer{text-align:center; color:var(--muted); font-size:.9rem; padding:18px}
 
-.filter-box label {
-  font-weight: bold;
-  margin-right: 4px;
-}
-.filter-box input,
-.filter-box select {
-  padding: 6px;
-  border: 1px solid #ccc;
-  border-radius: 6px;
-  min-width: 120px;
-}
-.filter-box button {
-  background: #1a73e8;
-  color: white;
-  border: none;
-  border-radius: 6px;
-  padding: 6px 12px;
-  cursor: pointer;
-}
-.filter-box button:hover {
-  background: #0f5fd0;
-}
-
-/* 엑셀 / PDF 버튼 */
-.export-btn { background: #2e7d32; }
-.export-btn:hover { background: #27672b; }
-.pdf-btn { background: #c62828; }
-.pdf-btn:hover { background: #a91f1f; }
-
-/* -----------------------------
-   테이블
-   ----------------------------- */
-table {
-  width: 100%;
-  border-collapse: collapse;
-  margin-top: 10px;
-  background: white;
-}
-th, td {
-  padding: 8px;
-  border: 1px solid #ccc;
-  text-align: center;
-  font-size: 0.9rem;
-}
-th {
-  background-color: #f0f0f0;
-}
-.status-resolved {
-  color: green;
-  font-weight: bold;
-}
-.status-pending {
-  color: orange;
-  font-weight: bold;
-}
-
-/* 표 가로 스크롤 */
-table-wrapper, .table-container {
-  overflow-x: auto;
-}
-
-/* -----------------------------
-   버튼 스타일
-   ----------------------------- */
-button {
-  font-family: inherit;
-  font-size: 0.95rem;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  padding: 6px 12px;
-  transition: 0.2s;
-}
-button.primary {
-  background: #1a73e8;
-  color: white;
-}
-button.primary:hover {
-  background: #0d57c5;
-}
-button.secondary {
-  background: #ddd;
-}
-button.secondary:hover {
-  background: #ccc;
-}
-button.danger {
-  background: #e53935;
-  color: white;
-}
-button.danger:hover {
-  background: #c62828;
-}
-
-/* -----------------------------
-   모달 (상세/수정 등)
-   ----------------------------- */
-#detailModal {
-  position: fixed;
-  inset: 0;
-  display: none;
-  justify-content: center;
-  align-items: center;
-  background: rgba(0, 0, 0, 0.5);
-  z-index: 999;
-}
-.modal-content {
-  background: white;
-  padding: 20px;
-  border-radius: 10px;
-  width: 320px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-}
-.modal-content h3 {
-  text-align: center;
-  margin-bottom: 10px;
-}
-.modal-content input,
-.modal-content select {
-  width: 100%;
-  margin: 5px 0;
-  padding: 6px;
-  border: 1px solid #ccc;
-  border-radius: 6px;
-}
-
-/* -----------------------------
-   푸터
-   ----------------------------- */
-footer {
-  text-align: center;
-  font-size: 0.85rem;
-  color: #666;
-  margin-top: 40px;
-  padding-bottom: 10px;
-}
-
-/* -----------------------------
-   반응형 대응
-   ----------------------------- */
-@media (max-width: 768px) {
-  header {
-    flex-direction: column;
-    align-items: center;
-  }
-  .logo {
-    font-size: 1.4rem;
-    margin-bottom: 6px;
-  }
-  nav {
-    flex-wrap: wrap;
-    justify-content: center;
-  }
-  .logout-btn {
-    position: static;
-    margin-top: 8px;
-  }
-  .filter-box {
-    flex-direction: column;
-    align-items: stretch;
-    max-width: 100%;
-  }
-  .filter-box label {
-    display: block;
-  }
-  table {
-    font-size: 0.85rem;
-  }
-  button {
-    width: 100%;
-    margin-top: 4px;
-  }
+/* Mobile tweaks */
+@media (max-width:768px){
+  .logo{font-size:1.6rem}
+  .logout-btn{position:static; order:3}
+  nav{order:2}
+  .filter-box{flex-direction:column; align-items:stretch}
+  table{font-size:.9rem}
+  button{width:100%}
 }
