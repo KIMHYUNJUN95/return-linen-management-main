@@ -1,140 +1,55 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>HARU 관리자 대시보드</title>
-  <link rel="stylesheet" href="common.css">
+  <link rel="stylesheet" href="common.css" />
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-  <style>
-    .tab-buttons {
-      text-align: center;
-      margin-top: 20px;
-    }
-    .tab-buttons button {
-      margin: 0 5px;
-      padding: 8px 16px;
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
-      font-weight: bold;
-      background: #e0e0e0;
-    }
-    .tab-buttons button.active {
-      background: #1a73e8;
-      color: white;
-    }
-    .filter-box {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-      justify-content: center;
-      align-items: center;
-      margin: 10px auto;
-      background: #f5f5f5;
-      padding: 10px;
-      border-radius: 8px;
-      max-width: 900px;
-    }
-    .filter-box label { font-weight: bold; }
-    .filter-box input, .filter-box select {
-      padding: 6px; border: 1px solid #ccc; border-radius: 6px;
-    }
-    .export-btn { background: #2e7d32; color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; }
-    .pdf-btn { background: #c62828; color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; }
-    table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-    th, td { border: 1px solid #ccc; padding: 8px; text-align: center; }
-    th { background: #f0f0f0; }
-    #detailModal {
-      position: fixed; inset: 0;
-      display: none; justify-content: center; align-items: center;
-      background: rgba(0,0,0,0.5);
-    }
-    .modal-content {
-      background: white; padding: 20px; border-radius: 10px; width: 300px;
-    }
-  </style>
 </head>
-
 <body>
   <header>
     <div class="logo">HARU</div>
     <nav>
       <a href="return_form.html">반품등록</a>
       <a href="admin_dashboard.html" class="active">관리자</a>
+      <a href="incoming_form.html">입고등록</a>
     </nav>
     <button id="btnLogout" class="logout-btn">로그아웃</button>
   </header>
 
   <main>
-    <h2 style="text-align:center;">관리자 대시보드</h2>
-
-    <div class="tab-buttons">
-      <button id="tabReturns" class="active">반품내역</button>
-      <button id="tabIncoming">입고내역</button>
+    <h2>관리자 대시보드</h2>
+    <div class="filter-box">
+      <label>시작일:</label><input type="date" id="startDate">
+      <label>종료일:</label><input type="date" id="endDate">
+      <label>건물:</label>
+      <select id="buildingFilter">
+        <option value="전체">전체</option>
+        <option>아라키초A</option><option>아라키초B</option>
+        <option>다이쿄초</option><option>가부키초</option>
+        <option>다카다노바바</option><option>오쿠보1</option>
+        <option>오쿠보2</option><option>오쿠보4</option>
+      </select>
+      <button id="btnFilter">검색</button>
+      <button id="btnReset">초기화</button>
+      <button id="btnExcel" class="export-btn">엑셀</button>
+      <button id="btnPDF" class="pdf-btn">PDF</button>
     </div>
 
-    <!-- 반품내역 -->
-    <section id="returnsSection">
-      <div class="filter-box">
-        <label>시작일:</label><input type="date" id="startDateR">
-        <label>종료일:</label><input type="date" id="endDateR">
-        <label>건물:</label>
-        <select id="buildingFilterR">
-          <option value="전체">전체</option>
-          <option>아라키초A</option>
-          <option>아라키초B</option>
-          <option>다이쿄초</option>
-          <option>가부키초</option>
-          <option>다카다노바바</option>
-          <option>오쿠보1</option>
-          <option>오쿠보2</option>
-          <option>오쿠보4</option>
-        </select>
-        <button id="btnFilterR">검색</button>
-        <button id="btnExcelR" class="export-btn">엑셀</button>
-        <button id="btnPDFR" class="pdf-btn">PDF</button>
-      </div>
-
-      <div style="overflow-x:auto;">
-        <table id="returnsTable">
-          <thead><tr><th>건물</th><th>날짜</th><th>담당자</th><th>린넨</th><th>수량</th><th>상태</th></tr></thead>
-          <tbody id="tbodyR"></tbody>
-        </table>
-      </div>
-    </section>
-
-    <!-- 입고내역 -->
-    <section id="incomingSection" style="display:none;">
-      <div class="filter-box">
-        <label>시작일:</label><input type="date" id="startDateI">
-        <label>종료일:</label><input type="date" id="endDateI">
-        <label>건물:</label>
-        <select id="buildingFilterI">
-          <option value="전체">전체</option>
-          <option>아라키초A</option>
-          <option>아라키초B</option>
-          <option>다이쿄초</option>
-          <option>가부키초</option>
-          <option>다카다노바바</option>
-          <option>오쿠보1</option>
-          <option>오쿠보2</option>
-          <option>오쿠보4</option>
-        </select>
-        <button id="btnFilterI">검색</button>
-        <button id="btnExcelI" class="export-btn">엑셀</button>
-        <button id="btnPDFI" class="pdf-btn">PDF</button>
-      </div>
-
-      <div style="overflow-x:auto;">
-        <table id="incomingTable">
-          <thead><tr><th>건물</th><th>날짜</th><th>담당자</th><th>린넨</th><th>수량</th></tr></thead>
-          <tbody id="tbodyI"></tbody>
-        </table>
-      </div>
-    </section>
+    <div style="overflow-x:auto;">
+      <table id="returnsTable">
+        <thead>
+          <tr>
+            <th>건물</th><th>날짜</th><th>담당자</th><th>린넨</th><th>수량</th>
+            <th>상태</th><th>상세</th><th>수정</th><th>삭제</th>
+          </tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
   </main>
 
   <footer>© 2025 HARU · by KIM HYUN JUN</footer>
