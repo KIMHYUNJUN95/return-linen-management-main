@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>HARU 관리자 대시보드</title>
   <link rel="stylesheet" href="common.css" />
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -22,35 +22,103 @@
 
   <main>
     <h2>관리자 대시보드</h2>
-    <div class="filter-box">
-      <label>시작일:</label><input type="date" id="startDate">
-      <label>종료일:</label><input type="date" id="endDate">
-      <label>건물:</label>
-      <select id="buildingFilter">
-        <option value="전체">전체</option>
+
+    <div class="card" style="display:flex;gap:8px;justify-content:center;">
+      <button id="tabReturns" class="primary">반품내역</button>
+      <button id="tabIncoming" class="secondary">입고내역</button>
+    </div>
+
+    <!-- 반품 필터 -->
+    <section id="returnsSection">
+      <div class="filter-box" style="margin-top:12px;">
+        <label>시작일</label><input type="date" id="startDateR">
+        <label>종료일</label><input type="date" id="endDateR">
+        <label>건물</label>
+        <select id="buildingFilterR">
+          <option value="전체">전체</option>
+          <option>아라키초A</option><option>아라키초B</option>
+          <option>다이쿄초</option><option>가부키초</option>
+          <option>다카다노바바</option><option>오쿠보1</option>
+          <option>오쿠보2</option><option>오쿠보4</option>
+        </select>
+        <button id="btnFilterR">검색</button>
+        <button id="btnResetR" class="secondary">초기화</button>
+        <button id="btnExcelR" class="ghost">엑셀</button>
+        <button id="btnPDFR" class="ghost">PDF</button>
+      </div>
+
+      <div class="table-wrap">
+        <table id="returnsTable">
+          <thead>
+            <tr>
+              <th>건물</th><th>날짜</th><th>담당자</th>
+              <th>린넨</th><th>수량</th><th>상태</th>
+              <th>상세</th><th>수정</th><th>삭제</th>
+            </tr>
+          </thead>
+          <tbody id="tbodyR"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- 입고 필터 -->
+    <section id="incomingSection" style="display:none;">
+      <div class="filter-box" style="margin-top:12px;">
+        <label>시작일</label><input type="date" id="startDateI">
+        <label>종료일</label><input type="date" id="endDateI">
+        <label>건물</label>
+        <select id="buildingFilterI">
+          <option value="전체">전체</option>
+          <option>아라키초A</option><option>아라키초B</option>
+          <option>다이쿄초</option><option>가부키초</option>
+          <option>다카다노바바</option><option>오쿠보1</option>
+          <option>오쿠보2</option><option>오쿠보4</option>
+        </select>
+        <button id="btnFilterI">검색</button>
+        <button id="btnResetI" class="secondary">초기화</button>
+        <button id="btnExcelI" class="ghost">엑셀</button>
+        <button id="btnPDFI" class="ghost">PDF</button>
+      </div>
+
+      <div class="table-wrap">
+        <table id="incomingTable">
+          <thead>
+            <tr>
+              <th>건물</th><th>날짜</th><th>담당자</th>
+              <th>린넨</th><th>수량</th>
+              <th>상세</th><th>삭제</th>
+            </tr>
+          </thead>
+          <tbody id="tbodyI"></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <!-- 상세/수정 모달 (반품용) -->
+  <div id="detailModal">
+    <div class="modal-content">
+      <h3>반품 상세 / 수정</h3>
+      <label>건물</label>
+      <input id="editBuilding" list="buildings">
+      <datalist id="buildings">
         <option>아라키초A</option><option>아라키초B</option>
         <option>다이쿄초</option><option>가부키초</option>
         <option>다카다노바바</option><option>오쿠보1</option>
         <option>오쿠보2</option><option>오쿠보4</option>
-      </select>
-      <button id="btnFilter">검색</button>
-      <button id="btnReset">초기화</button>
-      <button id="btnExcel" class="export-btn">엑셀</button>
-      <button id="btnPDF" class="pdf-btn">PDF</button>
+      </datalist>
+      <label>날짜</label><input type="date" id="editDate">
+      <label>담당자</label><input type="text" id="editStaff">
+      <label>린넨</label><input type="text" id="editLinen">
+      <label>수량</label><input type="number" id="editQty" min="0">
+      <label>상태</label>
+      <select id="editStatus"><option value="pending">대기</option><option value="resolved">완료</option></select>
+      <div style="display:flex;gap:8px;margin-top:10px;">
+        <button id="btnSave" class="primary" style="flex:1">저장</button>
+        <button id="btnCloseModal" class="secondary" style="flex:1">닫기</button>
+      </div>
     </div>
-
-    <div style="overflow-x:auto;">
-      <table id="returnsTable">
-        <thead>
-          <tr>
-            <th>건물</th><th>날짜</th><th>담당자</th><th>린넨</th><th>수량</th>
-            <th>상태</th><th>상세</th><th>수정</th><th>삭제</th>
-          </tr>
-        </thead>
-        <tbody id="tbody"></tbody>
-      </table>
-    </div>
-  </main>
+  </div>
 
   <footer>© 2025 HARU · by KIM HYUN JUN</footer>
   <script type="module" src="admin_dashboard.js"></script>
