@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>HARU 입고 내역</title>
+  <link rel="stylesheet" href="common.css" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <style>
+    table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+    th, td { border: 1px solid #ccc; padding: 8px; text-align: center; }
+    th { background: #f0f0f0; }
+    h2 { text-align: center; }
+    .filter-box { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin: 10px 0; }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="logo">HARU</div>
+    <nav>
+      <a href="return_form.html">반품등록</a>
+      <a href="incoming_form.html">입고등록</a>
+      <a href="incoming_dashboard.html" class="active">입고내역</a>
+    </nav>
+    <button id="btnLogout" class="logout-btn">로그아웃</button>
+  </header>
+  <main>
+    <h2>린넨 입고 내역</h2>
+    <div class="filter-box">
+      <input type="date" id="startDate">
+      <input type="date" id="endDate">
+      <select id="buildingFilter">
+        <option value="전체">전체 건물</option>
+        <option>아라키초A</option>
+        <option>아라키초B</option>
+        <option>다이쿄초</option>
+        <option>가부키초</option>
+        <option>다카다노바바</option>
+        <option>오쿠보1</option>
+        <option>오쿠보2</option>
+        <option>오쿠보4</option>
+      </select>
+      <button id="btnFilter">검색</button>
+      <button id="btnExcel">엑셀</button>
+      <button id="btnPDF">PDF</button>
+    </div>
+    <div style="overflow-x:auto;">
+      <table id="incomingTable">
+        <thead><tr><th>건물</th><th>날짜</th><th>담당자</th><th>린넨</th><th>수량</th></tr></thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+  </main>
+  <footer>© 2025 HARU · by KIM HYUN JUN</footer>
+  <script type="module" src="incoming_dashboard.js"></script>
+</body>
+</html>

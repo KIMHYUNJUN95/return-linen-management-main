@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>HARU 린넨 입고 등록</title>
+  <link rel="stylesheet" href="common.css" />
+  <style>
+    main { max-width: 700px; margin: 40px auto; background: #fff; padding: 20px; border-radius: 10px; box-shadow: 0 3px 8px rgba(0, 0, 0, 0.1); }
+    h2 { text-align: center; }
+    label { font-weight: bold; display: block; margin-top: 10px; }
+    input, select { width: 100%; padding: 8px; margin-top: 5px; border-radius: 6px; border: 1px solid #ccc; }
+    button { background: #1a73e8; color: white; padding: 10px 16px; border: none; border-radius: 8px; cursor: pointer; margin-top: 10px; }
+    .linen-row { display: flex; gap: 10px; margin-top: 8px; }
+    .linen-row select, .linen-row input { flex: 1; }
+    .removeItem { background: #c62828; }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="logo">HARU</div>
+    <nav>
+      <a href="return_form.html">반품등록</a>
+      <a href="incoming_form.html" class="active">입고등록</a>
+      <a href="admin_dashboard.html">관리자</a>
+    </nav>
+    <button id="btnLogout" class="logout-btn">로그아웃</button>
+  </header>
+  <main>
+    <h2>린넨 입고 등록</h2>
+    <label>담당자</label>
+    <input type="text" id="staffName" placeholder="담당자 이름" />
+    <label>날짜</label>
+    <input type="date" id="date" />
+    <label>건물 선택</label>
+    <select id="buildingSelect">
+      <option value="">건물 선택</option>
+      <option>아라키초A</option>
+      <option>아라키초B</option>
+      <option>다이쿄초</option>
+      <option>가부키초</option>
+      <option>다카다노바바</option>
+      <option>오쿠보1</option>
+      <option>오쿠보2</option>
+      <option>오쿠보4</option>
+    </select>
+    <label>린넨 항목</label>
+    <div id="linenContainer"></div>
+    <button id="addItem" type="button">항목 추가</button>
+    <button id="saveBtn" type="button">입고 등록</button>
+  </main>
+  <footer>© 2025 HARU · by KIM HYUN JUN</footer>
+  <script type="module" src="incoming_form.js"></script>
+</body>
+</html>
