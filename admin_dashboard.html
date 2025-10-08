@@ -8,37 +8,53 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-
   <style>
-    .status-resolved { color:green; font-weight:bold; }
-    .status-pending { color:orange; font-weight:bold; }
-
-    #detailModal {
-      position:fixed; inset:0;
-      display:none; justify-content:center; align-items:center;
-      background:rgba(0,0,0,0.5);
+    .tab-buttons {
+      text-align: center;
+      margin-top: 20px;
     }
-    .modal-content {
-      background:white; padding:20px; border-radius:10px; width:300px;
+    .tab-buttons button {
+      margin: 0 5px;
+      padding: 8px 16px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: bold;
+      background: #e0e0e0;
+    }
+    .tab-buttons button.active {
+      background: #1a73e8;
+      color: white;
     }
     .filter-box {
-      display:flex; flex-wrap:wrap; gap:10px;
-      justify-content:center; align-items:center;
-      margin:10px auto; background:#f5f5f5;
-      padding:10px; border-radius:8px;
-      max-width:900px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: center;
+      align-items: center;
+      margin: 10px auto;
+      background: #f5f5f5;
+      padding: 10px;
+      border-radius: 8px;
+      max-width: 900px;
     }
-    .filter-box label { font-weight:bold; }
+    .filter-box label { font-weight: bold; }
     .filter-box input, .filter-box select {
-      padding:6px; border:1px solid #ccc; border-radius:6px;
+      padding: 6px; border: 1px solid #ccc; border-radius: 6px;
     }
-    .filter-box button {
-      background:#1a73e8; color:white;
-      border:none; border-radius:6px;
-      padding:6px 12px; cursor:pointer;
+    .export-btn { background: #2e7d32; color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; }
+    .pdf-btn { background: #c62828; color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; }
+    table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+    th, td { border: 1px solid #ccc; padding: 8px; text-align: center; }
+    th { background: #f0f0f0; }
+    #detailModal {
+      position: fixed; inset: 0;
+      display: none; justify-content: center; align-items: center;
+      background: rgba(0,0,0,0.5);
     }
-    .export-btn { background:#2e7d32; }
-    .pdf-btn { background:#c62828; }
+    .modal-content {
+      background: white; padding: 20px; border-radius: 10px; width: 300px;
+    }
   </style>
 </head>
 
@@ -55,232 +71,73 @@
   <main>
     <h2 style="text-align:center;">관리자 대시보드</h2>
 
-    <!-- ✅ 날짜 + 건물 필터 -->
-    <div class="filter-box">
-      <label>시작일:</label>
-      <input type="date" id="startDate">
-      <label>종료일:</label>
-      <input type="date" id="endDate">
-
-      <label>건물:</label>
-      <select id="buildingFilter">
-        <option value="전체">전체</option>
-        <option>아라키초A</option>
-        <option>아라키초B</option>
-        <option>다이쿄초</option>
-        <option>가부키초</option>
-        <option>다카다노바바</option>
-        <option>오쿠보1</option>
-        <option>오쿠보2</option>
-        <option>오쿠보4</option>
-      </select>
-
-      <button id="btnFilter">검색</button>
-      <button id="btnReset">초기화</button>
-      <button id="btnExcel" class="export-btn">엑셀</button>
-      <button id="btnPDF" class="pdf-btn">PDF</button>
+    <div class="tab-buttons">
+      <button id="tabReturns" class="active">반품내역</button>
+      <button id="tabIncoming">입고내역</button>
     </div>
 
-    <!-- ✅ 건물별 통계 영역 -->
-    <section id="statsBox" style="max-width:900px;margin:20px auto;background:#f9f9f9;border-radius:8px;padding:15px;box-shadow:0 0 5px rgba(0,0,0,0.1);">
-      <h3 style="text-align:center;margin-bottom:10px;">📊 건물별 반품 현황</h3>
-      <div id="statsContent" style="line-height:1.8;font-size:14px;text-align:center;color:#333;">불러오는 중...</div>
+    <!-- 반품내역 -->
+    <section id="returnsSection">
+      <div class="filter-box">
+        <label>시작일:</label><input type="date" id="startDateR">
+        <label>종료일:</label><input type="date" id="endDateR">
+        <label>건물:</label>
+        <select id="buildingFilterR">
+          <option value="전체">전체</option>
+          <option>아라키초A</option>
+          <option>아라키초B</option>
+          <option>다이쿄초</option>
+          <option>가부키초</option>
+          <option>다카다노바바</option>
+          <option>오쿠보1</option>
+          <option>오쿠보2</option>
+          <option>오쿠보4</option>
+        </select>
+        <button id="btnFilterR">검색</button>
+        <button id="btnExcelR" class="export-btn">엑셀</button>
+        <button id="btnPDFR" class="pdf-btn">PDF</button>
+      </div>
+
+      <div style="overflow-x:auto;">
+        <table id="returnsTable">
+          <thead><tr><th>건물</th><th>날짜</th><th>담당자</th><th>린넨</th><th>수량</th><th>상태</th></tr></thead>
+          <tbody id="tbodyR"></tbody>
+        </table>
+      </div>
     </section>
 
-    <div style="overflow-x:auto;">
-      <table id="returnsTable">
-        <thead>
-          <tr>
-            <th>건물</th>
-            <th>날짜</th>
-            <th>담당자</th>
-            <th>린넨</th>
-            <th>수량</th>
-            <th>상태</th>
-            <th>상세</th>
-            <th>삭제</th>
-          </tr>
-        </thead>
-        <tbody id="tbody"></tbody>
-      </table>
-    </div>
+    <!-- 입고내역 -->
+    <section id="incomingSection" style="display:none;">
+      <div class="filter-box">
+        <label>시작일:</label><input type="date" id="startDateI">
+        <label>종료일:</label><input type="date" id="endDateI">
+        <label>건물:</label>
+        <select id="buildingFilterI">
+          <option value="전체">전체</option>
+          <option>아라키초A</option>
+          <option>아라키초B</option>
+          <option>다이쿄초</option>
+          <option>가부키초</option>
+          <option>다카다노바바</option>
+          <option>오쿠보1</option>
+          <option>오쿠보2</option>
+          <option>오쿠보4</option>
+        </select>
+        <button id="btnFilterI">검색</button>
+        <button id="btnExcelI" class="export-btn">엑셀</button>
+        <button id="btnPDFI" class="pdf-btn">PDF</button>
+      </div>
+
+      <div style="overflow-x:auto;">
+        <table id="incomingTable">
+          <thead><tr><th>건물</th><th>날짜</th><th>담당자</th><th>린넨</th><th>수량</th></tr></thead>
+          <tbody id="tbodyI"></tbody>
+        </table>
+      </div>
+    </section>
   </main>
 
-  <!-- 상세 모달 -->
-  <div id="detailModal">
-    <div class="modal-content">
-      <pre id="detailBody" style="white-space:pre-wrap;"></pre>
-      <label>상태 변경</label>
-      <select id="statusSelect">
-        <option value="pending">대기</option>
-        <option value="resolved">완료</option>
-      </select>
-      <button id="btnSaveStatus" class="primary" style="margin-top:10px;">저장</button>
-      <button id="btnCloseModal" class="secondary" style="margin-top:5px;">닫기</button>
-    </div>
-  </div>
-
   <footer>© 2025 HARU · by KIM HYUN JUN</footer>
-
-  <script type="module">
-    import { app, auth, db } from "./auth.js";
-    import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-    import { collection, getDocs, updateDoc, deleteDoc, doc, orderBy, query, where } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-
-    const ADMIN_EMAIL = "rlaguswns95@haru-tokyo.com";
-    let currentUserEmail = null;
-    let allData = [];
-    let currentId = null;
-
-    onAuthStateChanged(auth, async (user) => {
-      if (!user) { location.href = "signup.html"; return; }
-      currentUserEmail = user.email;
-      await loadReturns();
-    });
-
-    document.getElementById("btnLogout").onclick = async () => {
-      await signOut(auth);
-      location.href = "signup.html";
-    };
-
-    const tbody = document.getElementById("tbody");
-
-    async function loadReturns() {
-      let q;
-      if (currentUserEmail === ADMIN_EMAIL) {
-        q = query(collection(db, "returns"), orderBy("date", "desc"));
-      } else {
-        q = query(collection(db, "returns"), where("userEmail", "==", currentUserEmail), orderBy("date", "desc"));
-      }
-      const snap = await getDocs(q);
-      allData = [];
-      snap.forEach(docSnap => allData.push({ id: docSnap.id, ...docSnap.data() }));
-      render(allData);
-    }
-
-    function render(data) {
-      tbody.innerHTML = "";
-      data.forEach(d => {
-        const first = d.items?.[0] || {};
-        const tr = document.createElement("tr");
-        tr.innerHTML = `
-          <td>${d.buildingId || "-"}</td>
-          <td>${d.date || "-"}</td>
-          <td>${d.staffName || "-"}</td>
-          <td>${first.linenType || "-"}</td>
-          <td>${first.defectCount ?? "-"}</td>
-          <td class="${d.status === "resolved" ? "status-resolved" : "status-pending"}">${d.status === "resolved" ? "완료" : "대기"}</td>
-          <td><button class="primary btnDetail" data-id="${d.id}">상세</button></td>
-          ${currentUserEmail === ADMIN_EMAIL || d.userEmail === currentUserEmail
-            ? `<td><button class="danger btnDel" data-id="${d.id}">삭제</button></td>`
-            : `<td>-</td>`}
-        `;
-        tbody.appendChild(tr);
-      });
-      document.querySelectorAll(".btnDetail").forEach(b => b.onclick = openDetail);
-      document.querySelectorAll(".btnDel").forEach(b => b.onclick = delItem);
-
-      // ✅ 건물별 통계 갱신
-      updateStats(data);
-    }
-
-    async function openDetail(e) {
-      currentId = e.currentTarget.dataset.id;
-      const data = allData.find(d => d.id === currentId);
-      if (!data) return;
-      const text = data.items.map((it,i)=>`${i+1}. ${it.linenType} - ${it.defectCount}`).join("\n");
-      document.getElementById("detailBody").textContent =
-        `건물: ${data.buildingId}\n담당자: ${data.staffName}\n날짜: ${data.date}\n상태: ${data.status==="resolved"?"완료":"대기"}\n\n[항목]\n${text}`;
-      document.getElementById("statusSelect").value = data.status;
-      document.getElementById("detailModal").style.display = "flex";
-    }
-
-    document.getElementById("btnCloseModal").onclick = () => document.getElementById("detailModal").style.display = "none";
-
-    document.getElementById("btnSaveStatus").onclick = async () => {
-      if (!currentId) return;
-      const val = document.getElementById("statusSelect").value;
-      await updateDoc(doc(db,"returns",currentId),{status:val});
-      alert("상태 변경 완료");
-      document.getElementById("detailModal").style.display = "none";
-      await loadReturns();
-      applyFilter();
-    };
-
-    async function delItem(e){
-      if(!confirm("삭제하시겠습니까?"))return;
-      await deleteDoc(doc(db,"returns",e.currentTarget.dataset.id));
-      await loadReturns();
-      applyFilter();
-    }
-
-    // 🔎 필터 기능 (날짜 + 건물)
-    document.getElementById("btnFilter").onclick = applyFilter;
-    document.getElementById("btnReset").onclick = ()=>{
-      document.getElementById("startDate").value="";
-      document.getElementById("endDate").value="";
-      document.getElementById("buildingFilter").value="전체";
-      render(allData);
-    };
-
-    function applyFilter(){
-      const start=document.getElementById("startDate").value;
-      const end=document.getElementById("endDate").value;
-      const bld=document.getElementById("buildingFilter").value;
-      const filtered = allData.filter(d=>{
-        const okDate=(!start||d.date>=start)&&(!end||d.date<=end);
-        const okBld=bld==="전체"||d.buildingId===bld;
-        return okDate&&okBld;
-      });
-      render(filtered);
-    }
-
-    // ✅ 엑셀 내보내기
-    document.getElementById("btnExcel").onclick = () => {
-      const wb = XLSX.utils.table_to_book(document.getElementById("returnsTable"), { sheet: "HARU Returns" });
-      XLSX.writeFile(wb, "haru_returns.xlsx");
-    };
-
-    // ✅ PDF 내보내기 (이미지 방식 + 선명도 개선)
-    document.getElementById("btnPDF").onclick = async()=>{
-      const wrapper=document.getElementById("returnsTable").parentElement;
-      const canvas=await html2canvas(wrapper,{
-        scale:3, // 🔹 글자 선명도 향상
-        useCORS:true,
-        backgroundColor:"#fff"
-      });
-      const img=canvas.toDataURL("image/png");
-      const {jsPDF}=window.jspdf;
-      const pdf=new jsPDF("p","pt","a4");
-      const pw=pdf.internal.pageSize.getWidth();
-      const ph=pdf.internal.pageSize.getHeight();
-      const iw=pw-40;
-      const ih=canvas.height*(iw/canvas.width);
-      pdf.text("HARU 반품 내역",20,20);
-      if(ih>ph-40){
-        const s=(ph-60)/ih;
-        pdf.addImage(img,"PNG",20,30,iw*s,ih*s);
-      }else pdf.addImage(img,"PNG",20,30,iw,ih);
-      pdf.save("haru_returns.pdf");
-    };
-
-    // ✅ 건물별 통계 함수
-    function updateStats(data){
-      const stats = {};
-      data.forEach(d=>{
-        const b = d.buildingId || "기타";
-        if(!stats[b]) stats[b] = { total:0, pending:0, resolved:0 };
-        stats[b].total++;
-        if(d.status==="resolved") stats[b].resolved++;
-        else stats[b].pending++;
-      });
-
-      const html = Object.entries(stats)
-        .map(([b,s])=>`${b} — 총 ${s.total}건 (대기 ${s.pending} / 완료 ${s.resolved})`)
-        .join("<br>");
-
-      document.getElementById("statsContent").innerHTML = html || "데이터가 없습니다.";
-    }
-  </script>
+  <script type="module" src="admin_dashboard.js"></script>
 </body>
 </html>
