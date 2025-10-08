@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>HARU 입고등록</title>
   <link rel="stylesheet" href="common.css" />
 </head>
@@ -19,40 +19,40 @@
 
   <main>
     <h2>입고 등록</h2>
-    <form id="incomingForm">
-      <label>날짜</label>
-      <input type="date" id="date" required />
-      <label>담당자 이름</label>
-      <input type="text" id="staffName" required />
-      <label>건물 선택</label>
-      <select id="buildingId" required>
-        <option value="">건물 선택</option>
-        <option>아라키초A</option><option>아라키초B</option>
-        <option>다이쿄초</option><option>가부키초</option>
-        <option>다카다노바바</option><option>오쿠보1</option>
-        <option>오쿠보2</option><option>오쿠보4</option>
-      </select>
+    <div class="card">
+      <form id="incomingForm">
+        <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px">
+          <div>
+            <label>날짜</label>
+            <input type="date" id="date" required />
+          </div>
+          <div>
+            <label>담당자</label>
+            <input type="text" id="staffName" required />
+          </div>
+          <div>
+            <label>건물</label>
+            <select id="buildingId" required>
+              <option value="">건물 선택</option>
+              <option>아라키초A</option><option>아라키초B</option>
+              <option>다이쿄초</option><option>가부키초</option>
+              <option>다카다노바바</option><option>오쿠보1</option>
+              <option>오쿠보2</option><option>오쿠보4</option>
+            </select>
+          </div>
+        </div>
 
-      <div id="linenContainer">
-        <label>입고 품목</label>
-        <select class="linenType">
-          <option>수건타월</option>
-          <option>싱글 매트커버</option>
-          <option>싱글 이불커버</option>
-          <option>더블 매트커버</option>
-          <option>더블 매트커버(고무)</option>
-          <option>더블 이불커버</option>
-          <option>베개커버</option>
-          <option>발매트</option>
-        </select>
-        <label>수량</label>
-        <input type="number" class="defectCount" min="1" value="1" />
-      </div>
+        <hr style="margin:12px 0;border:none;border-top:1px solid #eee">
 
-      <button type="button" id="addLinen">항목 추가</button>
-      <button type="button" id="removeLinen">항목 삭제</button>
-      <button type="submit" class="primary">등록</button>
-    </form>
+        <div id="items"></div>
+        <div style="display:flex; gap:8px; margin-top:8px;">
+          <button type="button" id="addItem" class="ghost">항목 추가</button>
+          <button type="button" id="removeItem" class="secondary">항목 삭제</button>
+        </div>
+
+        <button type="submit" class="primary" style="margin-top:12px;">등록</button>
+      </form>
+    </div>
   </main>
 
   <footer>© 2025 HARU · by KIM HYUN JUN</footer>
