@@ -1,92 +1,82 @@
-// ✅ return_form.js (수정 완료 버전)
-import { app, auth, db } from "./auth.js";
-import {
-  collection,
-  addDoc
-} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-import {
-  onAuthStateChanged
-} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { auth, db } from "./auth.js";
+import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { collection, addDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-let currentUserEmail = null;
+let currentUser = null;
 
-// 로그인한 사용자 이메일 저장
-onAuthStateChanged(auth, (user) => {
-  if (!user) {
-    location.href = "signup.html";
-  } else {
-    currentUserEmail = user.email;
-    document.getElementById("staffName").value = user.displayName || "알바생";
-  }
+onAuthStateChanged(auth, (u)=>{
+  if(!u) location.href="signup.html";
+  currentUser = u;
+  document.getElementById("staffName").value = u?.displayName || "";
 });
 
-// ✅ 린넨 항목 추가 기능
-const linenContainer = document.getElementById("linenContainer");
-document.getElementById("addItem").addEventListener("click", () => {
-  const div = document.createElement("div");
-  div.className = "linen-row";
-  div.innerHTML = `
+document.getElementById("btnLogout").onclick = async ()=>{
+  await signOut(auth);
+  location.href="signup.html";
+};
+
+const items = document.getElementById("items");
+function addRow(){
+  const row = document.createElement("div");
+  row.className = "linen-row";
+  row.style.display="grid";
+  row.style.gridTemplateColumns="1fr 120px";
+  row.style.gap="8px";
+  row.style.marginTop="8px";
+  row.innerHTML = `
     <select class="linenType">
-      <option value="">린넨 종류 선택</option>
-      <option>수건</option>
-      <option>이불</option>
-      <option>베개커버</option>
-      <option>시트</option>
-      <option>매트리스커버</option>
+      <option>수건타월</option>
+      <option>싱글 매트커버</option>
+      <option>싱글 이불 커버</option>
+      <option>더블 매트커버</option>
+      <option>더블 매트 커버(고무)</option>
+      <option>더블 이불 커버</option>
+      <option>배게커버</option>
+      <option>발매트</option>
     </select>
-    <input type="number" class="linenCount" placeholder="불량 수량" min="0">
-    <button type="button" class="removeItem">삭제</button>
+    <input type="number" class="defectCount" min="1" value="1" />
   `;
-  linenContainer.appendChild(div);
-
-  div.querySelector(".removeItem").onclick = () => div.remove();
-});
-
-// ✅ 린넨 항목 수집 함수
-function collectLinenItems() {
-  const rows = document.querySelectorAll(".linen-row");
-  const items = [];
-  rows.forEach((row) => {
-    const linenType = row.querySelector(".linenType").value;
-    const defectCount = parseInt(row.querySelector(".linenCount").value || 0);
-    if (linenType) items.push({ linenType, defectCount });
-  });
-  return items;
+  items.appendChild(row);
 }
+function removeRow(){
+  const rows = items.querySelectorAll(".linen-row");
+  if(rows.length>0) rows[rows.length-1].remove();
+}
+document.getElementById("addItem").onclick = addRow;
+document.getElementById("removeItem").onclick = removeRow;
+addRow(); // 기본 1개
 
-// ✅ 반품 저장
-document.getElementById("saveBtn").addEventListener("click", async () => {
-  const staffName = document.getElementById("staffName").value.trim();
+document.getElementById("returnForm").addEventListener("submit", async (e)=>{
+  e.preventDefault();
   const date = document.getElementById("date").value;
-  const buildingId = document.getElementById("buildingSelect").value;
-  const items = collectLinenItems();
+  const staffName = document.getElementById("staffName").value.trim();
+  const buildingId = document.getElementById("buildingId").value;
 
-  if (!staffName || !date || !buildingId || items.length === 0) {
-    alert("모든 필드를 입력하세요.");
+  const list = [];
+  items.querySelectorAll(".linen-row").forEach(r=>{
+    const linenType = r.querySelector(".linenType").value;
+    const defectCount = parseInt(r.querySelector(".defectCount").value||0);
+    if(linenType && defectCount>0) list.push({ linenType, defectCount });
+  });
+
+  if(!date || !staffName || !buildingId || list.length===0){
+    alert("모든 항목을 입력하세요.");
     return;
   }
 
-  try {
-    await addDoc(collection(db, "returns"), {
-      staffName,
-      date,
-      buildingId,
-      items,
+  try{
+    await addDoc(collection(db,"returns"),{
+      date, staffName, buildingId,
+      items: list,
       status: "pending",
-      userEmail: currentUserEmail || "unknown", // ✅ 사용자 이메일 저장
+      userEmail: currentUser?.email || "unknown",
       createdAt: new Date()
     });
-
-    alert("반품이 등록되었습니다!");
-    location.reload();
-  } catch (error) {
-    console.error("등록 실패:", error);
-    alert("등록 중 오류가 발생했습니다.");
+    alert("반품 등록 완료!");
+    e.target.reset();
+    items.innerHTML="";
+    addRow();
+  }catch(err){
+    alert("등록 실패: "+(err.message||err));
   }
 });
-
-// ✅ 로그아웃
-document.getElementById("btnLogout").onclick = async () => {
-  await signOut(auth);
-  location.href = "signup.html";
-};
