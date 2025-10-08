@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HARU 로그인</title>
+  <link rel="stylesheet" href="common.css">
+  <style>
+    .container {
+      background: white;
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+      width: 320px;
+      margin: 80px auto;
+      text-align: center;
+    }
+    input {
+      width: 100%;
+      padding: 10px;
+      margin: 6px 0;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+    }
+    .toggle { color:#1a73e8; margin-top:15px; cursor:pointer; }
+  </style>
+</head>
+<body>
+  <h1 style="text-align:center;color:#1a73e8;">HARU</h1>
+
+  <div class="container" id="loginContainer">
+    <h3>로그인</h3>
+    <form id="loginForm">
+      <input type="email" id="email" placeholder="이메일" required>
+      <input type="password" id="password" placeholder="비밀번호" required>
+      <button type="submit" class="primary">로그인</button>
+    </form>
+    <div class="toggle" onclick="toggleForm()">회원가입</div>
+  </div>
+
+  <div class="container" id="signupContainer" style="display:none;">
+    <h3>회원가입</h3>
+    <form id="signupForm">
+      <input type="email" id="regEmail" placeholder="이메일" required>
+      <input type="password" id="regPassword" placeholder="비밀번호" required>
+      <button type="submit" class="primary">회원가입</button>
+    </form>
+    <div class="toggle" onclick="toggleForm()">로그인으로 돌아가기</div>
+  </div>
+
+  <footer>© 2025 HARU · by KIM HYUN JUN</footer>
+
+  <script>
+    function toggleForm(){
+      const login=document.getElementById("loginContainer");
+      const sign=document.getElementById("signupContainer");
+      if(login.style.display==="none"){ login.style.display="block"; sign.style.display="none"; }
+      else{ login.style.display="none"; sign.style.display="block"; }
+    }
+  </script>
+
+  <script type="module" src="auth.js"></script>
+</body>
+</html>
