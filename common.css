@@ -1,58 +1,151 @@
-/* 🔹 기본 레이아웃 반응형 */
+/* =============================
+   🌐 HARU Linen Management
+   Responsive Design Full Version
+   ============================= */
+
+/* 기본 폰트 및 전체 배경 */
 body {
   margin: 0;
   padding: 0;
   font-family: "Noto Sans KR", sans-serif;
   background-color: #fafafa;
+  color: #333;
 }
 
-/* 헤더 로고 및 내비게이션 */
+/* -----------------------------
+   헤더 (로고 + 메뉴 + 로그아웃)
+   ----------------------------- */
 header {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  flex-wrap: wrap; /* 자동 줄바꿈 */
+  padding: 10px 20px;
   background: white;
   border-bottom: 1px solid #ddd;
-  padding: 10px 20px;
-  flex-wrap: wrap;
+  position: relative;
 }
+
+/* HARU 로고 중앙 정렬 */
 .logo {
+  flex: 1 1 100%;
+  text-align: center;
   font-weight: bold;
-  font-size: 1.5rem;
+  font-size: 1.8rem;
   color: #1a73e8;
+  margin: 5px 0 10px 0;
 }
+
+/* 네비게이션 메뉴 */
 nav {
   display: flex;
-  gap: 10px;
+  justify-content: center;
+  flex: 1 1 100%;
+  gap: 12px;
   flex-wrap: wrap;
 }
+
 nav a {
   text-decoration: none;
   color: #333;
-  padding: 6px 12px;
+  padding: 6px 14px;
   border-radius: 6px;
   transition: 0.2s;
+  font-weight: 500;
 }
+
 nav a.active,
 nav a:hover {
   background: #1a73e8;
   color: white;
 }
 
-/* 로그아웃 버튼 */
+/* 로그아웃 버튼 오른쪽 상단 고정 */
 .logout-btn {
+  position: absolute;
+  top: 12px;
+  right: 18px;
   background: #333;
   color: white;
   border: none;
   border-radius: 6px;
   padding: 6px 12px;
   cursor: pointer;
+  font-size: 0.95rem;
+  transition: 0.2s;
+}
+.logout-btn:hover {
+  background: #000;
 }
 
-/* 🔹 표 반응형 */
+/* -----------------------------
+   메인 공통
+   ----------------------------- */
+main {
+  padding: 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+h2 {
+  text-align: center;
+  color: #333;
+  margin-bottom: 20px;
+}
+
+/* -----------------------------
+   필터 박스
+   ----------------------------- */
+.filter-box {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+  align-items: center;
+  margin: 10px auto 20px auto;
+  background: #f5f5f5;
+  padding: 10px;
+  border-radius: 8px;
+  max-width: 900px;
+}
+
+.filter-box label {
+  font-weight: bold;
+  margin-right: 4px;
+}
+.filter-box input,
+.filter-box select {
+  padding: 6px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  min-width: 120px;
+}
+.filter-box button {
+  background: #1a73e8;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 6px 12px;
+  cursor: pointer;
+}
+.filter-box button:hover {
+  background: #0f5fd0;
+}
+
+/* 엑셀 / PDF 버튼 */
+.export-btn { background: #2e7d32; }
+.export-btn:hover { background: #27672b; }
+.pdf-btn { background: #c62828; }
+.pdf-btn:hover { background: #a91f1f; }
+
+/* -----------------------------
+   테이블
+   ----------------------------- */
 table {
   width: 100%;
   border-collapse: collapse;
+  margin-top: 10px;
+  background: white;
 }
 th, td {
   padding: 8px;
@@ -63,56 +156,129 @@ th, td {
 th {
   background-color: #f0f0f0;
 }
-table-wrapper {
+.status-resolved {
+  color: green;
+  font-weight: bold;
+}
+.status-pending {
+  color: orange;
+  font-weight: bold;
+}
+
+/* 표 가로 스크롤 */
+table-wrapper, .table-container {
   overflow-x: auto;
 }
 
-/* 🔹 필터박스 반응형 */
-.filter-box {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
+/* -----------------------------
+   버튼 스타일
+   ----------------------------- */
+button {
+  font-family: inherit;
+  font-size: 0.95rem;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  padding: 6px 12px;
+  transition: 0.2s;
+}
+button.primary {
+  background: #1a73e8;
+  color: white;
+}
+button.primary:hover {
+  background: #0d57c5;
+}
+button.secondary {
+  background: #ddd;
+}
+button.secondary:hover {
+  background: #ccc;
+}
+button.danger {
+  background: #e53935;
+  color: white;
+}
+button.danger:hover {
+  background: #c62828;
+}
+
+/* -----------------------------
+   모달 (상세/수정 등)
+   ----------------------------- */
+#detailModal {
+  position: fixed;
+  inset: 0;
+  display: none;
   justify-content: center;
   align-items: center;
-  margin: 10px auto;
-  background: #f5f5f5;
-  padding: 10px;
-  border-radius: 8px;
-  max-width: 95%;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 999;
 }
-.filter-box input,
-.filter-box select {
-  flex: 1;
-  min-width: 120px;
+.modal-content {
+  background: white;
+  padding: 20px;
+  border-radius: 10px;
+  width: 320px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+.modal-content h3 {
+  text-align: center;
+  margin-bottom: 10px;
+}
+.modal-content input,
+.modal-content select {
+  width: 100%;
+  margin: 5px 0;
   padding: 6px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
 }
 
-/* 🔹 폼 레이아웃 */
-main {
-  padding: 10px;
-}
-input, select, button {
-  font-size: 1rem;
+/* -----------------------------
+   푸터
+   ----------------------------- */
+footer {
+  text-align: center;
+  font-size: 0.85rem;
+  color: #666;
+  margin-top: 40px;
+  padding-bottom: 10px;
 }
 
-/* 🔹 모바일 최적화 */
+/* -----------------------------
+   반응형 대응
+   ----------------------------- */
 @media (max-width: 768px) {
   header {
     flex-direction: column;
-    align-items: flex-start;
+    align-items: center;
+  }
+  .logo {
+    font-size: 1.4rem;
+    margin-bottom: 6px;
   }
   nav {
-    width: 100%;
-    justify-content: space-around;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  .logout-btn {
+    position: static;
+    margin-top: 8px;
   }
   .filter-box {
     flex-direction: column;
     align-items: stretch;
+    max-width: 100%;
+  }
+  .filter-box label {
+    display: block;
   }
   table {
     font-size: 0.85rem;
   }
   button {
     width: 100%;
+    margin-top: 4px;
   }
 }
