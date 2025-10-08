@@ -1,24 +1,30 @@
-import { app, auth, db } from "./auth.js";
-import { collection, addDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { auth, db } from "./auth.js";
 import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { collection, addDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-let currentUserEmail = null;
+let currentUser = null;
 
-onAuthStateChanged(auth, (user) => {
-  if (!user) location.href = "signup.html";
-  else {
-    currentUserEmail = user.email;
-    document.getElementById("staffName").value = user.displayName || "알바생";
-  }
+onAuthStateChanged(auth, (u)=>{
+  if(!u) location.href="signup.html";
+  currentUser = u;
+  document.getElementById("staffName").value = u?.displayName || "";
 });
 
-const linenContainer = document.getElementById("linenContainer");
-document.getElementById("addItem").addEventListener("click", () => {
-  const div = document.createElement("div");
-  div.className = "linen-row";
-  div.innerHTML = `
+document.getElementById("btnLogout").onclick = async ()=>{
+  await signOut(auth);
+  location.href="signup.html";
+};
+
+const items = document.getElementById("items");
+function addRow(){
+  const row = document.createElement("div");
+  row.className="linen-row";
+  row.style.display="grid";
+  row.style.gridTemplateColumns="1fr 120px";
+  row.style.gap="8px";
+  row.style.marginTop="8px";
+  row.innerHTML = `
     <select class="linenType">
-      <option value="">린넨 종류 선택</option>
       <option>수건타월</option>
       <option>싱글 매트커버</option>
       <option>싱글 이불 커버</option>
@@ -28,47 +34,48 @@ document.getElementById("addItem").addEventListener("click", () => {
       <option>배게커버</option>
       <option>발매트</option>
     </select>
-    <input type="number" class="linenCount" placeholder="수량" min="0">
-    <button type="button" class="removeItem">삭제</button>
+    <input type="number" class="qty" min="1" value="1" />
   `;
-  linenContainer.appendChild(div);
-  div.querySelector(".removeItem").onclick = () => div.remove();
-});
-
-function collectLinenItems() {
-  const rows = document.querySelectorAll(".linen-row");
-  const items = [];
-  rows.forEach((row) => {
-    const linenType = row.querySelector(".linenType").value;
-    const receivedCount = parseInt(row.querySelector(".linenCount").value || 0);
-    if (linenType) items.push({ linenType, receivedCount });
-  });
-  return items;
+  items.appendChild(row);
 }
+function removeRow(){
+  const rows = items.querySelectorAll(".linen-row");
+  if(rows.length>0) rows[rows.length-1].remove();
+}
+document.getElementById("addItem").onclick = addRow;
+document.getElementById("removeItem").onclick = removeRow;
+addRow();
 
-document.getElementById("saveBtn").addEventListener("click", async () => {
-  const staffName = document.getElementById("staffName").value.trim();
+document.getElementById("incomingForm").addEventListener("submit", async (e)=>{
+  e.preventDefault();
   const date = document.getElementById("date").value;
-  const buildingId = document.getElementById("buildingSelect").value;
-  const items = collectLinenItems();
-  if (!staffName || !date || !buildingId || items.length === 0) {
-    alert("모든 필드를 입력하세요.");
+  const staffName = document.getElementById("staffName").value.trim();
+  const buildingId = document.getElementById("buildingId").value;
+
+  const list=[];
+  items.querySelectorAll(".linen-row").forEach(r=>{
+    const linenType = r.querySelector(".linenType").value;
+    const receivedCount = parseInt(r.querySelector(".qty").value||0);
+    if(linenType && receivedCount>0) list.push({ linenType, receivedCount });
+  });
+
+  if(!date || !staffName || !buildingId || list.length===0){
+    alert("모든 항목을 입력하세요.");
     return;
   }
-  try {
-    await addDoc(collection(db, "incoming"), {
-      staffName, date, buildingId, items,
-      status: "received", userEmail: currentUserEmail || "unknown", createdAt: new Date()
+
+  try{
+    await addDoc(collection(db,"incoming"),{
+      date, staffName, buildingId,
+      items:list,
+      status:"received",
+      userEmail: currentUser?.email || "unknown",
+      createdAt: new Date()
     });
-    alert("입고가 등록되었습니다!");
-    location.reload();
-  } catch (error) {
-    console.error("등록 실패:", error);
-    alert("등록 중 오류가 발생했습니다.");
+    alert("입고 등록 완료!");
+    e.target.reset();
+    items.innerHTML=""; addRow();
+  }catch(err){
+    alert("등록 실패: "+(err.message||err));
   }
 });
-
-document.getElementById("btnLogout").onclick = async () => {
-  await signOut(auth);
-  location.href = "signup.html";
-};
