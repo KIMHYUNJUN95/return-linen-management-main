@@ -1,5 +1,5 @@
 /* =============================
-   HARU Linen Management - Common CSS (2025 완전 반응형, 내림순 정렬)
+   HARU Linen Management - Common CSS (2025 완전 반응형, 날짜 길이 통일)
    ============================= */
 
 :root{
@@ -229,4 +229,11 @@ footer{
   #addItem, #removeItem {
     flex:1;
   }
+}
+
+/* ✅ 날짜 input 길이 담당자·건물 칸과 통일 */
+form input[type="date"] {
+  width: 100% !important;
+  max-width: 260px; /* 담당자/건물 input과 길이 통일 */
+  min-width: 180px;
 }
