@@ -5,6 +5,19 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>HARU 시스템</title>
   <link rel="stylesheet" href="common.css" />
+
+  <!-- ✅ PWA (앱 설치 지원) -->
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#1e90ff" />
+  <script>
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker
+        .register("service-worker.js")
+        .then(() => console.log("✅ Service Worker Registered"))
+        .catch(err => console.error("SW Registration Failed:", err));
+    }
+  </script>
+  <script src="install.js"></script>
 </head>
 <body>
 
@@ -12,31 +25,30 @@
   <div id="header-placeholder"></div>
 
   <main>
-    <section class="intro">
-      <h1>HARU 관리 시스템</h1>
-      <p>호텔 린넨, 유지보수, 분실물, 입출고 내역을 한눈에 관리하세요.</p>
-      <button class="primary" onclick="location.href='signup.html'">로그인 / 회원가입</button>
+    <section class="intro" style="text-align:center; margin-top:100px;">
+      <h1 style="font-size:2em; margin-bottom:10px;">HARU 관리 시스템</h1>
+      <p style="color:#555; margin-bottom:30px;">호텔 린넨, 유지보수, 분실물, 입출고 내역을 한눈에 관리하세요.</p>
+      <button class="primary" onclick="location.href='signup.html'" 
+              style="padding:12px 24px; border:none; border-radius:10px; background:#1e90ff; color:white; font-size:16px; cursor:pointer;">
+        로그인 / 회원가입
+      </button>
     </section>
   </main>
 
-  <footer>
+  <footer style="text-align:center; color:#777; padding:20px 0;">
     © 2025 HARU · by KIM HYUN JUN
   </footer>
 
   <!-- ✅ header.html 불러오기 및 header.js 초기화 -->
   <script type="module">
     import { initHeaderMenu } from "./header.js";
-
-    // header.html 불러와서 placeholder에 삽입
     fetch("header.html")
       .then(res => res.text())
       .then(html => {
         document.getElementById("header-placeholder").innerHTML = html;
-        initHeaderMenu(); // ✅ 헤더 로드 후 메뉴 작동 스크립트 실행
+        initHeaderMenu();
       })
-      .catch(err => {
-        console.error("헤더 로드 실패:", err);
-      });
+      .catch(err => console.error("헤더 로드 실패:", err));
   </script>
 
 </body>
