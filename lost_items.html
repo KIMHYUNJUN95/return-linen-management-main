@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>HARU 분실물 등록 / 수정</title>
+  <link rel="stylesheet" href="common.css" />
+  <style>
+    .lost-container{max-width:800px;margin:0 auto;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);padding:20px}
+    .lost-container h2{margin-bottom:20px;color:var(--text)}
+    form{display:flex;flex-direction:column;gap:14px}
+    textarea{resize:vertical;min-height:80px}
+    .photo-preview{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+    .photo-preview img{width:80px;height:80px;object-fit:cover;border-radius:8px;border:1px solid var(--border)}
+    button.primary{width:100%;margin-top:10px}
+  </style>
+</head>
+<body>
+  <div id="header-placeholder"></div>
+  <main>
+    <div class="lost-container">
+      <h2 id="formTitle">분실물 등록</h2>
+      <form id="lostForm">
+        <label for="building">건물 선택</label>
+        <select id="building" required>
+          <option value="">건물을 선택하세요</option>
+          <option value="아라키초A">아라키초 A</option>
+          <option value="아라키초B">아라키초 B</option>
+          <option value="다이쿄초">다이쿄초</option>
+          <option value="가부키초">가부키초</option>
+          <option value="다카다노바바">다카다노바바</option>
+          <option value="오쿠보1">오쿠보1</option>
+          <option value="오쿠보2">오쿠보2</option>
+          <option value="오쿠보4">오쿠보4</option>
+        </select>
+
+        <label for="room">객실명</label>
+        <input type="text" id="room" placeholder="예: A201, B302 등" required />
+
+        <label for="staff">담당자 이름</label>
+        <input type="text" id="staff" placeholder="담당자 이름 입력" required />
+
+        <label for="itemName">분실물/내용</label>
+        <input type="text" id="itemName" placeholder="예: 검정색 우산, 지갑 등" />
+
+        <label for="desc">세부 설명</label>
+        <textarea id="desc" placeholder="예: 위치, 특징, 추가 비고 등"></textarea>
+
+        <label for="status">상태</label>
+        <select id="status">
+          <option value="보관중">보관중</option>
+          <option value="회수">회수</option>
+          <option value="폐기">폐기</option>
+        </select>
+
+        <label for="photo">사진 등록</label>
+        <input type="file" id="photo" accept="image/*" multiple />
+        <div class="photo-preview" id="photoPreview"></div>
+
+        <button type="submit" class="primary" id="submitBtn">등록하기</button>
+      </form>
+    </div>
+  </main>
+  <footer style="text-align:center;color:#777;padding:16px 0;">© 2025 HARU · by KIM HYUN JUN</footer>
+
+  <script type="module">
+    import { db, storage } from "./storage.js";
+    import { collection, addDoc, doc, getDoc, updateDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+    import { ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
+    import { initHeaderMenu } from "./header.js";
+
+    fetch("header.html").then(res=>res.text()).then(html=>{
+      document.getElementById("header-placeholder").innerHTML=html; initHeaderMenu();
+    });
+
+    const urlParams=new URLSearchParams(location.search);
+    const editId=urlParams.get("edit");
+    const form=document.getElementById("lostForm");
+    const title=document.getElementById("formTitle");
+    const submitBtn=document.getElementById("submitBtn");
+    const photoInput=document.getElementById("photo");
+    const preview=document.getElementById("photoPreview");
+    let existingPhotos=[];
+
+    photoInput.addEventListener("change",()=>{
+      preview.innerHTML="";
+      [...photoInput.files].forEach(file=>{
+        const img=document.createElement("img");
+        img.src=URL.createObjectURL(file);
+        preview.appendChild(img);
+      });
+    });
+
+    if(editId){
+      title.textContent="분실물 수정";
+      submitBtn.textContent="수정 완료";
+      const docRef=doc(db,"lostItems",editId);
+      const snap=await getDoc(docRef);
+      if(snap.exists()){
+        const d=snap.data();
+        document.getElementById("building").value=d.building||"";
+        document.getElementById("room").value=d.room||"";
+        document.getElementById("staff").value=d.staffName||d.createdBy||"";
+        document.getElementById("itemName").value=d.item||"";
+        document.getElementById("desc").value=d.description||"";
+        document.getElementById("status").value=d.status||"보관중";
+        existingPhotos=d.photos||d.imageUrls||[];
+        preview.innerHTML=existingPhotos.map(url=>`<img src="${url}">`).join("");
+      }
+    }
+
+    form.addEventListener("submit",async(e)=>{
+      e.preventDefault();
+      submitBtn.disabled=true;
+
+      const building=document.getElementById("building").value.trim();
+      const room=document.getElementById("room").value.trim();
+      const staffName=document.getElementById("staff").value.trim();
+      const item=document.getElementById("itemName").value.trim();
+      const desc=document.getElementById("desc").value.trim();
+      const status=document.getElementById("status").value.trim();
+
+      if(!building||!room||!staffName){
+        alert("건물/객실/담당자 이름을 입력해주세요.");
+        submitBtn.disabled=false; return;
+      }
+
+      const photos=[...photoInput.files];
+      let photoUrls=[...existingPhotos];
+
+      for(const file of photos){
+        const storageRef=ref(storage,`lostItems/${Date.now()}_${file.name}`);
+        await uploadBytes(storageRef,file);
+        const url=await getDownloadURL(storageRef);
+        photoUrls.push(url);
+      }
+
+      const data={
+        building, room, staffName,
+        item, description:desc, status,
+        photos: photoUrls,
+        createdAt: serverTimestamp()
+      };
+
+      try{
+        if(editId){
+          await updateDoc(doc(db,"lostItems",editId),data);
+          alert("✅ 수정이 완료되었습니다.");
+        }else{
+          await addDoc(collection(db,"lostItems"),data);
+          alert("✅ 등록이 완료되었습니다.");
+        }
+        location.href="lost_items_list.html";
+      }catch(err){
+        alert("오류 발생: "+(err.message||err));
+      }finally{
+        submitBtn.disabled=false;
+      }
+    });
+  </script>
+</body>
+</html>

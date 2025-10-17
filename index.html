@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>HARU 시스템</title>
+  <link rel="stylesheet" href="common.css" />
+</head>
+<body>
+
+  <!-- 공통 헤더 -->
+  <div id="header-placeholder"></div>
+
+  <main>
+    <section class="intro">
+      <h1>HARU 관리 시스템</h1>
+      <p>호텔 린넨, 유지보수, 분실물, 입출고 내역을 한눈에 관리하세요.</p>
+      <button class="primary" onclick="location.href='signup.html'">로그인 / 회원가입</button>
+    </section>
+  </main>
+
+  <footer>
+    © 2025 HARU · by KIM HYUN JUN
+  </footer>
+
+  <!-- ✅ header.html 불러오기 및 header.js 초기화 -->
+  <script type="module">
+    import { initHeaderMenu } from "./header.js";
+
+    // header.html 불러와서 placeholder에 삽입
+    fetch("header.html")
+      .then(res => res.text())
+      .then(html => {
+        document.getElementById("header-placeholder").innerHTML = html;
+        initHeaderMenu(); // ✅ 헤더 로드 후 메뉴 작동 스크립트 실행
+      })
+      .catch(err => {
+        console.error("헤더 로드 실패:", err);
+      });
+  </script>
+
+</body>
+</html>
