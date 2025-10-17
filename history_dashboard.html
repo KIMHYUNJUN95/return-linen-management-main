@@ -6,7 +6,7 @@
   <title>HARU 내역 관리</title>
   <link rel="stylesheet" href="common.css" />
   <style>
-    /* 카드형 스타일 통합 */
+    /* ✅ 카드형 스타일 통합 */
     .history-section {
       display: flex;
       flex-direction: column;
@@ -76,6 +76,18 @@
     .export-buttons button:hover {
       opacity: 0.9;
     }
+
+    /* ✅ 모바일 날짜 표시 수정 */
+    input[type="date"] {
+      color: #333;
+      background-color: #fff;
+      appearance: none;
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      padding: 6px 10px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+    }
   </style>
 </head>
 
@@ -88,6 +100,11 @@
 
       <!-- 🔍 필터 -->
       <div class="filter" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px;">
+        <select id="filterType">
+          <option value="">전체 구분</option>
+          <option value="incoming">입고</option>
+          <option value="returns">반품</option>
+        </select>
         <select id="filterBuilding">
           <option value="">전체 건물</option>
           <option value="아라키초A">아라키초A</option>

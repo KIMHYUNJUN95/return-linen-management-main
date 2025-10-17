@@ -1,4 +1,4 @@
-// history_dashboard_fast.js — 카드형 통합 + 엑셀/PDF + 속도개선 + 수정/삭제 모달
+// history_dashboard_fast.js — 카드형 통합 + 엑셀/PDF + 수정/삭제 모달
 import { db } from "./storage.js";
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import {
@@ -38,7 +38,7 @@ function normalizeLinenName(name) {
 }
 
 const cardBody = document.getElementById("historyCardBody");
-let allData = []; // 전역 데이터 캐시
+let allData = []; // 전역 캐시
 
 /* ✅ 로딩 UI */
 function showLoading() {
@@ -54,19 +54,15 @@ function renderCards(list) {
   list.sort((a, b) => new Date(b.date) - new Date(a.date));
 
   cardBody.innerHTML = list.map(d => `
-    <div class="history-card" style="padding:12px;border:1px solid #e3e6eb;border-radius:10px;background:#fff;margin-bottom:10px;">
-      <header style="display:flex;justify-content:space-between;align-items:center;font-weight:600;margin-bottom:6px;">
+    <div class="history-card">
+      <header>
         <span>${d.type === "입고" ? "📦 입고" : "🧺 반품"}</span>
-        <span style="font-size:13px;color:#777;">${d.date}</span>
+        <span class="meta">${d.date}</span>
       </header>
-      <div style="font-size:14px;margin:4px 0;">건물: ${d.building}</div>
-      <div style="font-size:14px;margin:4px 0;">담당자: ${d.staff}</div>
-      <div style="font-size:13px;margin:4px 0;color:#555;">
-        ${d.items.map(i => `${i.linenType} ${i.count}개`).join(", ")}
-      </div>
-      ${d.source === "old"
-        ? '<span style="display:inline-block;background:#888;color:#fff;border-radius:8px;padding:2px 8px;font-size:12px;">이전기록</span>'
-        : ""}
+      <div class="content">건물: ${d.building}</div>
+      <div class="content">담당자: ${d.staff}</div>
+      <div class="content">${d.items.map(i => `${i.linenType} ${i.count}개`).join(", ")}</div>
+      ${d.source === "old" ? `<span class="legacy-label">이전기록</span>` : ""}
       <div style="margin-top:8px;display:flex;gap:8px;justify-content:flex-end;">
         <button class="btn-edit" data-id="${d.id}" data-col="${d.col}" data-source="${d.source}" style="background:#007bff;color:#fff;border:none;padding:6px 12px;border-radius:6px;cursor:pointer;">수정</button>
         <button class="btn-del" data-id="${d.id}" data-col="${d.col}" data-source="${d.source}" style="background:#d32f2f;color:#fff;border:none;padding:6px 12px;border-radius:6px;cursor:pointer;">삭제</button>
@@ -74,15 +70,10 @@ function renderCards(list) {
     </div>`).join("");
 
   document.querySelectorAll(".btn-edit").forEach(b => {
-    b.addEventListener("click", () =>
-      openEditModal(b.dataset.id, b.dataset.col, b.dataset.source)
-    );
+    b.addEventListener("click", () => openEditModal(b.dataset.id, b.dataset.col, b.dataset.source));
   });
-
   document.querySelectorAll(".btn-del").forEach(b => {
-    b.addEventListener("click", () =>
-      deleteRecord(b.dataset.id, b.dataset.col, b.dataset.source)
-    );
+    b.addEventListener("click", () => deleteRecord(b.dataset.id, b.dataset.col, b.dataset.source));
   });
 }
 
@@ -112,6 +103,12 @@ function parseSnap(snap, type, source) {
 async function loadHistory() {
   showLoading();
   allData = [];
+
+  const typeFilter = document.getElementById("filterType")?.value;
+  const buildingFilter = document.getElementById("filterBuilding")?.value;
+  const startDate = document.getElementById("startDate")?.value;
+  const endDate = document.getElementById("endDate")?.value;
+
   const jobs = [
     { db, col: "incoming", type: "입고", source: "new" },
     { db, col: "returns", type: "반품", source: "new" },
@@ -122,9 +119,19 @@ async function loadHistory() {
   for (const job of jobs) {
     (async () => {
       try {
-        const q = query(collection(job.db, job.col), orderBy("date", "desc"), limit(50));
+        const q = query(collection(job.db, job.col), orderBy("date", "desc"), limit(100));
         const snap = await getDocs(q);
-        const parsed = parseSnap(snap, job.type, job.source);
+        let parsed = parseSnap(snap, job.type, job.source);
+
+        // ✅ 필터 적용
+        parsed = parsed.filter(d => {
+          if (typeFilter && d.col !== typeFilter) return false;
+          if (buildingFilter && d.building !== buildingFilter) return false;
+          if (startDate && d.date < startDate) return false;
+          if (endDate && d.date > endDate) return false;
+          return true;
+        });
+
         allData.push(...parsed);
         renderCards(allData);
       } catch (err) {
@@ -222,4 +229,8 @@ async function deleteRecord(id, col, source) {
 }
 
 /* ✅ 실행 */
-window.addEventListener("DOMContentLoaded", loadHistory);
+window.addEventListener("DOMContentLoaded", () => {
+  document.getElementById("filterBtn").addEventListener("click", loadHistory);
+  document.getElementById("resetBtn").addEventListener("click", loadHistory);
+  loadHistory();
+});
