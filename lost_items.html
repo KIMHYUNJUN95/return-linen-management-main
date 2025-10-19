@@ -95,9 +95,8 @@
     © 2025 HARU · by KIM HYUN JUN
   </footer>
 
-  <!-- ✅ (추가) 미리보기 전용: 파이어베이스와 분리된 일반 스크립트 -->
+  <!-- ✅ 미리보기 전용 스크립트 -->
   <script>
-    // Firebase import가 실패해도 미리보기는 항상 동작하도록 분리
     (function() {
       const input = document.getElementById("photo");
       const preview = document.getElementById("photoPreview");
@@ -116,9 +115,9 @@
     })();
   </script>
 
-  <!-- ✅ 모듈: 헤더 로드 + 수정 모드/저장 로직 (원본 그대로 유지) -->
+  <!-- ✅ 저장 로직 수정 (등록자 정보 추가) -->
   <script type="module">
-    import { db, storage } from "./storage.js";
+    import { db, storage, auth } from "./storage.js";
     import {
       collection, addDoc, doc, getDoc, updateDoc, serverTimestamp
     } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
@@ -144,7 +143,7 @@
 
     let existingPhotos = [];
 
-    // ✅ (원본 유지) 수정 모드면 기존 데이터 로드
+    // ✅ 수정 모드일 경우 기존 데이터 불러오기
     if (editId) {
       title.textContent = "분실물 수정";
       submitBtn.textContent = "수정 완료";
@@ -162,7 +161,7 @@
       }
     }
 
-    // ✅ 등록 or 수정 저장
+    // ✅ 등록 / 수정
     form.addEventListener("submit", async (e) => {
       e.preventDefault();
       submitBtn.disabled = true;
@@ -176,7 +175,11 @@
       let photoUrls = [...existingPhotos];
 
       try {
-        // 새로 올린 사진 업로드
+        // 로그인 사용자 정보
+        const user = auth.currentUser;
+        const createdBy = user ? (user.displayName || user.email) : "관리자";
+
+        // 새로 업로드한 사진 처리
         for (const f of photos) {
           const storageRef = ref(storage, `lost_items/${Date.now()}_${f.name}`);
           await uploadBytes(storageRef, f);
@@ -191,7 +194,7 @@
           status,
           imageUrls: photoUrls,
           createdAt: serverTimestamp(),
-          createdBy: "관리자" // 나중에 로그인 사용자 이름으로 대체
+          createdBy
         };
 
         if (editId) {
