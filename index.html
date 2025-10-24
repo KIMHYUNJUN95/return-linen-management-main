@@ -1,0 +1,223 @@
+﻿<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>HARU 운영 관리 시스템</title>
+  <meta name="description" content="린넨, 시설 유지보수, 분실물, 주문, 근무기록을 통합 관리합니다." />
+  
+  <!-- PWA -->
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#0a0e14" />
+  <link rel="icon" href="icons/icon-192.png" />
+  
+  <!-- Styles -->
+  <link rel="stylesheet" href="common.css" />
+
+  <style>
+    .hero-section {
+      min-height: 80vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: var(--space-8) var(--space-4);
+      position: relative;
+    }
+
+    .hero-title {
+      font-family: var(--font-display);
+      font-size: var(--font-size-4xl);
+      font-weight: 900;
+      margin-bottom: var(--space-4);
+      background: linear-gradient(135deg, hsl(var(--color-primary)), hsl(var(--color-secondary)));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      animation: fadeIn 0.8s ease-out;
+    }
+
+    .hero-subtitle {
+      font-size: var(--font-size-xl);
+      color: hsl(var(--color-text-secondary));
+      margin-bottom: var(--space-8);
+      max-width: 600px;
+      animation: fadeIn 1s ease-out 0.2s both;
+    }
+
+    .hero-cta {
+      display: flex;
+      gap: var(--space-4);
+      flex-wrap: wrap;
+      justify-content: center;
+      animation: fadeIn 1.2s ease-out 0.4s both;
+    }
+
+    .features {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: var(--space-6);
+      padding: var(--space-8) var(--space-4);
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .feature-card {
+      background: hsla(var(--color-bg-glass), 0.4);
+      backdrop-filter: blur(var(--blur-md));
+      border: 1px solid hsl(var(--color-border-glass));
+      border-radius: var(--radius-lg);
+      padding: var(--space-6);
+      text-align: center;
+      transition: all var(--transition-base);
+    }
+
+    .feature-card:hover {
+      transform: translateY(-4px);
+      box-shadow: var(--shadow-lg), var(--shadow-glow);
+      border-color: hsl(var(--color-primary) / 0.5);
+    }
+
+    .feature-icon {
+      font-size: var(--font-size-4xl);
+      margin-bottom: var(--space-4);
+    }
+
+    .feature-title {
+      font-size: var(--font-size-xl);
+      font-weight: 700;
+      margin-bottom: var(--space-2);
+      color: hsl(var(--color-text-primary));
+    }
+
+    .feature-desc {
+      color: hsl(var(--color-text-secondary));
+      font-size: var(--font-size-sm);
+    }
+
+    @media (max-width: 768px) {
+      .hero-title {
+        font-size: var(--font-size-3xl);
+      }
+
+      .hero-subtitle {
+        font-size: var(--font-size-lg);
+      }
+
+      .hero-cta {
+        flex-direction: column;
+        width: 100%;
+      }
+
+      .hero-cta .btn {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- 3D Background Canvas -->
+  <canvas id="bg-canvas"></canvas>
+
+  <!-- Header -->
+  <div id="header-placeholder"></div>
+
+  <!-- Main Content -->
+  <main>
+    <!-- Hero Section -->
+    <section class="hero-section">
+      <h1 class="hero-title">HARU 운영 관리 시스템</h1>
+      <p class="hero-subtitle">
+        린넨, 시설 유지보수, 분실물, 주문, 근무기록을 효율적으로 통합 관리하세요.
+      </p>
+      <div class="hero-cta">
+        <a href="signup.html" class="btn btn-primary btn-lg" data-testid="button-get-started">
+          시작하기
+        </a>
+        <a href="board.html" class="btn btn-secondary btn-lg" data-testid="button-dashboard">
+          대시보드
+        </a>
+      </div>
+    </section>
+
+    <!-- Features -->
+    <section class="features">
+      <div class="feature-card" data-testid="feature-linen">
+        <div class="feature-icon">📦</div>
+        <h3 class="feature-title">린넨 관리</h3>
+        <p class="feature-desc">입고/재고/출고 흐름을 한눈에 관리</p>
+      </div>
+
+      <div class="feature-card" data-testid="feature-maintenance">
+        <div class="feature-icon">🔧</div>
+        <h3 class="feature-title">시설 유지보수</h3>
+        <p class="feature-desc">객실 설비 점검과 수리 요청을 체계적으로 처리</p>
+      </div>
+
+      <div class="feature-card" data-testid="feature-lost-items">
+        <div class="feature-icon">🔍</div>
+        <h3 class="feature-title">분실물 관리</h3>
+        <p class="feature-desc">분실물 등록과 인수인계 이력 관리</p>
+      </div>
+
+      <div class="feature-card" data-testid="feature-orders">
+        <div class="feature-icon">🛒</div>
+        <h3 class="feature-title">발주 관리</h3>
+        <p class="feature-desc">소모품 발주와 승인 내역을 효율적으로 관리</p>
+      </div>
+
+      <div class="feature-card" data-testid="feature-worklog">
+        <div class="feature-icon">⏰</div>
+        <h3 class="feature-title">근무기록</h3>
+        <p class="feature-desc">근무시간과 작업 내역 기록</p>
+      </div>
+
+      <div class="feature-card" data-testid="feature-notices">
+        <div class="feature-icon">📢</div>
+        <h3 class="feature-title">공지사항</h3>
+        <p class="feature-desc">업무 공지와 주요 알림 전달</p>
+      </div>
+    </section>
+  </main>
+
+  <!-- Footer -->
+  <footer>
+    © 2025 <strong>HARU_KIM HYUN JUN</strong>
+  </footer>
+
+  <!-- PWA Service Worker -->
+  <script>
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker
+        .register("service-worker.js")
+        .then(() => console.log("✅ Service Worker Registered"))
+        .catch(err => console.error("❌ Service Worker Registration Failed:", err));
+    }
+  </script>
+
+  <!-- Install Prompt -->
+  <script src="install.js"></script>
+
+  <!-- 3D Background -->
+  <script type="module" src="scripts/bg/scene.js"></script>
+
+  <!-- Header -->
+  <script type="module">
+    import { initHeaderMenu } from "./header.js";
+    fetch("header.html")
+      .then(res => res.text())
+      .then(html => {
+        document.getElementById("header-placeholder").innerHTML = html;
+        initHeaderMenu();
+      })
+      .catch(err => console.error("❌ 헤더 로드 실패:", err));
+  </script>
+
+  <!-- Global Notice Popup -->
+  <script type="module" src="notice_popup.js"></script>
+
+  <!-- Text normalization for Korean (runtime fix) -->
+  <script type="module" src="index_text_fix.js"></script>
+</body>
+</html>

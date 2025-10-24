@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HARU 게시판</title>
+  <link rel="stylesheet" href="common.css">
+  <style>
+    .board-container {
+      max-width: 900px;
+      margin: 20px auto;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: var(--shadow);
+    }
+    .post-form input,
+    .post-form textarea {
+      width: 100%;
+      margin: 6px 0;
+    }
+
+    /* ✅ 공지 체크박스 가로 정렬 */
+    .pinned-label {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 600;
+      color: var(--text);
+      cursor: pointer;
+      margin: 8px 0 12px 0;
+    }
+    .pinned-label input {
+      width: 18px;
+      height: 18px;
+      cursor: pointer;
+    }
+
+    .post-list {
+      margin-top: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .post {
+      background: var(--elev);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px;
+      white-space: pre-wrap; /* 본문 줄바꿈 보존(추가적으로 JS에서 <br> 처리도 함) */
+    }
+    .post-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .post-author {
+      font-size: 13px;
+      color: var(--muted);
+    }
+    .post-actions button { margin-left: 6px; }
+    .pinned { border: 2px solid var(--accent); }
+
+    /* ✅ 댓글 */
+    .comment-box {
+      margin-top: 10px;
+      border-top: 1px solid var(--border);
+      padding-top: 8px;
+    }
+    .comment-list { display: flex; flex-direction: column; gap: 6px; }
+    .comment {
+      background: rgba(255, 255, 255, 0.03);
+      border-radius: 8px;
+      padding: 8px;
+    }
+    .comment small { color: var(--muted); }
+    .comment .cmt-actions { float: right; display: inline-flex; gap: 6px; }
+    .comment-input {
+      width: 100%;
+      margin-top: 6px;
+      min-height: 56px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 8px;
+      resize: vertical;
+    }
+
+    /* ✅ 모달(수정) */
+    .modal-bg {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.5);
+      display: flex; justify-content: center; align-items: center;
+      z-index: 9999;
+    }
+    .modal {
+      background: #fff;
+      border-radius: 12px;
+      padding: 20px;
+      width: 90%;
+      max-width: 480px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+    }
+    .modal input, .modal textarea {
+      width: 100%;
+      margin: 8px 0;
+      padding: 8px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: 14px;
+    }
+    .modal .modal-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    @media (max-width: 768px){
+      .board-container{padding:16px}
+      .post-actions{width:100%;display:flex;gap:6px;justify-content:flex-end}
+    }
+  </style>
+</head>
+<body>
+  <div id="header-placeholder"></div>
+
+  <main>
+    <div class="board-container">
+      <h2>공지 / 메모 게시판</h2>
+
+      <!-- 작성 폼 -->
+      <form id="postForm" class="post-form">
+        <input type="text" id="title" placeholder="제목을 입력하세요" required>
+        <textarea id="content" placeholder="내용을 입력하세요" required></textarea>
+
+        <!-- ✅ 가로 정렬된 체크박스 -->
+        <label for="pinned" class="pinned-label">
+          <span>공지로 고정</span>
+          <input type="checkbox" id="pinned">
+        </label>
+
+        <button type="submit" class="primary">등록</button>
+      </form>
+
+      <!-- 목록 -->
+      <section id="postList" class="post-list"></section>
+    </div>
+  </main>
+
+  <footer style="text-align:center;color:#777;padding:20px 0;">
+    © 2025 HARU · by KIM HYUN JUN
+  </footer>
+
+  <script type="module" src="board.js"></script>
+  <script type="module">
+    import { initHeaderMenu } from "./header.js";
+    fetch("header.html").then(r=>r.text()).then(html=>{
+      document.getElementById("header-placeholder").innerHTML = html;
+      initHeaderMenu();
+    });
+  </script>
+</body>
+</html>

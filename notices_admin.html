@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>HARU 공지 관리</title>
+  <link rel="stylesheet" href="common.css" />
+</head>
+<body>
+  <canvas id="bg-canvas"></canvas>
+  <div id="header-placeholder"></div>
+
+  <main>
+    <div class="container-md" style="padding: var(--space-6);">
+      <h1>📢 공지 관리</h1>
+
+      <div class="glass-card" style="margin-top: var(--space-6);">
+        <h3 style="margin-bottom: var(--space-4);">새 공지 작성</h3>
+        <form id="noticeForm">
+          <div class="form-group">
+            <label class="form-label" for="title">제목</label>
+            <input type="text" id="title" class="form-input" required data-testid="input-title" />
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="content">내용</label>
+            <textarea id="content" class="form-textarea" rows="8" required data-testid="textarea-content"></textarea>
+          </div>
+
+          <div class="form-group">
+            <label style="display:flex;align-items:center;gap:var(--space-2);cursor:pointer;">
+              <input type="checkbox" id="important" data-testid="checkbox-important" />
+              <span class="form-label" style="margin:0;">중요 공지로 표시</span>
+            </label>
+          </div>
+
+          <button type="submit" class="btn btn-primary" style="width:100%;" data-testid="button-submit">
+            공지 등록
+          </button>
+        </form>
+      </div>
+
+      <h3 style="margin-top: var(--space-8); margin-bottom: var(--space-4);">공지 목록</h3>
+      <div id="noticesList" data-testid="container-notices-list"></div>
+    </div>
+  </main>
+
+  <footer>© 2025 <strong>HARU_KIM HYUN JUN</strong></footer>
+
+  <script type="module" src="scripts/bg/scene.js"></script>
+  <script type="module">
+    import { initHeaderMenu } from "./header.js";
+    fetch("header.html").then(r=>r.text()).then(h=>{
+      document.getElementById("header-placeholder").innerHTML=h;
+      initHeaderMenu();
+    });
+  </script>
+  <script type="module" src="notices_admin.js"></script>
+</body>
+</html>

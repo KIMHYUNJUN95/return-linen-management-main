@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>HARU · 재고 관리</title>
+  <link rel="stylesheet" href="common.css"/>
+  <link rel="stylesheet" href="background.css"/>
+  <link rel="stylesheet" href="inventory.css"/>
+  <style>
+    /* ===============================
+       🏢 건물 탭 스타일 (디자인톤 유지)
+       =============================== */
+    .building-tabs {
+      display: flex;
+      gap: 10px;
+      overflow-x: auto;
+      padding: 10px 0 14px 2px;
+      scrollbar-width: none;
+    }
+    .building-tabs::-webkit-scrollbar {
+      display: none;
+    }
+    .building-tabs button {
+      background: rgba(255,255,255,0.08);
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 6px 14px;
+      font-weight: 600;
+      font-size: 14px;
+      cursor: pointer;
+      transition: 0.25s;
+      white-space: nowrap;
+    }
+    .building-tabs button:hover {
+      background: rgba(255,255,255,0.18);
+      transform: translateY(-1px);
+    }
+    .building-tabs button.active {
+      background: linear-gradient(135deg, #00b4d8, #0077b6);
+      color: #fff;
+      border: none;
+      box-shadow: 0 0 6px rgba(0,183,255,0.6);
+    }
+
+    /* 🔍 검색 + 초기화 버튼 한 줄 정렬 */
+    .search-wrap {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    #invSearch {
+      flex: 1;
+    }
+
+    #btnResetSearch {
+      border: 1px solid var(--border);
+      background: var(--elev);
+      color: var(--text);
+      border-radius: 8px;
+      height: 36px;
+      padding: 0 14px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 600;
+      transition: 0.2s;
+      white-space: nowrap;
+    }
+    #btnResetSearch:hover {
+      opacity: 0.85;
+      background: rgba(255,255,255,0.05);
+    }
+
+    /* ===============================
+       📋 리스트 스크롤 전용
+       =============================== */
+    .table-wrap {
+      background: var(--surface);
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+      margin-top: 20px;
+    }
+
+    .table-scroll {
+      max-height: 480px; /* 🔁 리스트만 스크롤 */
+      overflow-y: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 14px;
+      color: var(--text);
+      table-layout: fixed;
+    }
+
+    thead th {
+      position: sticky;
+      top: 0;
+      z-index: 2;
+      background: rgba(0, 0, 0, 0.05);
+      backdrop-filter: blur(6px);
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    th, td {
+      padding: 10px 12px;
+      border-bottom: 1px solid rgba(0,0,0,0.1);
+      text-align: left;
+      vertical-align: middle;
+    }
+
+    tr:hover td {
+      background: rgba(255,255,255,0.04);
+    }
+
+    @media (max-width: 768px) {
+      .table-scroll {
+        max-height: 360px;
+      }
+      th, td {
+        font-size: 13px;
+        padding: 8px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- 🌌 3D 배경 -->
+  <canvas id="bg-canvas"></canvas>
+
+  <!-- 🧭 헤더 -->
+  <div id="header-placeholder"></div>
+
+  <main class="inv-container">
+    <h2>재고 관리</h2>
+
+    <!-- 🏢 건물 탭 -->
+    <div class="building-tabs glass">
+      <button class="active" data-building="아라키초A">아라키초A</button>
+      <button data-building="아라키초B">아라키초B</button>
+      <button data-building="다이쿄초">다이쿄초</button>
+      <button data-building="가부키초">가부키초</button>
+      <button data-building="다카다노바바">다카다노바바</button>
+      <button data-building="오쿠보1">오쿠보1</button>
+      <button data-building="오쿠보2">오쿠보2</button>
+      <button data-building="오쿠보4">오쿠보4</button>
+    </div>
+
+    <!-- 🔍 필터 & 내보내기 -->
+    <section class="inv-filters glass">
+      <div class="group">
+        <label for="invBuilding">건물</label>
+        <select id="invBuilding">
+          <option value="">전체</option>
+          <option value="아라키초A">아라키초A</option>
+          <option value="아라키초B">아라키초B</option>
+          <option value="다이쿄초">다이쿄초</option>
+          <option value="가부키초">가부키초</option>
+          <option value="다카다노바바">다카다노바바</option>
+          <option value="오쿠보1">오쿠보1</option>
+          <option value="오쿠보2">오쿠보2</option>
+          <option value="오쿠보4">오쿠보4</option>
+        </select>
+      </div>
+
+      <div class="group search-wrap">
+        <label for="invSearch">검색</label>
+        <input id="invSearch" type="text" placeholder="품목명 검색"/>
+        <button id="btnResetSearch">초기화</button>
+      </div>
+
+      <div class="group actions">
+        <button id="btnExportInv" class="btn">📄 CSV 내보내기</button>
+      </div>
+    </section>
+
+    <!-- 🧾 재고 등록 / 수정 폼 -->
+    <section class="inv-form-card glass">
+      <h3 id="formTitle">품목 등록 / 수정</h3>
+
+      <div class="form-grid">
+        <label>건물
+          <select id="formBuilding" required>
+            <option value="아라키초A">아라키초A</option>
+            <option value="아라키초B">아라키초B</option>
+            <option value="다이쿄초">다이쿄초</option>
+            <option value="가부키초">가부키초</option>
+            <option value="다카다노바바">다카다노바바</option>
+            <option value="오쿠보1">오쿠보1</option>
+            <option value="오쿠보2">오쿠보2</option>
+            <option value="오쿠보4">오쿠보4</option>
+          </select>
+        </label>
+
+        <!-- ✅ 공통 품목 선택 -->
+        <label>공통 품목 선택
+          <select id="commonItemSelect">
+            <option value="">직접 입력</option>
+            <option value="all">🌐 공통 품목 전체 등록</option>
+          </select>
+        </label>
+
+        <label>품목명
+          <input id="formName" type="text" placeholder="예: 수건타월" required/>
+        </label>
+
+        <label>현재 재고
+          <input id="formQty" type="number" min="0" value="0" required/>
+        </label>
+
+        <label>최소 수량
+          <input id="formMin" type="number" min="0" value="0" required/>
+        </label>
+
+        <label>비고(선택)
+          <input id="formNote" type="text" placeholder="메모"/>
+        </label>
+      </div>
+
+      <div class="form-actions">
+        <button id="btnSaveItem" type="button" class="btn primary">💾 저장</button>
+        <button id="btnResetForm" type="button" class="btn ghost">🔄 폼 초기화</button>
+      </div>
+
+      <p class="help">목록에서 품목을 클릭하면 자동으로 불러와 수정할 수 있습니다.</p>
+    </section>
+
+    <!-- 📋 재고 목록 -->
+    <section class="table-wrap glass">
+      <div class="table-scroll">
+        <table>
+          <thead>
+            <tr>
+              <th>품목명</th>
+              <th class="t-right">재고 수량</th>
+              <th class="t-right">최소 수량</th>
+              <th>건물</th>
+              <th>최근 수정일</th>
+              <th style="width:150px;">관리</th>
+            </tr>
+          </thead>
+          <tbody id="invTbody">
+            <tr><td colspan="6">불러오는 중...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <footer style="text-align:center;color:#9fb0c6;padding:16px 0;">
+    © 2025 HARU · by KIM HYUN JUN
+  </footer>
+
+  <!-- ✅ 헤더 로드 -->
+  <script type="module">
+    import { initHeaderMenu } from "./header.js";
+    fetch("header.html").then(r=>r.text()).then(h=>{
+      document.getElementById("header-placeholder").innerHTML = h;
+      initHeaderMenu();
+    });
+  </script>
+
+  <!-- ✅ 검색 초기화 기능 -->
+  <script type="module">
+    const invSearch = document.getElementById("invSearch");
+    const btnResetSearch = document.getElementById("btnResetSearch");
+    btnResetSearch.addEventListener("click", () => {
+      invSearch.value = "";
+      invSearch.dispatchEvent(new Event("input"));
+    });
+  </script>
+
+  <!-- ✅ 재고관리 스크립트 -->
+  <script type="module" src="inventory.js"></script>
+</body>
+</html>

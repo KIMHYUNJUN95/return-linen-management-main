@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>HARU 로그인 / 회원가입</title>
+  <link rel="stylesheet" href="common.css" />
+  <style>
+    body {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      background: var(--bg);
+      margin: 0;
+    }
+    .auth-container {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 30px 26px;
+      width: 100%;
+      max-width: 380px;
+      text-align: center;
+      margin-top: 80px;
+    }
+    .logo {
+      font-weight: 800;
+      font-size: 24px;
+      color: var(--accent);
+      margin-bottom: 16px;
+    }
+    h2 {
+      margin-bottom: 10px;
+      font-size: 20px;
+    }
+    form {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-top: 10px;
+    }
+    input {
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 10px 12px;
+      font-size: 15px;
+      background: #fff;
+    }
+    input:focus {
+      border-color: var(--accent);
+      box-shadow: var(--focus);
+      outline: none;
+    }
+    button.primary {
+      width: 100%;
+      font-size: 15px;
+      margin-top: 8px;
+    }
+    .toggle-text {
+      margin-top: 14px;
+      color: var(--text-muted);
+      font-size: 14px;
+    }
+    .toggle-link {
+      color: var(--accent);
+      font-weight: 600;
+      cursor: pointer;
+    }
+    @media (max-width: 768px) {
+      .auth-container {
+        margin: 0 16px;
+        padding: 24px 18px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="header-placeholder"></div>
+  <main>
+    <div class="auth-container">
+      <div class="logo">HARU</div>
+      <h2 id="formTitle">로그인</h2>
+
+      <!-- 로그인 폼 -->
+      <form id="loginForm" autocomplete="on">
+        <input
+          type="email"
+          id="email"
+          placeholder="이메일"
+          required
+          autocomplete="username"
+        />
+        <input
+          type="password"
+          id="password"
+          placeholder="비밀번호"
+          required
+          autocomplete="current-password"
+        />
+        <button type="submit" class="primary">로그인</button>
+      </form>
+
+      <!-- 회원가입 폼 -->
+      <form id="signupForm" style="display:none;" autocomplete="on">
+        <input
+          type="text"
+          id="name"
+          placeholder="이름"
+          required
+          autocomplete="name"
+        />
+        <input
+          type="email"
+          id="signupEmail"
+          placeholder="이메일"
+          required
+          autocomplete="email"
+        />
+        <input
+          type="password"
+          id="signupPw"
+          placeholder="비밀번호"
+          required
+          autocomplete="new-password"
+        />
+        <button type="submit" class="primary">회원가입</button>
+      </form>
+
+      <div id="toggleText" class="toggle-text">
+        계정이 없나요? <span class="toggle-link" id="toSignup">회원가입</span>
+      </div>
+    </div>
+  </main>
+
+  <footer>© 2025 HARU · by KIM HYUN JUN</footer>
+
+  <script type="module" src="signup.js"></script>
+  <script type="module">
+    import { initHeaderMenu } from "./header.js";
+    fetch("header.html")
+      .then(res => res.text())
+      .then(html => {
+        document.getElementById("header-placeholder").innerHTML = html;
+        initHeaderMenu();
+      });
+  </script>
+</body>
+</html>

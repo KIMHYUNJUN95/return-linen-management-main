@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>HARU 주문 목록</title>
+  <link rel="stylesheet" href="common.css" />
+  <style>
+    .orders-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: var(--space-6);
+    }
+
+    .toolbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: var(--space-4);
+      margin-bottom: var(--space-6);
+      flex-wrap: wrap;
+    }
+
+    .filter-group {
+      display: flex;
+      gap: var(--space-3);
+      flex-wrap: wrap;
+    }
+
+    .order-card {
+      background: hsla(var(--color-bg-glass), 0.4);
+      backdrop-filter: blur(var(--blur-md));
+      border: 1px solid hsl(var(--color-border-glass));
+      border-radius: var(--radius-lg);
+      padding: var(--space-5);
+      margin-bottom: var(--space-4);
+      transition: all var(--transition-base);
+    }
+
+    .order-card:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-lg);
+      border-color: hsl(var(--color-primary) / 0.3);
+    }
+
+    .order-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: start;
+      margin-bottom: var(--space-4);
+    }
+
+    .order-meta {
+      font-size: var(--font-size-sm);
+      color: hsl(var(--color-text-secondary));
+    }
+
+    .order-items {
+      margin: var(--space-3) 0;
+      padding: var(--space-3);
+      background: hsla(var(--color-bg-elevated), 0.3);
+      border-radius: var(--radius-md);
+    }
+
+    .item {
+      display: flex;
+      justify-content: space-between;
+      padding: var(--space-2) 0;
+      font-size: var(--font-size-sm);
+    }
+
+    .order-actions {
+      display: flex;
+      gap: var(--space-2);
+      margin-top: var(--space-4);
+    }
+  </style>
+</head>
+<body>
+  <canvas id="bg-canvas"></canvas>
+  <div id="header-placeholder"></div>
+
+  <main>
+    <div class="orders-container">
+      <h1>🛒 주문 목록</h1>
+
+      <div class="toolbar">
+        <div class="filter-group">
+          <select id="filterStatus" class="form-select" data-testid="select-filter-status">
+            <option value="">전체 상태</option>
+            <option value="pending">대기중</option>
+            <option value="approved">승인됨</option>
+            <option value="completed">완료</option>
+            <option value="rejected">거부됨</option>
+          </select>
+          <select id="filterUrgency" class="form-select" data-testid="select-filter-urgency">
+            <option value="">전체 긴급도</option>
+            <option value="일반">일반</option>
+            <option value="긴급">긴급</option>
+            <option value="매우긴급">매우긴급</option>
+          </select>
+        </div>
+        <a href="orders.html" class="btn btn-primary" data-testid="button-new-order">+ 새 주문</a>
+      </div>
+
+      <div id="ordersList" data-testid="container-orders-list"></div>
+      <div id="emptyState" style="display:none;" class="empty-state">
+        <div class="empty-state-icon">📭</div>
+        <div class="empty-state-text">주문 내역이 없습니다</div>
+      </div>
+    </div>
+  </main>
+
+  <footer>© 2025 <strong>HARU_KIM HYUN JUN</strong></footer>
+
+  <script type="module" src="scripts/bg/scene.js"></script>
+  <script type="module">
+    import { initHeaderMenu } from "./header.js";
+    fetch("header.html").then(r=>r.text()).then(h=>{
+      document.getElementById("header-placeholder").innerHTML=h;
+      initHeaderMenu();
+    });
+  </script>
+  <script type="module" src="orders_list.js"></script>
+</body>
+</html>

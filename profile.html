@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>HARU 내정보</title>
+  <link rel="stylesheet" href="common.css" />
+  <style>
+    .profile-container {
+      max-width: 700px;
+      margin: 0 auto;
+      padding: var(--space-6);
+    }
+
+    .profile-header {
+      text-align: center;
+      margin-bottom: var(--space-8);
+    }
+
+    .profile-avatar {
+      width: 120px;
+      height: 120px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, hsl(var(--color-primary)), hsl(var(--color-secondary)));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: var(--font-size-4xl);
+      color: white;
+      margin: 0 auto var(--space-4);
+      box-shadow: var(--shadow-lg), var(--shadow-glow);
+    }
+
+    .profile-name {
+      font-size: var(--font-size-2xl);
+      font-weight: 700;
+      margin-bottom: var(--space-2);
+    }
+
+    .profile-email {
+      color: hsl(var(--color-text-secondary));
+    }
+
+    .info-grid {
+      display: grid;
+      gap: var(--space-4);
+      margin-bottom: var(--space-6);
+    }
+
+    .info-item {
+      background: hsla(var(--color-bg-glass), 0.3);
+      border: 1px solid hsl(var(--color-border-glass));
+      border-radius: var(--radius-md);
+      padding: var(--space-4);
+    }
+
+    .info-label {
+      font-size: var(--font-size-sm);
+      color: hsl(var(--color-text-tertiary));
+      margin-bottom: var(--space-1);
+    }
+
+    .info-value {
+      font-size: var(--font-size-lg);
+      font-weight: 600;
+      color: hsl(var(--color-text-primary));
+    }
+
+    .action-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: var(--space-3);
+    }
+
+    @media (max-width: 768px) {
+      .action-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <canvas id="bg-canvas"></canvas>
+  <div id="header-placeholder"></div>
+
+  <main>
+    <div class="profile-container">
+      <div class="profile-header">
+        <div class="profile-avatar" id="avatarIcon" data-testid="avatar">👤</div>
+        <h1 class="profile-name" id="userName" data-testid="text-user-name">사용자</h1>
+        <div class="profile-email" id="userEmail" data-testid="text-user-email">email@example.com</div>
+      </div>
+
+      <div class="glass-card">
+        <h3 style="margin-bottom: var(--space-4);">내 정보</h3>
+
+        <div class="info-grid">
+          <div class="info-item">
+            <div class="info-label">가입일</div>
+            <div class="info-value" id="joinDate" data-testid="text-join-date">-</div>
+          </div>
+
+          <div class="info-item">
+            <div class="info-label">마지막 로그인</div>
+            <div class="info-value" id="lastLogin" data-testid="text-last-login">-</div>
+          </div>
+
+          <div class="info-item">
+            <div class="info-label">이메일 인증</div>
+            <div class="info-value" id="emailVerified" data-testid="text-email-verified">
+              <span class="badge badge-glass">-</span>
+            </div>
+          </div>
+
+          <div class="info-item">
+            <div class="info-label">계정 상태</div>
+            <div class="info-value">
+              <span class="badge badge-success">활성</span>
+            </div>
+          </div>
+        </div>
+
+        <h4 style="margin: var(--space-6) 0 var(--space-4);">계정 관리</h4>
+
+        <form id="updateProfileForm">
+          <div class="form-group">
+            <label class="form-label" for="displayName">이름</label>
+            <input type="text" id="displayName" class="form-input" data-testid="input-display-name" />
+          </div>
+
+          <button type="submit" class="btn btn-primary" style="width:100%;" data-testid="button-update-profile">
+            프로필 업데이트
+          </button>
+        </form>
+
+        <h4 style="margin: var(--space-6) 0 var(--space-4);">비밀번호 변경</h4>
+
+        <div class="action-grid">
+          <button class="btn btn-secondary" onclick="changePassword()" data-testid="button-change-password">
+            비밀번호 변경
+          </button>
+          <button class="btn btn-danger" onclick="deleteAccount()" data-testid="button-delete-account">
+            계정 삭제
+          </button>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer>© 2025 <strong>HARU_KIM HYUN JUN</strong></footer>
+
+  <script type="module" src="scripts/bg/scene.js"></script>
+  <script type="module">
+    import { initHeaderMenu } from "./header.js";
+    fetch("header.html").then(r=>r.text()).then(h=>{
+      document.getElementById("header-placeholder").innerHTML=h;
+      initHeaderMenu();
+    });
+  </script>
+  <script type="module" src="profile.js"></script>
+</body>
+</html>

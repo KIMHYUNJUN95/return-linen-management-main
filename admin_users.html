@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>HARU · 사용자 관리</title>
+  <link rel="stylesheet" href="common.css" />
+  <link rel="stylesheet" href="background.css" />
+  <style>
+    /* ===============================
+       👑 관리자 페이지 스타일 (HARU 디자인톤 유지)
+       =============================== */
+    main {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+
+    h2 {
+      color: var(--text);
+      font-weight: 700;
+      margin-bottom: 20px;
+    }
+
+    .admin-card {
+      background: var(--elev);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: var(--shadow);
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .admin-card label {
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .admin-card input {
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 8px 10px;
+      width: 100%;
+      background: #fff;
+    }
+
+    .btn-wrap {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    .btn {
+      border-radius: 8px;
+      height: 38px;
+      padding: 0 16px;
+      font-size: 14px;
+      cursor: pointer;
+      transition: 0.2s;
+      font-weight: 600;
+    }
+
+    .btn.primary {
+      background: linear-gradient(135deg, #00b4d8, #0077b6);
+      color: #fff;
+      border: none;
+    }
+
+    .btn.danger {
+      background: #d33;
+      color: #fff;
+      border: none;
+    }
+
+    .btn:hover {
+      opacity: 0.85;
+      transform: translateY(-1px);
+    }
+
+    .user-list {
+      margin-top: 24px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: var(--shadow);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 14px;
+      color: var(--text);
+    }
+
+    thead {
+      background: rgba(255, 255, 255, 0.1);
+      font-weight: 600;
+    }
+
+    th, td {
+      padding: 10px 12px;
+      text-align: left;
+      border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+    }
+
+    .t-center {
+      text-align: center;
+    }
+
+    @media (max-width: 768px) {
+      .btn-wrap {
+        flex-direction: column;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- 🌌 3D 배경 -->
+  <canvas id="bg-canvas"></canvas>
+
+  <!-- 🧭 헤더 -->
+  <div id="header-placeholder"></div>
+
+  <main class="glass">
+    <h2>👑 사용자 관리</h2>
+
+    <!-- 🔐 관리자 전용 기능 카드 -->
+    <section class="admin-card">
+      <label for="emailInput">사용자 이메일</label>
+      <input id="emailInput" type="email" placeholder="rlaguswns95@haru-tokyo.com" />
+
+      <div class="btn-wrap">
+        <button id="btnGrantAdmin" class="btn primary">관리자 권한 부여</button>
+        <button id="btnRevokeAdmin" class="btn danger">관리자 권한 회수</button>
+        <button id="btnRefreshUsers" class="btn">🔄 목록 새로고침</button>
+      </div>
+    </section>
+
+    <!-- 👥 사용자 목록 -->
+    <section class="user-list glass">
+      <table>
+        <thead>
+          <tr>
+            <th>이름</th>
+            <th>이메일</th>
+            <th class="t-center">권한</th>
+          </tr>
+        </thead>
+        <tbody id="userTbody">
+          <tr><td colspan="3" class="t-center">불러오는 중...</td></tr>
+        </tbody>
+      </table>
+    </section>
+  </main>
+
+  <footer style="text-align:center;color:#9fb0c6;padding:16px 0;">
+    © 2025 HARU · by KIM HYUN JUN
+  </footer>
+
+  <!-- ✅ 헤더 로드 -->
+  <script type="module">
+    import { initHeaderMenu } from "./header.js";
+    fetch("header.html")
+      .then(r => r.text())
+      .then(h => {
+        document.getElementById("header-placeholder").innerHTML = h;
+        initHeaderMenu();
+      });
+  </script>
+
+  <!-- ✅ 관리자 스크립트 -->
+  <script type="module" src="admin_users.js"></script>
+</body>
+</html>
