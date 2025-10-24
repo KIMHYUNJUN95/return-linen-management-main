@@ -9,13 +9,12 @@ import { getStorage } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-
 import { getAuth } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-analytics.js";
 
-// ✅ 콘솔 일반설정(web 앱 설정)과 동일하게 맞추기
+// ✅ Firebase 콘솔의 Web App 설정값과 동일하게
 const firebaseConfig = {
   apiKey: "AIzaSyAyD0Gn5-zqzPzdXjQzZhVlMQvqTzUmHKs",
   authDomain: "return-linen-management.firebaseapp.com",
   projectId: "return-linen-management",
-  // 🔴 원인: appspot.com → 🔵 정답: firebasestorage.app
-  storageBucket: "return-linen-management.firebasestorage.app",
+  storageBucket: "return-linen-management.appspot.com", // ✅ 올바른 값으로 수정됨
   messagingSenderId: "310421638033",
   appId: "1:310421638033:web:280047bf93a8c780f8e830",
   measurementId: "G-D6BDRRKD9Y"
