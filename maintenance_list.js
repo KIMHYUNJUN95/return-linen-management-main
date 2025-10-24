@@ -27,7 +27,6 @@ onAuthStateChanged(auth, async (user) => {
     location.href = "board.html";
     return;
   }
-  // ✅ 관리자 접근 허용 → 목록 로드
   loadMaintenanceList();
 });
 
@@ -51,7 +50,7 @@ function formatDate(ts) {
 }
 
 // ========================================
-/* 📋 Firestore 유지보수 목록 불러오기 */
+// 📋 Firestore 유지보수 목록 불러오기
 // ========================================
 async function loadMaintenanceList() {
   const tbody = document.getElementById("maintenanceBody");
@@ -62,7 +61,6 @@ async function loadMaintenanceList() {
   }
 
   try {
-    // createdAt 정렬이 없어도 우선 모두 로드
     const qy = query(collection(db, "maintenance"));
     const snapshot = await getDocs(qy);
 
@@ -82,13 +80,14 @@ async function loadMaintenanceList() {
       const createdAt = formatDate(data.createdAt);
       const building = data.building || "-";
       const room = data.room || "-";
-      const issue = data.issue || "-";
+      const issue = data.issue || data.description || "-"; // ✅ 수정됨
       const note = data.note || "-";
       const staff = data.staff || "-";
       const status = data.status || "-";
-      const photo = data.photoURL || ""; // getDownloadURL로 받은 절대경로 사용
+      const photo =
+        data.photoURL ||
+        (Array.isArray(data.imageUrls) && data.imageUrls.length > 0 ? data.imageUrls[0] : ""); // ✅ 수정됨
 
-      // ✅ 테이블용 (헤더 순서에 맞춰: 등록일 / 건물 / 객실 / 내용 / 등록자 / 비고 / 사진 / 상태 / 작업)
       tableHtml += `
         <tr data-id="${id}">
           <td>${createdAt}</td>
@@ -108,7 +107,6 @@ async function loadMaintenanceList() {
         </tr>
       `;
 
-      // ✅ 모바일 카드
       mobileHtml += `
         <div class="mobile-card" data-id="${id}">
           <strong>🏢 ${building}</strong> · <span>${room}</span><br>
@@ -127,9 +125,9 @@ async function loadMaintenanceList() {
     tbody.innerHTML = tableHtml;
     mobileList.innerHTML = mobileHtml;
 
-    attachPhotoEvents(); // 사진 확대
-    attachDeleteEvents(); // 삭제
-    attachEditEvents();   // 수정 이동
+    attachPhotoEvents();
+    attachDeleteEvents();
+    attachEditEvents();
   } catch (err) {
     console.error("🔥 Firestore 불러오기 오류:", err);
     tbody.innerHTML = `<tr><td colspan="9">데이터 불러오기 오류가 발생했습니다.</td></tr>`;
@@ -137,14 +135,13 @@ async function loadMaintenanceList() {
 }
 
 // ========================================
-// 🖼️ 사진 확대 모달 (닫기 버튼 없어도 동작)
+// 🖼️ 사진 확대 모달
 // ========================================
 function attachPhotoEvents() {
   const photoModal = document.getElementById("photoModal");
   const modalImg = document.getElementById("modalImg");
   if (!photoModal || !modalImg) return;
 
-  // 썸네일 클릭
   document.querySelectorAll("[data-photo]").forEach((img) => {
     img.addEventListener("click", () => {
       modalImg.src = img.dataset.photo;
@@ -152,12 +149,10 @@ function attachPhotoEvents() {
     });
   });
 
-  // 오버레이 클릭 닫기
   photoModal.addEventListener("click", (e) => {
     if (e.target === photoModal) photoModal.style.display = "none";
   });
 
-  // ESC 닫기
   document.addEventListener("keydown", (e) => {
     if (e.key === "Escape") photoModal.style.display = "none";
   });
