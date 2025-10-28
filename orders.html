@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>HARU 주문요청</title>
+  <link rel="stylesheet" href="common.css" />
+  <style>
+    .order-container {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: var(--space-6);
+    }
+
+    .order-form {
+      background: hsla(var(--color-bg-glass), 0.5);
+      backdrop-filter: blur(var(--blur-md));
+      border: 1px solid hsl(var(--color-border-glass));
+      border-radius: var(--radius-lg);
+      padding: var(--space-6);
+      box-shadow: var(--shadow-md);
+    }
+
+    .item-list {
+      margin: var(--space-4) 0;
+      background: hsla(var(--color-bg-elevated), 0.3);
+      border: 1px solid hsl(var(--color-border-subtle));
+      border-radius: var(--radius-md);
+      overflow: hidden;
+    }
+
+    .item-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: var(--space-3);
+      border-bottom: 1px solid hsla(var(--color-border-subtle), 0.3);
+    }
+
+    .item-row:last-child {
+      border-bottom: none;
+    }
+
+    .item-info {
+      flex: 1;
+    }
+
+    .item-name {
+      font-weight: 600;
+      color: hsl(var(--color-text-primary));
+    }
+
+    .item-qty {
+      font-size: var(--font-size-sm);
+      color: hsl(var(--color-text-secondary));
+    }
+
+    .empty-list {
+      padding: var(--space-8);
+      text-align: center;
+      color: hsl(var(--color-text-tertiary));
+    }
+  </style>
+</head>
+<body>
+  <canvas id="bg-canvas"></canvas>
+  <div id="header-placeholder"></div>
+
+  <main>
+    <div class="order-container">
+      <h1>🛒 주문 요청</h1>
+      <p class="text-secondary" style="margin-bottom: var(--space-6);">
+        필요한 물품을 주문 요청하세요
+      </p>
+
+      <div class="order-form">
+        <form id="orderForm">
+          <!-- 아마존 검색 -->
+          <div style="background: hsl(var(--color-bg-elevated)); border: 2px solid hsl(var(--color-primary) / 0.2); border-radius: var(--radius-lg); padding: var(--space-4); margin-bottom: var(--space-6);">
+            <h3 style="margin-bottom: var(--space-3); font-size: var(--font-size-lg);">🔍 아마존 물품 검색</h3>
+            <div class="form-group" style="margin-bottom: var(--space-3);">
+              <input 
+                type="text" 
+                id="amazonSearch" 
+                class="form-input" 
+                placeholder="일본어로 물품 검색 (예: タオル, シャンプー)" 
+                data-testid="input-amazon-search"
+              />
+            </div>
+            <button type="button" id="searchAmazonBtn" class="btn btn-primary btn-sm" data-testid="button-search-amazon">
+              Amazon.co.jp에서 검색
+            </button>
+            <p style="font-size: var(--font-size-xs); color: hsl(var(--color-text-tertiary)); margin-top: var(--space-2); margin-bottom: 0;">
+              💡 검색하면 자동으로 목록에 추가되고 링크가 저장됩니다
+            </p>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="category">카테고리</label>
+            <select id="category" class="form-select" data-testid="select-category">
+              <option value="">카테고리 선택</option>
+              <option value="린넨">린넨</option>
+              <option value="어메니티">어메니티</option>
+              <option value="청소용품">청소용품</option>
+              <option value="비품">비품</option>
+              <option value="기타">기타</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="itemName">물품명</label>
+            <input type="text" id="itemName" class="form-input" placeholder="예: 수건타월" data-testid="input-item-name" />
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="quantity">수량</label>
+            <input type="number" id="quantity" class="form-input" min="1" value="1" data-testid="input-quantity" />
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="itemLink">링크 (선택)</label>
+            <input type="url" id="itemLink" class="form-input" placeholder="https://www.amazon.co.jp/..." data-testid="input-item-link" />
+          </div>
+
+          <button type="button" id="addItemBtn" class="btn btn-secondary" data-testid="button-add-item">
+            + 목록에 추가
+          </button>
+
+          <div class="item-list" id="itemList">
+            <div class="empty-list">추가된 물품이 없습니다</div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="urgency">긴급도</label>
+            <select id="urgency" class="form-select" data-testid="select-urgency">
+              <option value="일반">일반</option>
+              <option value="긴급">긴급</option>
+              <option value="매우긴급">매우긴급</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="notes">비고</label>
+            <textarea id="notes" class="form-textarea" placeholder="추가 요청사항을 입력하세요 (선택)" data-testid="textarea-notes"></textarea>
+          </div>
+
+          <button type="submit" class="btn btn-primary" style="width: 100%;" data-testid="button-submit">
+            주문 요청하기
+          </button>
+        </form>
+      </div>
+    </div>
+  </main>
+
+  <footer>© 2025 <strong>HARU_KIM HYUN JUN</strong></footer>
+
+  <script type="module" src="scripts/bg/scene.js"></script>
+  <script type="module">
+    import { initHeaderMenu } from "./header.js";
+    fetch("header.html").then(r=>r.text()).then(h=>{
+      document.getElementById("header-placeholder").innerHTML=h;
+      initHeaderMenu();
+    });
+  </script>
+  <script type="module" src="orders.js"></script>
+</body>
+</html>

@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>HARU 반품등록</title>
+  <link rel="stylesheet" href="common.css" />
+  <style>
+    .return-container {
+      max-width: 880px;
+      margin: 0 auto;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 20px;
+    }
+    .return-container h2 { margin-bottom: 20px; color: var(--text); }
+
+    form { display: flex; flex-direction: column; gap: 20px; }
+
+    /* 섹션 카드 */
+    .form-section {
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px;
+      background: #fff;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+    }
+    .form-section h3 {
+      margin-top: 0;
+      margin-bottom: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    label { font-weight: 600; color: var(--text); margin-bottom: 4px; display:block; }
+    input, select, textarea {
+      width: 100%;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 10px 12px;
+      font-size: 15px;
+      background: #fff;
+    }
+    textarea { resize: vertical; min-height: 80px; }
+    button.primary { width: 100%; margin-top: 10px; }
+
+    /* 린넨 섹션 */
+    .linen-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-bottom: 10px; }
+    .linen-row select { flex: 1 1 220px; }
+    .linen-row input[type="number"] { width: 120px; }
+    .linen-list { margin-top: 10px; border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
+    .linen-list table { width: 100%; border-collapse: collapse; background: var(--surface); }
+    .linen-list th, .linen-list td { padding: 10px 12px; border-bottom: 1px solid var(--border); text-align: left; }
+    .linen-list th { background: linear-gradient(0deg, var(--surface), var(--elev)); color: #b7c4d6; font-size: 12px; letter-spacing: .04em; text-transform: uppercase; }
+    .linen-empty { padding: 14px; color: var(--muted); }
+    .actions-cell { text-align: right; }
+    .btn-del { height: 32px; padding: 0 10px; border-radius: 10px; }
+
+    /* 사진 미리보기 */
+    .photo-preview { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+    .photo-preview img { width: 80px; height: 80px; object-fit: cover; border-radius: 8px; border: 1px solid var(--border); }
+
+    @media (max-width: 768px) {
+      .return-container { padding: 16px; border-radius: 10px; }
+      input, select, textarea { font-size: 14px; }
+      .linen-row { gap: 6px; }
+      .linen-row input[type="number"] { flex: 0 0 110px; }
+      .linen-list th, .linen-list td { padding: 8px 10px; }
+      button.primary { font-size: 15px; }
+    }
+  </style>
+</head>
+<body>
+  <div id="header-placeholder"></div>
+  <main>
+    <div class="return-container">
+      <h2>반품 등록</h2>
+      <form id="returnForm">
+
+        <!-- 건물/날짜/담당자 -->
+        <div class="form-section">
+          <h3>기본 정보</h3>
+          <label for="building">건물 선택</label>
+          <select id="building" required>
+            <option value="">건물을 선택하세요</option>
+            <option value="아라키초A">아라키초A</option>
+            <option value="아라키초B">아라키초B</option>
+            <option value="다이쿄초">다이쿄초</option>
+            <option value="가부키초">가부키초</option>
+            <option value="다카다노바바">다카다노바바</option>
+            <option value="오쿠보1">오쿠보1</option>
+            <option value="오쿠보2">오쿠보2</option>
+            <option value="오쿠보4">오쿠보4</option>
+          </select>
+
+          <label for="date">날짜</label>
+          <input type="date" id="date" required />
+
+          <label for="staff">담당자 이름</label>
+          <input type="text" id="staff" placeholder="담당자 이름 입력" required />
+        </div>
+
+        <!-- 린넨 섹션 -->
+        <div class="form-section">
+          <h3>린넨 추가</h3>
+          <div class="linen-row">
+            <select id="linenSelect">
+              <option value="">린넨 종류 선택</option>
+              <option value="싱글 이불 커버">싱글 이불 커버</option>
+              <option value="싱글 매트 커버">싱글 매트 커버</option>
+              <option value="더블 이불 커버">더블 이불 커버</option>
+              <option value="더블 매트 커버">더블 매트 커버</option>
+              <option value="더블 매트 커버(고무)">더블 매트 커버(고무)</option>
+              <option value="배게 커버">배게 커버</option>
+              <option value="수건타월">수건타월</option>
+              <option value="발매트">발매트</option>
+            </select>
+            <input type="number" id="linenQty" min="1" step="1" value="1" placeholder="수량" />
+            <button type="button" id="btnAddLinen" class="primary btn-sm" style="height:38px;">+ 추가</button>
+          </div>
+          <div class="linen-list" id="linenList">
+            <div class="linen-empty">추가된 린넨이 없습니다.</div>
+          </div>
+          <input type="hidden" id="linenPayload" name="linenPayload" />
+        </div>
+
+        <!-- 비고 -->
+        <div class="form-section">
+          <h3>비고 / 특이사항</h3>
+          <textarea id="desc" placeholder="특이사항을 입력하세요 (선택)"></textarea>
+        </div>
+
+        <!-- 사진 등록 -->
+        <div class="form-section">
+          <h3>사진 등록</h3>
+          <input type="file" id="photo" accept="image/*" multiple />
+          <div class="photo-preview" id="photoPreview"></div>
+        </div>
+
+        <button type="submit" class="primary">등록하기</button>
+      </form>
+    </div>
+  </main>
+
+  <footer style="text-align:center;color:#777;padding:16px 0;">
+    © 2025 HARU · by KIM HYUN JUN
+  </footer>
+
+  <script type="module">
+    import { initHeaderMenu } from "./header.js";
+    fetch("header.html").then(r=>r.text()).then(h=>{
+      document.getElementById("header-placeholder").innerHTML=h;
+      initHeaderMenu();
+    });
+
+    const photoInput=document.getElementById("photo");
+    const preview=document.getElementById("photoPreview");
+    photoInput.addEventListener("change",()=>{
+      preview.innerHTML="";
+      [...photoInput.files].forEach(file=>{
+        const img=document.createElement("img");
+        img.src=URL.createObjectURL(file);
+        preview.appendChild(img);
+      });
+    });
+
+    const linens=[];
+    const selectEl=document.getElementById("linenSelect");
+    const qtyEl=document.getElementById("linenQty");
+    const addBtn=document.getElementById("btnAddLinen");
+    const listWrap=document.getElementById("linenList");
+    const payloadInput=document.getElementById("linenPayload");
+
+    function renderLinens(){
+      if(linens.length===0){
+        listWrap.innerHTML='<div class="linen-empty">추가된 린넨이 없습니다.</div>';
+        return;
+      }
+      const rows=linens.map((ln,idx)=>`
+        <tr>
+          <td>${ln.type}</td>
+          <td>${ln.qty}</td>
+          <td class="actions-cell">
+            <button type="button" class="btn btn-sm ghost btn-del" data-index="${idx}">삭제</button>
+          </td>
+        </tr>`).join("");
+      listWrap.innerHTML=`
+        <table>
+          <thead><tr><th>린넨</th><th>수량</th><th></th></tr></thead>
+          <tbody>${rows}</tbody>
+        </table>`;
+      listWrap.querySelectorAll(".btn-del").forEach(btn=>{
+        btn.addEventListener("click",()=>{
+          const i=Number(btn.dataset.index);
+          linens.splice(i,1);
+          renderLinens();
+        });
+      });
+    }
+
+    addBtn.addEventListener("click",()=>{
+      const type=selectEl.value;
+      const qty=parseInt(qtyEl.value);
+      if(!type)return alert("린넨 종류를 선택하세요.");
+      if(!qty||qty<1)return alert("수량은 1 이상이어야 합니다.");
+      const exist=linens.find(l=>l.type===type);
+      if(exist){exist.qty+=qty;}
+      else{linens.push({type,qty});}
+      renderLinens();
+      qtyEl.value="1";
+      selectEl.value="";
+    });
+
+    document.getElementById("returnForm").addEventListener("submit",()=>{
+      payloadInput.value=JSON.stringify(linens);
+    });
+
+    renderLinens();
+  </script>
+
+  <script type="module" src="return_form.js"></script>
+</body>
+</html>

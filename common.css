@@ -1,0 +1,348 @@
+/* ========================================
+   🎨 HARU Common Styles (미래적 디자인 시스템)
+   ======================================== */
+
+/* Import Design Tokens */
+@import url('./styles/tokens.css');
+@import url('./styles/layout.css');
+@import url('./styles/components.css');
+
+/* Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&display=swap');
+
+/* Reset */
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  font-family: var(--font-body);
+  background: hsl(var(--color-bg-base));
+  color: hsl(var(--color-text-primary));
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  overflow-x: hidden;
+}
+
+/* 📄 Page Structure */
+body {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+main {
+  flex: 1;
+}
+
+/* 🎨 Header (Solid Navigation) */
+.main-header {
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: hsl(var(--color-bg-elevated));
+  border-bottom: 2px solid hsl(var(--color-border-subtle));
+  padding: var(--space-4) var(--space-6);
+  box-shadow: var(--shadow-lg);
+}
+
+.main-header .logo {
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-size: var(--font-size-2xl);
+  background: linear-gradient(135deg, hsl(var(--color-primary)), hsl(var(--color-secondary)));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  user-select: none;
+  letter-spacing: 0.05em;
+}
+
+.menu-wrap {
+  position: relative;
+  flex: 1;
+  display: flex;
+  justify-content: center;
+}
+
+.menu-toggle {
+  background: linear-gradient(135deg, hsl(var(--color-primary)), hsl(var(--color-secondary)));
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-md);
+  padding: var(--space-2) var(--space-4);
+  font-weight: 600;
+  font-size: var(--font-size-base);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  box-shadow: var(--shadow-md);
+}
+
+.menu-toggle:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-lg), var(--shadow-glow);
+}
+
+.menu-list {
+  position: absolute;
+  top: calc(100% + var(--space-2));
+  left: 50%;
+  transform: translateX(-50%);
+  background: hsl(var(--color-bg-card));
+  border: 2px solid hsl(var(--color-border-strong));
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-xl), 0 0 0 1px rgba(0, 0, 0, 0.5);
+  list-style: none;
+  padding: var(--space-2) 0;
+  display: none;
+  min-width: 220px;
+  max-height: 70vh;
+  overflow-y: auto;
+  z-index: 1001;
+}
+
+.menu-list.open {
+  display: block;
+  animation: slideDown var(--transition-base);
+}
+
+.menu-list li {
+  margin: 0;
+}
+
+.menu-list li a {
+  display: block;
+  padding: var(--space-3) var(--space-4);
+  color: hsl(var(--color-text-primary));
+  text-decoration: none;
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  transition: all var(--transition-fast);
+  border-left: 3px solid transparent;
+}
+
+.menu-list li a:hover {
+  background: hsl(var(--color-bg-elevated));
+  color: hsl(var(--color-primary));
+  border-left-color: hsl(var(--color-primary));
+}
+
+.logout-btn {
+  background: hsl(var(--color-bg-input));
+  border: 1px solid hsl(var(--color-border-subtle));
+  border-radius: var(--radius-md);
+  padding: var(--space-2) var(--space-4);
+  color: hsl(var(--color-text-secondary));
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: var(--shadow-sm);
+  transition: all var(--transition-fast);
+}
+
+.logout-btn:hover {
+  border-color: hsl(var(--color-error));
+  color: hsl(var(--color-error));
+  background: hsl(var(--color-bg-elevated));
+  box-shadow: var(--shadow-md);
+}
+
+/* 👣 Footer */
+footer {
+  text-align: center;
+  padding: var(--space-6) var(--space-4);
+  background: hsl(var(--color-bg-elevated));
+  border-top: 2px solid hsl(var(--color-border-subtle));
+  color: hsl(var(--color-text-tertiary));
+  font-size: var(--font-size-sm);
+  margin-top: var(--space-8);
+  box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.08);
+}
+
+footer strong {
+  color: hsl(var(--color-primary));
+  font-weight: 700;
+}
+
+/* 🎴 Empty State */
+.empty-state {
+  text-align: center;
+  padding: var(--space-12) var(--space-4);
+  color: hsl(var(--color-text-tertiary));
+}
+
+.empty-state-icon {
+  font-size: var(--font-size-4xl);
+  margin-bottom: var(--space-4);
+  opacity: 0.5;
+}
+
+.empty-state-text {
+  font-size: var(--font-size-lg);
+}
+
+/* 📱 Responsive (Mobile) */
+@media (max-width: 768px) {
+  .main-header {
+    padding: var(--space-3) var(--space-4);
+  }
+
+  .main-header .logo {
+    font-size: var(--font-size-xl);
+  }
+
+  .menu-list {
+    left: auto;
+    right: 0;
+    transform: none;
+    max-width: 80vw;
+  }
+
+  .logout-btn {
+    padding: var(--space-2) var(--space-3);
+    font-size: var(--font-size-sm);
+  }
+}
+
+/* ⚡ Utility Classes */
+.text-center { text-align: center; }
+.text-left { text-align: left; }
+.text-right { text-align: right; }
+
+.fw-normal { font-weight: 400; }
+.fw-medium { font-weight: 500; }
+.fw-semibold { font-weight: 600; }
+.fw-bold { font-weight: 700; }
+
+.text-primary { color: hsl(var(--color-primary)); }
+.text-secondary { color: hsl(var(--color-text-secondary)); }
+.text-tertiary { color: hsl(var(--color-text-tertiary)); }
+.text-success { color: hsl(var(--color-success)); }
+.text-warning { color: hsl(var(--color-warning)); }
+.text-error { color: hsl(var(--color-error)); }
+
+/* 🎨 Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: hsl(var(--color-bg-elevated));
+}
+
+::-webkit-scrollbar-thumb {
+  background: hsla(var(--color-primary), 0.5);
+  border-radius: var(--radius-full);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--color-primary));
+}
+
+/* ========================================
+   📐 HARU 가독성 향상 레이어 (공통 Section/Card)
+======================================== */
+
+/* 기능 영역 섹션 */
+.section {
+  padding: var(--space-5);
+  margin-bottom: var(--space-6);
+  background: hsl(var(--color-bg-elevated));
+  border: 1px solid hsl(var(--color-border-subtle));
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+}
+
+.section h2 {
+  font-size: var(--font-size-xl);
+  font-weight: 700;
+  color: hsl(var(--color-text-primary));
+  margin-bottom: var(--space-4);
+}
+
+.section h3 {
+  font-size: var(--font-size-lg);
+  font-weight: 600;
+  color: hsl(var(--color-text-secondary));
+  margin-bottom: var(--space-3);
+}
+
+/* 폼 요소 */
+input, select, textarea {
+  width: 100%;
+  padding: var(--space-3) var(--space-4);
+  background: hsl(var(--color-bg-input));
+  color: hsl(var(--color-text-primary));
+  border: 1px solid hsl(var(--color-border-subtle));
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-base);
+}
+
+input:focus, select:focus, textarea:focus {
+  outline: none;
+  border-color: hsl(var(--color-primary));
+  box-shadow: 0 0 0 2px hsla(var(--color-primary), 0.3);
+}
+
+/* ✅ 초록색 버튼 (분실물등록, 유지보수등록 전용) */
+button.btn-green {
+  background-color: #16a34a;
+  color: white;
+  font-weight: 600;
+  font-size: 16px;
+  padding: 12px 0;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.2s ease, transform 0.1s ease;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+}
+
+button.btn-green:hover {
+  background-color: #15803d;
+  transform: translateY(-1px);
+}
+
+button.btn-green:disabled {
+  background-color: #9ca3af;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+/* 📊 출근자 현황 칩 스타일 */
+.info-chip {
+  background: hsla(var(--color-bg-elevated), 0.6);
+  border: 1px solid hsl(var(--color-border-subtle));
+  border-radius: 9999px;
+  padding: 4px 10px;
+  font-size: 0.85rem;
+  white-space: nowrap;
+}
+
+@media (max-width: 768px) {
+  .info-chip {
+    font-size: 0.8rem;
+    padding: 3px 8px;
+  }
+}
+
+#recentLogs .log-card.condensed {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: var(--space-4);
+}
+
+/* 반응형 여백 조정 */
+@media (max-width: 768px) {
+  .section {
+    padding: var(--space-4);
+  }
+}

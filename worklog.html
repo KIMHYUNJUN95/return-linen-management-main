@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>HARU 근무기록</title>
+  <link rel="stylesheet" href="common.css" />
+  <style>
+    .worklog-container {
+      max-width: 1000px;
+      margin: 0 auto;
+      padding: var(--space-6);
+    }
+
+    .worklog-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: var(--space-6);
+      margin-bottom: var(--space-6);
+    }
+
+    @media (max-width: 768px) {
+      .worklog-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .log-card {
+      background: hsla(var(--color-bg-glass), 0.4);
+      backdrop-filter: blur(var(--blur-md));
+      border: 1px solid hsl(var(--color-border-glass));
+      border-radius: var(--radius-lg);
+      padding: var(--space-5);
+      margin-bottom: var(--space-4);
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .log-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+
+    .log-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: var(--space-3);
+      padding-bottom: var(--space-3);
+      border-bottom: 1px solid hsla(var(--color-border-subtle), 0.3);
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .log-time {
+      font-family: var(--font-mono);
+      font-size: var(--font-size-xl);
+      font-weight: 700;
+      color: hsl(var(--color-primary));
+    }
+
+    .log-date {
+      font-size: var(--font-size-sm);
+      color: hsl(var(--color-text-secondary));
+    }
+
+    #recentLogs {
+      display: flex;
+      gap: var(--space-4);
+      overflow-x: auto;
+      overflow-y: hidden;
+      padding-bottom: var(--space-2);
+      -webkit-overflow-scrolling: touch;
+      scroll-snap-type: x proximity;
+    }
+
+    #recentLogs .log-card {
+      flex: 0 0 auto;
+      min-width: 280px;
+      max-width: 340px;
+      margin-bottom: 0;
+      scroll-snap-align: start;
+    }
+
+    #recentLogs .log-card.condensed {
+      display: flex;
+      align-items: center;
+      padding: var(--space-3) var(--space-4);
+      min-height: auto;
+    }
+
+    @media (max-width: 420px) {
+      #recentLogs .log-card { min-width: 240px; }
+    }
+
+    /* ================================
+       🪄 카드형 모달 (개선 UI)
+       ================================ */
+    .modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(5px);
+      justify-content: center;
+      align-items: center;
+      z-index: 999;
+      animation: fadeIn 0.25s ease;
+    }
+
+    .modal-card {
+      background: #fff;
+      border-radius: 16px;
+      padding: 24px 20px 80px;
+      max-width: 400px;
+      width: 90%;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+      position: relative;
+      animation: slideUp 0.25s ease;
+      font-family: 'Inter', sans-serif;
+    }
+
+    /* 👤 유저 정보 헤더 */
+    .modal-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .modal-user-avatar {
+      width: 50px;
+      height: 50px;
+      background: #e0f7ff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 26px;
+      border-radius: 50%;
+    }
+
+    .modal-user-info h3 {
+      font-size: 20px;
+      font-weight: 700;
+      margin: 0;
+      color: #111;
+    }
+
+    .modal-date {
+      font-size: 14px;
+      color: #777;
+      margin-top: 2px;
+    }
+
+    /* 📊 정보 섹션 */
+    .modal-section {
+      background: #f8f9fa;
+      padding: 12px 14px;
+      border-radius: 10px;
+      margin-bottom: 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .modal-section span {
+      font-weight: 600;
+      color: #444;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .modal-section strong {
+      font-size: 15px;
+      color: #111;
+    }
+
+    /* 🕒 총 근무시간 강조 */
+    .modal-section.highlight {
+      background: linear-gradient(135deg, #0077b6, #00b4d8);
+      color: #fff;
+      font-size: 18px;
+      font-weight: 700;
+      justify-content: center;
+    }
+
+    .modal-section.highlight strong {
+      color: #fff;
+      font-size: 18px;
+    }
+
+    /* 하단 닫기 버튼 */
+    .modal-close {
+      position: absolute;
+      bottom: 20px;
+      left: 20px;
+      right: 20px;
+      background: #0077b6;
+      color: #fff;
+      border: none;
+      padding: 14px 0;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .modal-close:hover {
+      background: #005f8d;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    @keyframes slideUp {
+      from { transform: translateY(40px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+
+    @media (max-width: 420px) {
+      .modal-card { padding: 20px 16px 80px; }
+      .modal-user-info h3 { font-size: 18px; }
+      .modal-section { font-size: 14px; }
+      .modal-close { font-size: 15px; }
+    }
+  </style>
+</head>
+<body>
+  <canvas id="bg-canvas"></canvas>
+  <div id="header-placeholder"></div>
+
+  <main>
+    <div class="worklog-container">
+      <h1>⏰ 근무 기록</h1>
+      <p class="text-secondary" style="margin-bottom: var(--space-6);">
+        출퇴근 시간을 기록하고 근무 현황을 확인하세요
+      </p>
+
+      <!-- 출근 / 퇴근 -->
+      <div class="worklog-grid">
+        <div class="glass-card">
+          <h3 style="margin-bottom: var(--space-4);">출근</h3>
+          <button id="clockInBtn" class="btn btn-primary" style="width:100%;">출근하기</button>
+          <div id="clockInTime" class="log-time" style="margin-top: var(--space-4); text-align: center; display: none;"></div>
+        </div>
+
+        <div class="glass-card">
+          <h3 style="margin-bottom: var(--space-4);">퇴근</h3>
+          <button id="clockOutBtn" class="btn btn-danger" style="width:100%;" disabled>퇴근하기</button>
+          <div id="clockOutTime" class="log-time" style="margin-top: var(--space-4); text-align: center; display: none;"></div>
+          <div style="margin-top: var(--space-4);">
+            <button id="resetWorkBtn" class="btn btn-ghost" style="width:100%;" disabled>상태 리셋</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 휴식 -->
+      <div class="glass-card" style="margin-top: var(--space-6);">
+        <h3 style="margin-bottom: var(--space-4);">☕ 휴식</h3>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-3);">
+          <button id="breakStartBtn" class="btn btn-secondary" disabled>휴식 시작</button>
+          <button id="breakEndBtn" class="btn btn-secondary" disabled>휴식 종료</button>
+        </div>
+        <div id="breakStatus" style="margin-top: var(--space-3); text-align: center; font-size: var(--font-size-sm); color: hsl(var(--color-text-secondary));"></div>
+        <div id="totalBreakTime" class="log-time" style="margin-top: var(--space-2); text-align: center; display: none;"></div>
+      </div>
+
+      <!-- 청소 시작 / 완료 -->
+      <div class="glass-card" style="margin-top: var(--space-6);">
+        <h3 style="margin-bottom: var(--space-4);">🧹 청소</h3>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-3);">
+          <button id="cleanStartBtn" class="btn btn-secondary" disabled>청소 시작</button>
+          <button id="cleanEndBtn" class="btn btn-secondary" disabled>청소 완료</button>
+        </div>
+      </div>
+
+      <!-- 출근자 현황 -->
+      <h3 style="margin-top: var(--space-8); margin-bottom: var(--space-4);">오늘 출근자 현황</h3>
+      <div id="recentLogs" data-testid="container-recent-logs"></div>
+    </div>
+  </main>
+
+  <!-- 🪄 카드형 모달 (개선 UI 적용) -->
+  <div id="logModal" class="modal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div class="modal-user-avatar">👤</div>
+        <div class="modal-user-info">
+          <h3 id="modalUser"></h3>
+          <p class="modal-date" id="modalDate"></p>
+        </div>
+      </div>
+
+      <div class="modal-section highlight">
+        <strong id="modalTotal"></strong>
+      </div>
+
+      <div class="modal-section">
+        <span>✅ 출근</span>
+        <strong id="modalIn"></strong>
+      </div>
+
+      <div class="modal-section">
+        <span>☕ 휴식</span>
+        <strong id="modalBreak"></strong>
+      </div>
+
+      <div class="modal-section">
+        <span>🏁 퇴근</span>
+        <strong id="modalOut"></strong>
+      </div>
+
+      <button id="closeModalBtn" class="modal-close">닫기</button>
+    </div>
+  </div>
+
+  <footer>© 2025 <strong>HARU_KIM HYUN JUN</strong></footer>
+
+  <script type="module" src="scripts/bg/scene.js"></script>
+  <script type="module">
+    import { initHeaderMenu } from "./header.js";
+    fetch("header.html").then(r=>r.text()).then(h=>{
+      document.getElementById("header-placeholder").innerHTML=h;
+      initHeaderMenu();
+    });
+  </script>
+  <script type="module" src="worklog.js"></script>
+</body>
+</html>

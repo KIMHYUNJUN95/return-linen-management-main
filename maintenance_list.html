@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>HARU 유지보수 관리</title>
+  <link rel="stylesheet" href="common.css" />
+  <style>
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+      background: hsl(var(--color-bg-elevated));
+      border: 1px solid hsl(var(--color-border-subtle));
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-md);
+      padding: 20px;
+    }
+    h2 { 
+      margin-bottom: 16px; 
+      font-size: var(--font-size-xl);
+      font-weight: 700;
+      color: hsl(var(--color-text-primary));
+    }
+    .filter {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+    .filter select, .filter input {
+      border-radius: var(--radius-md);
+      border: 1px solid hsl(var(--color-border-subtle));
+      padding: 8px 12px;
+      font-size: 14px;
+      background: hsl(var(--color-bg-input));
+      color: hsl(var(--color-text-primary));
+    }
+    .filter button {
+      border: none;
+      border-radius: 8px;
+      padding: 0 14px;
+      height: 36px;
+      cursor: pointer;
+      color: #fff;
+    }
+    #filterBtn { background: hsl(var(--color-primary)); }
+    #resetBtn { background: #777; }
+    button.btn-green {
+      background-color: #16a34a !important;
+      color: white !important;
+      font-weight: 600;
+      font-size: 14px;
+      padding: 8px 16px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.2s ease, transform 0.1s ease;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+    }
+    button.btn-green:hover { background-color: #15803d !important; transform: translateY(-1px); }
+    button.btn-green:disabled { background-color: #9ca3af; cursor: not-allowed; box-shadow: none; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: center;
+      font-size: 15px;
+    }
+    th, td {
+      border-bottom: 1px solid hsl(var(--color-border-subtle));
+      padding: 10px;
+      vertical-align: middle;
+    }
+    th {
+      background: hsl(var(--color-bg-card));
+      font-weight: 600;
+      color: hsl(var(--color-text-primary));
+    }
+    .photo-thumb {
+      width: 70px;
+      height: 70px;
+      object-fit: cover;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    .mobile-card {
+      background: hsl(var(--color-bg-card));
+      border: 1px solid hsl(var(--color-border-subtle));
+      border-radius: 10px;
+      padding: 12px;
+      margin-bottom: 10px;
+      box-shadow: var(--shadow-sm);
+    }
+    .mobile-card img {
+      width: 100%;
+      border-radius: 10px;
+      margin-top: 8px;
+    }
+    @media (min-width: 769px) {
+      .table-wrap { display: block; }
+      .mobile-card-list { display: none; }
+    }
+    @media (max-width: 768px) {
+      .table-wrap { display: none; }
+      .mobile-card-list { display: block; }
+    }
+    .modal-bg {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.6);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 9999;
+      padding: 20px;
+    }
+    .modal-card {
+      background: #fff;
+      border-radius: 12px;
+      padding: 20px;
+      max-width: 600px;
+      width: 90%;
+      max-height: 80vh;
+      overflow-y: auto;
+    }
+    .modal-card img {
+      width: 100%;
+      border-radius: 8px;
+      margin-top: 10px;
+    }
+    .modal-card textarea {
+      width: 100%;
+      border: 1px solid hsl(var(--color-border-subtle));
+      border-radius: 8px;
+      padding: 8px;
+      min-height: 60px;
+    }
+    footer {
+      text-align: center;
+      color: #777;
+      padding: 16px 0;
+    }
+  </style>
+</head>
+<body>
+  <div id="header-placeholder"></div>
+
+  <main>
+    <div class="container section">
+      <h2>🛠️ 유지보수 관리</h2>
+
+      <!-- 🔎 필터 영역 -->
+      <div class="filter">
+        <select id="filterBuilding">
+          <option value="">전체 건물</option>
+          <option value="아라키초A">아라키초A</option>
+          <option value="아라키초B">아라키초B</option>
+          <option value="다이쿄초">다이쿄초</option>
+          <option value="가부키초">가부키초</option>
+          <option value="다카다노바바">다카다노바바</option>
+          <option value="오쿠보1">오쿠보1</option>
+          <option value="오쿠보2">오쿠보2</option>
+          <option value="오쿠보4">오쿠보4</option>
+        </select>
+        <input type="text" id="searchInput" placeholder="내용 / 객실 / 등록자 검색" />
+        <button id="filterBtn">검색</button>
+        <button id="resetBtn">초기화</button>
+        <button id="btnAdd" class="primary btn-green" onclick="location.href='maintenance.html'">+ 유지보수 등록</button>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>등록일</th>
+              <th>건물</th>
+              <th>객실</th>
+              <th>내용</th>
+              <th>등록자</th>
+              <th>비고</th>
+              <th>사진</th>
+              <th>상태</th>
+              <th>작업</th>
+            </tr>
+          </thead>
+          <tbody id="maintenanceBody"></tbody>
+        </table>
+      </div>
+
+      <div class="mobile-card-list" id="mobileList"></div>
+    </div>
+  </main>
+
+  <div id="detailModal" class="modal-bg">
+    <div class="modal-card" id="detailContent"></div>
+  </div>
+
+  <div id="photoModal" class="modal-bg">
+    <div class="modal-card">
+      <img id="modalImg" src="">
+      <div style="text-align:center;margin-top:10px;">
+        <button onclick="photoModal.style.display='none'">닫기</button>
+      </div>
+    </div>
+  </div>
+
+  <footer>© 2025 HARU · by KIM HYUN JUN</footer>
+
+  <!-- ✅ 헤더 (메뉴) -->
+  <script type="module">
+    import { initHeaderMenu } from "./header.js";
+    fetch("header.html")
+      .then(r => r.text())
+      .then(h => {
+        document.getElementById("header-placeholder").innerHTML = h;
+        initHeaderMenu();
+      });
+  </script>
+
+  <!-- ✅ Firebase 초기화: 반드시 maintenance_list.js 보다 먼저, 캐시 무효화 쿼리 추가 -->
+  <script type="module" src="storage.js?v=20251028A"></script>
+
+  <!-- ✅ 유지보수 기능 스크립트 -->
+  <script type="module" src="maintenance_list.js?v=20251028A"></script>
+</body>
+</html>

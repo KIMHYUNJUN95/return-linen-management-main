@@ -1,0 +1,20 @@
+{
+  "name": "haru-hotel-management",
+  "version": "2.0.0",
+  "description": "HARU 호텔 관리 시스템 - 미래적 PWA",
+  "type": "commonjs",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "keywords": [
+    "hotel",
+    "management",
+    "pwa",
+    "firebase",
+    "threejs"
+  ],
+  "author": "HARU_KIM HYUN JUN",
+  "license": "MIT"
+}

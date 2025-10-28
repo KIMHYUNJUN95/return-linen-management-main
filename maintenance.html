@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>HARU 유지보수 등록</title>
+  <link rel="stylesheet" href="common.css" />
+  <style>
+    .maintenance-container {
+      max-width: 800px;
+      margin: 0 auto;
+      background: hsl(var(--color-bg-elevated));
+      border: 1px solid hsl(var(--color-border-subtle));
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-md);
+      padding: 24px;
+    }
+    .maintenance-container h2 {
+      margin-bottom: 20px;
+      color: hsl(var(--color-text-primary));
+      font-size: var(--font-size-xl);
+      font-weight: 700;
+    }
+    form { display: flex; flex-direction: column; gap: 14px; }
+    label { font-weight: 600; color: hsl(var(--color-text-secondary)); }
+    input, select, textarea {
+      width: 100%;
+      border: 1px solid hsl(var(--color-border-subtle));
+      border-radius: var(--radius-md);
+      padding: 10px 12px;
+      font-size: var(--font-size-base);
+      background: hsl(var(--color-bg-input));
+      color: hsl(var(--color-text-primary));
+    }
+    textarea { resize: vertical; min-height: 80px; }
+    .photo-preview { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+    .photo-preview img {
+      width: 80px; height: 80px; object-fit: cover;
+      border-radius: 8px; border: 1px solid hsl(var(--color-border-subtle));
+    }
+    button.primary {
+      width: 100%; margin-top: 10px; background-color: #16a34a;
+      color: #fff; font-weight: 600; font-size: 16px; padding: 12px 0;
+      border: none; border-radius: 8px; cursor: pointer;
+      transition: background 0.2s ease, transform 0.1s ease;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+    }
+    button.primary:hover { background-color: #15803d; transform: translateY(-1px); }
+    @media (max-width: 768px) {
+      .maintenance-container { padding: 16px; border-radius: 10px; }
+      input, select, textarea { font-size: 14px; }
+    }
+  </style>
+</head>
+<body>
+  <!-- ✅ 공통 헤더 -->
+  <div id="header-placeholder"></div>
+
+  <main>
+    <div class="maintenance-container section">
+      <h2 id="formTitle">객실 유지보수 등록</h2>
+      <form id="maintenanceForm">
+        <label for="building">건물 선택</label>
+        <select id="building" name="building" required>
+          <option value="">건물을 선택하세요</option>
+          <option value="아라키초A">아라키초A</option>
+          <option value="아라키초B">아라키초B</option>
+          <option value="다이쿄초">다이쿄초</option>
+          <option value="가부키초">가부키초</option>
+          <option value="다카다노바바">다카다노바바</option>
+          <option value="오쿠보1">오쿠보1</option>
+          <option value="오쿠보2">오쿠보2</option>
+          <option value="오쿠보4">오쿠보4</option>
+        </select>
+
+        <label for="room">객실명</label>
+        <input type="text" id="room" name="room" placeholder="예: 201" required />
+
+        <label for="status">상태</label>
+        <select id="status" name="status">
+          <option value="접수됨">접수됨</option>
+          <option value="진행중">진행중</option>
+          <option value="완료">완료</option>
+        </select>
+
+        <label for="description">내용</label>
+        <textarea id="description" name="description" placeholder="유지보수 내용을 입력하세요" required></textarea>
+
+        <label for="photo">사진 등록</label>
+        <input type="file" id="photo" accept="image/*" multiple />
+        <div class="photo-preview" id="photoPreview"></div>
+
+        <button type="submit" class="primary" id="submitBtn">등록하기</button>
+      </form>
+    </div>
+  </main>
+
+  <footer style="text-align:center;color:#777;padding:16px 0;">
+    © 2025 HARU · by KIM HYUN JUN
+  </footer>
+
+  <!-- ✅ 미리보기 -->
+  <script>
+    (function() {
+      const input = document.getElementById("photo");
+      const preview = document.getElementById("photoPreview");
+      if (!input || !preview) return;
+      input.addEventListener("change", () => {
+        preview.innerHTML = "";
+        const files = Array.from(input.files || []);
+        files.forEach(file => {
+          if (!file || !file.type || !file.type.startsWith("image/")) return;
+          const img = document.createElement("img");
+          img.src = URL.createObjectURL(file);
+          img.onload = () => URL.revokeObjectURL(img.src);
+          preview.appendChild(img);
+        });
+      });
+    })();
+  </script>
+
+  <!-- ✅ 헤더 로드 -->
+  <script type="module">
+    import { initHeaderMenu } from "./header.js";
+    fetch("header.html").then(r=>r.text()).then(h=>{
+      document.getElementById("header-placeholder").innerHTML=h;
+      initHeaderMenu();
+    });
+  </script>
+
+  <!-- ✅ Firebase 초기화 (중요!!) -->
+  <script type="module" src="./storage.js"></script>
+
+  <!-- ✅ 등록 로직 -->
+  <script type="module" src="maintenance_form.js"></script>
+</body>
+</html>

@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>HARU 로그인 / 회원가입</title>
+  <meta name="description" content="HARU 호텔 관리 시스템 로그인 및 회원가입" />
+  
+  <!-- Styles -->
+  <link rel="stylesheet" href="common.css" />
+  
+  <style>
+    body {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      background: hsl(var(--color-bg-base));
+      margin: 0;
+    }
+
+    .auth-container {
+      background: hsla(var(--color-bg-glass), 0.6);
+      backdrop-filter: blur(var(--blur-lg));
+      -webkit-backdrop-filter: blur(var(--blur-lg));
+      border: 1px solid hsl(var(--color-border-glass));
+      border-radius: var(--radius-xl);
+      box-shadow: var(--shadow-xl), var(--shadow-glow);
+      padding: var(--space-8) var(--space-6);
+      width: 100%;
+      max-width: 420px;
+      text-align: center;
+      margin: var(--space-4);
+      animation: scaleIn var(--transition-base);
+    }
+
+    .logo {
+      font-family: var(--font-display);
+      font-weight: 900;
+      font-size: var(--font-size-4xl);
+      background: linear-gradient(135deg, hsl(var(--color-primary)), hsl(var(--color-secondary)));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: var(--space-6);
+      letter-spacing: 0.05em;
+    }
+
+    h2 {
+      margin-bottom: var(--space-6);
+      font-size: var(--font-size-2xl);
+      font-weight: 700;
+      color: hsl(var(--color-text-primary));
+    }
+
+    form {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-4);
+      margin-top: var(--space-4);
+    }
+
+    .form-input {
+      background: hsla(var(--color-bg-glass), 0.5);
+      backdrop-filter: blur(var(--blur-sm));
+      border: 1px solid hsl(var(--color-border-glass));
+      border-radius: var(--radius-md);
+      padding: var(--space-4) var(--space-4);
+      font-size: var(--font-size-base);
+      color: hsl(var(--color-text-primary));
+      transition: all var(--transition-base);
+    }
+
+    .form-input::placeholder {
+      color: hsl(var(--color-text-tertiary));
+    }
+
+    .form-input:focus {
+      outline: none;
+      border-color: hsl(var(--color-primary));
+      box-shadow: 0 0 0 3px hsla(var(--color-primary), 0.15);
+      background: hsla(var(--color-bg-glass), 0.7);
+    }
+
+    .btn-submit {
+      width: 100%;
+      margin-top: var(--space-2);
+    }
+
+    .toggle-text {
+      margin-top: var(--space-4);
+      color: hsl(var(--color-text-secondary));
+      font-size: var(--font-size-sm);
+    }
+
+    .toggle-link {
+      color: hsl(var(--color-primary));
+      font-weight: 600;
+      cursor: pointer;
+      transition: color var(--transition-fast);
+    }
+
+    .toggle-link:hover {
+      color: hsl(var(--color-primary-dark));
+      text-decoration: underline;
+    }
+
+    @media (max-width: 768px) {
+      .auth-container {
+        padding: var(--space-6) var(--space-4);
+      }
+
+      .logo {
+        font-size: var(--font-size-3xl);
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- 3D Background Canvas -->
+  <canvas id="bg-canvas"></canvas>
+
+  <!-- Auth Container -->
+  <main>
+    <div class="auth-container">
+      <div class="logo">HARU</div>
+      <h2 id="formTitle">로그인</h2>
+
+      <!-- 로그인 폼 -->
+      <form id="loginForm" autocomplete="on">
+        <input
+          type="email"
+          id="email"
+          class="form-input"
+          placeholder="이메일"
+          required
+          autocomplete="username"
+          data-testid="input-email"
+        />
+        <input
+          type="password"
+          id="password"
+          class="form-input"
+          placeholder="비밀번호"
+          required
+          autocomplete="current-password"
+          data-testid="input-password"
+        />
+        <button type="submit" class="btn btn-primary btn-submit" data-testid="button-login">
+          로그인
+        </button>
+      </form>
+
+      <!-- 회원가입 폼 -->
+      <form id="signupForm" style="display:none;" autocomplete="on">
+        <input
+          type="text"
+          id="name"
+          class="form-input"
+          placeholder="이름"
+          required
+          autocomplete="name"
+          data-testid="input-name"
+        />
+        <input
+          type="email"
+          id="signupEmail"
+          class="form-input"
+          placeholder="이메일"
+          required
+          autocomplete="email"
+          data-testid="input-signup-email"
+        />
+        <input
+          type="password"
+          id="signupPw"
+          class="form-input"
+          placeholder="비밀번호"
+          required
+          autocomplete="new-password"
+          data-testid="input-signup-password"
+        />
+        <button type="submit" class="btn btn-primary btn-submit" data-testid="button-signup">
+          회원가입
+        </button>
+      </form>
+
+      <div id="toggleText" class="toggle-text">
+        계정이 없나요? <span class="toggle-link" id="toSignup" data-testid="link-toggle">회원가입</span>
+      </div>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer style="margin-top: auto;">
+    © 2025 <strong>HARU_KIM HYUN JUN</strong>
+  </footer>
+
+  <!-- 3D Background -->
+  <script type="module" src="scripts/bg/scene.js"></script>
+
+  <!-- Auth Logic -->
+  <script type="module" src="signup.js"></script>
+</body>
+</html>

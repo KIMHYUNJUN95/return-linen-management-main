@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>HARU 내역 관리</title>
+  <link rel="stylesheet" href="common.css" />
+  <style>
+    /* ✅ 카드형 스타일 */
+    .history-section {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      padding: 8px 0;
+    }
+    .history-card {
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      box-shadow: var(--shadow);
+      padding: 14px;
+      transition: 0.2s;
+    }
+    .history-card[data-type="입고"] {
+      background: #f0f6ff;
+      border-left: 6px solid #4c9aff;
+    }
+    .history-card[data-type="반품"] {
+      background: #fff7f7;
+      border-left: 6px solid #ff6b6b;
+    }
+    .history-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    }
+    .history-card header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-weight: 600;
+      margin-bottom: 6px;
+    }
+    .history-card .meta {
+      font-size: 13px;
+      color: #777;
+    }
+    .history-card .content {
+      font-size: 14px;
+      color: var(--text);
+      margin-top: 4px;
+      line-height: 1.5;
+    }
+    .legacy-label {
+      display: inline-block;
+      background: #888;
+      color: #fff;
+      font-size: 12px;
+      padding: 2px 8px;
+      border-radius: 8px;
+      margin-top: 8px;
+    }
+    .history-card .actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+      margin-top: 10px;
+    }
+    .history-card .actions button {
+      padding: 6px 14px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 500;
+      transition: 0.2s;
+    }
+    .actions .btn-edit {
+      background: #007bff;
+      color: #fff;
+    }
+    .actions .btn-del {
+      background: #d32f2f;
+      color: #fff;
+    }
+    .actions button:hover {
+      opacity: 0.9;
+    }
+
+    /* 📤 내보내기 버튼 */
+    .export-buttons {
+      display: flex;
+      gap: 10px;
+      margin: 12px 0;
+    }
+    .export-buttons button {
+      flex: 1;
+      padding: 10px 14px;
+      border: none;
+      border-radius: var(--radius);
+      font-weight: 600;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+    .export-buttons .excel {
+      background: #2e7d32;
+      color: #fff;
+    }
+    .export-buttons .pdf {
+      background: #c62828;
+      color: #fff;
+    }
+    .export-buttons button:hover {
+      opacity: 0.9;
+    }
+
+    /* 📅 날짜 필드 */
+    input[type="date"] {
+      color: #333;
+      background-color: #fff;
+      appearance: none;
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      padding: 6px 10px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+    }
+
+    /* 📱 반응형 */
+    @media (max-width: 600px) {
+      .export-buttons {
+        flex-direction: column;
+      }
+      .export-buttons button {
+        width: 100%;
+      }
+      .filter {
+        flex-direction: column;
+      }
+      .filter select, .filter input, .filter button {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div id="header-placeholder"></div>
+
+  <main>
+    <div class="container">
+      <h2 style="margin-bottom:12px;">린넨 입고·반품 내역</h2>
+
+      <!-- 🔍 필터 -->
+      <div class="filter" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px;">
+        <select id="filterType">
+          <option value="">전체 구분</option>
+          <option value="incoming">입고</option>
+          <option value="returns">반품</option>
+        </select>
+        <select id="filterBuilding">
+          <option value="">전체 건물</option>
+          <option value="아라키초A">아라키초A</option>
+          <option value="아라키초B">아라키초B</option>
+          <option value="다이쿄초">다이쿄초</option>
+          <option value="가부키초">가부키초</option>
+          <option value="다카다노바바">다카다노바바</option>
+          <option value="오쿠보1">오쿠보1</option>
+          <option value="오쿠보2">오쿠보2</option>
+          <option value="오쿠보4">오쿠보4</option>
+        </select>
+        <input type="date" id="startDate" />
+        <input type="date" id="endDate" />
+        <button id="filterBtn" class="primary">검색</button>
+        <button id="resetBtn" class="secondary">초기화</button>
+      </div>
+
+      <!-- 📤 엑셀 / PDF 내보내기 -->
+      <div class="export-buttons">
+        <button id="btnExcel" class="excel">엑셀 내보내기</button>
+        <button id="btnPDF" class="pdf">PDF 내보내기</button>
+      </div>
+
+      <!-- 📱 카드형 내역 리스트 -->
+      <div class="history-section" id="historyCardBody">
+        <div style="text-align:center;color:#777;padding:20px;">불러오는 중...</div>
+      </div>
+    </div>
+  </main>
+
+  <footer style="text-align:center;color:#777;padding:16px 0;">
+    © 2025 HARU · by KIM HYUN JUN
+  </footer>
+
+  <!-- ✅ Header 메뉴 -->
+  <script type="module">
+    import { initHeaderMenu } from "./header.js";
+    fetch("header.html")
+      .then(r => r.text())
+      .then(html => {
+        document.getElementById("header-placeholder").innerHTML = html;
+        initHeaderMenu();
+      });
+  </script>
+
+  <!-- ✅ 외부 라이브러리 (엑셀/PDF) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
+
+  <!-- ✅ 메인 스크립트 -->
+  <script type="module" src="history_dashboard_fast.js"></script>
+</body>
+</html>

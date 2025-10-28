@@ -1,0 +1,240 @@
+﻿<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HARU 게시판</title>
+  <link rel="stylesheet" href="common.css">
+  <style>
+    .board-container {
+      max-width: 900px;
+      margin: 20px auto;
+      background: hsl(var(--color-bg-elevated));
+      border: 1px solid hsl(var(--color-border-subtle));
+      border-radius: var(--radius-lg);
+      padding: 24px;
+      box-shadow: var(--shadow-md);
+    }
+
+    h2 {
+      font-size: var(--font-size-xl);
+      font-weight: 700;
+      color: hsl(var(--color-text-primary));
+      margin-bottom: 16px;
+    }
+
+    .post-form input,
+    .post-form textarea {
+      width: 100%;
+      margin: 6px 0;
+      padding: 10px 12px;
+      font-size: var(--font-size-base);
+      border: 1px solid hsl(var(--color-border-subtle));
+      border-radius: var(--radius-md);
+      background: hsl(var(--color-bg-input));
+      color: hsl(var(--color-text-primary));
+    }
+
+    .post-form textarea {
+      min-height: 120px;
+      resize: vertical;
+    }
+
+    /* 笨・・ｵ・ ・ｴ增ｬ・菩侃 */
+    .pinned-label {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 600;
+      color: hsl(var(--color-text-primary));
+      cursor: pointer;
+      margin: 8px 0 12px 0;
+    }
+
+    .pinned-label input {
+      width: 18px;
+      height: 18px;
+      cursor: pointer;
+    }
+
+    /* 笨・・護亨・ ・ｴ・・*/
+    .post-list {
+      margin-top: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .post {
+      background: hsl(var(--color-bg-card));
+      border: 1px solid hsl(var(--color-border-subtle));
+      border-radius: 10px;
+      padding: 16px;
+      white-space: pre-wrap;
+    }
+
+    .post-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .post-title {
+      font-weight: 600;
+      font-size: var(--font-size-lg);
+      color: hsl(var(--color-text-primary));
+    }
+
+    .post-author {
+      font-size: var(--font-size-sm);
+      color: hsl(var(--color-text-tertiary));
+    }
+
+    .post-actions {
+      display: flex;
+      gap: 6px;
+    }
+
+    .post-actions button {
+      font-size: var(--font-size-sm);
+    }
+
+    .pinned {
+      border: 2px solid hsl(var(--color-primary));
+    }
+
+    /* 笨・・縄ｸ */
+    .comment-box {
+      margin-top: 12px;
+      border-top: 1px solid hsl(var(--color-border-subtle));
+      padding-top: 8px;
+    }
+
+    .comment-list {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .comment {
+      background: hsla(var(--color-primary), 0.03);
+      border-radius: 8px;
+      padding: 8px;
+    }
+
+    .comment small {
+      color: hsl(var(--color-text-tertiary));
+    }
+
+    .comment .cmt-actions {
+      float: right;
+      display: inline-flex;
+      gap: 6px;
+    }
+
+    .comment-input {
+      width: 100%;
+      margin-top: 6px;
+      min-height: 56px;
+      border: 1px solid hsl(var(--color-border-subtle));
+      border-radius: 8px;
+      padding: 8px;
+      resize: vertical;
+      font-size: var(--font-size-sm);
+    }
+
+    /* 笨・・們・・ｨ・ｬ */
+    .modal-bg {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.5);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 9999;
+    }
+
+    .modal {
+      background: #fff;
+      border-radius: 12px;
+      padding: 20px;
+      width: 90%;
+      max-width: 480px;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+    }
+
+    .modal input,
+    .modal textarea {
+      width: 100%;
+      margin: 8px 0;
+      padding: 8px;
+      border: 1px solid hsl(var(--color-border-subtle));
+      border-radius: 8px;
+      font-size: 14px;
+    }
+
+    .modal .modal-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    @media (max-width: 768px) {
+      .board-container { padding: 16px; }
+      .post-actions {
+        width: 100%;
+        display: flex;
+        gap: 6px;
+        justify-content: flex-end;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- 笨・嵭､・・-->
+  <div id="header-placeholder"></div>
+
+  <main>
+    <div class="board-container section">
+      <h2>공지 / 메모 게시판</h2>
+
+      <!-- 統 ・卓┳ 尞ｼ -->
+      <form id="postForm" class="post-form">
+        <input type="text" id="title" placeholder="제목을 입력하세요" required>
+        <textarea id="content" placeholder="내용을 입력하세요" required></textarea>
+
+        <label for="pinned" class="pinned-label">
+          <span>공지로 고정</span>
+          <input type="checkbox" id="pinned">
+        </label>
+        <button type="submit" class="primary">등록</button>
+      </form>
+
+      <!-- 糖 ・護亨・ ・ｩ・・-->
+      <section id="postList" class="post-list"></section>
+    </div>
+  </main>
+
+  <footer style="text-align:center;color:#777;padding:20px 0;">
+    ﾂｩ 2025 HARU ﾂｷ by KIM HYUN JUN
+  </footer>
+
+  <script type="module" src="board.js"></script>
+  <script type="module">
+    import { initHeaderMenu } from "./header.js";
+    fetch("header.html")
+      .then(r => r.text())
+      .then(html => {
+        document.getElementById("header-placeholder").innerHTML = html;
+        initHeaderMenu();
+      });
+  </script>
+  <!-- Global Notice Popup -->
+  <script type="module" src="notice_popup.js"></script>
+</body>
+</html>
+

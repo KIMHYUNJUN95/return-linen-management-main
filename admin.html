@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>HARU 관리자</title>
+  <link rel="stylesheet" href="common.css" />
+  <style>
+    .admin-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: var(--space-6);
+    }
+
+    .admin-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: var(--space-6);
+      margin-top: var(--space-6);
+    }
+
+    .admin-card {
+      background: hsla(var(--color-bg-glass), 0.5);
+      backdrop-filter: blur(var(--blur-md));
+      border: 1px solid hsl(var(--color-border-glass));
+      border-radius: var(--radius-lg);
+      padding: var(--space-6);
+      transition: all var(--transition-base);
+    }
+
+    .admin-card:hover {
+      transform: translateY(-4px);
+      box-shadow: var(--shadow-lg), var(--shadow-glow);
+      border-color: hsl(var(--color-primary) / 0.5);
+    }
+
+    .admin-icon {
+      font-size: var(--font-size-4xl);
+      margin-bottom: var(--space-4);
+    }
+
+    .admin-title {
+      font-size: var(--font-size-xl);
+      font-weight: 700;
+      margin-bottom: var(--space-2);
+    }
+
+    .admin-desc {
+      color: hsl(var(--color-text-secondary));
+      font-size: var(--font-size-sm);
+      margin-bottom: var(--space-4);
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: var(--space-4);
+      margin-bottom: var(--space-8);
+    }
+
+    @media (max-width: 1024px) {
+      .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    @media (max-width: 640px) {
+      .stats-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .stat-card {
+      background: hsla(var(--color-bg-elevated), 0.5);
+      border: 1px solid hsl(var(--color-border-glass));
+      border-radius: var(--radius-md);
+      padding: var(--space-4);
+      text-align: center;
+    }
+
+    .stat-value {
+      font-size: var(--font-size-3xl);
+      font-weight: 700;
+      color: hsl(var(--color-primary));
+    }
+
+    .stat-label {
+      font-size: var(--font-size-sm);
+      color: hsl(var(--color-text-secondary));
+      margin-top: var(--space-1);
+    }
+  </style>
+</head>
+<body>
+  <canvas id="bg-canvas"></canvas>
+  <div id="header-placeholder"></div>
+
+  <main>
+    <div class="admin-container">
+      <h1>👨‍💼 관리자 대시보드</h1>
+      <p class="text-secondary" style="margin-bottom: var(--space-6);">
+        시스템 전체 현황을 관리하세요
+      </p>
+
+      <!-- 통계 -->
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-value" id="totalUsers" data-testid="stat-total-users">0</div>
+          <div class="stat-label">전체 사용자</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="totalOrders" data-testid="stat-total-orders">0</div>
+          <div class="stat-label">주문 요청</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="totalNotices" data-testid="stat-total-notices">0</div>
+          <div class="stat-label">공지사항</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="totalLogs" data-testid="stat-total-logs">0</div>
+          <div class="stat-label">근무 기록</div>
+        </div>
+      </div>
+
+      <!-- 관리 메뉴 -->
+      <div class="admin-grid">
+        <a href="notices_admin.html" class="admin-card" data-testid="link-manage-notices" style="text-decoration:none;color:inherit;">
+          <div class="admin-icon">📢</div>
+          <h3 class="admin-title">공지사항 관리</h3>
+          <p class="admin-desc">공지사항을 작성하고 관리합니다</p>
+          <div class="btn btn-secondary" style="width:100%;">관리하기</div>
+        </a>
+
+        <a href="orders_list.html" class="admin-card" data-testid="link-manage-orders" style="text-decoration:none;color:inherit;">
+          <div class="admin-icon">🛒</div>
+          <h3 class="admin-title">주문 관리</h3>
+          <p class="admin-desc">주문 요청을 승인하고 관리합니다</p>
+          <div class="btn btn-secondary" style="width:100%;">관리하기</div>
+        </a>
+
+        <a href="admin_dashboard.html" class="admin-card" data-testid="link-linen-stats" style="text-decoration:none;color:inherit;">
+          <div class="admin-icon">📊</div>
+          <h3 class="admin-title">린넨 통계</h3>
+          <p class="admin-desc">린넨 입출고 통계를 확인합니다</p>
+          <div class="btn btn-secondary" style="width:100%;">통계 보기</div>
+        </a>
+
+        <div class="admin-card">
+          <div class="admin-icon">⚙️</div>
+          <h3 class="admin-title">시스템 설정</h3>
+          <p class="admin-desc">시스템 전반적인 설정을 관리합니다</p>
+          <button class="btn btn-secondary" style="width:100%;" onclick="alert('준비 중입니다')" data-testid="button-system-settings">
+            설정하기
+          </button>
+        </div>
+
+        <div class="admin-card">
+          <div class="admin-icon">📁</div>
+          <h3 class="admin-title">데이터 백업</h3>
+          <p class="admin-desc">전체 데이터를 백업하고 복원합니다</p>
+          <button class="btn btn-secondary" style="width:100%;" onclick="alert('준비 중입니다')" data-testid="button-backup">
+            백업하기
+          </button>
+        </div>
+
+        <div class="admin-card">
+          <div class="admin-icon">📈</div>
+          <h3 class="admin-title">통계 리포트</h3>
+          <p class="admin-desc">전체 시스템 사용 현황을 확인합니다</p>
+          <button class="btn btn-secondary" style="width:100%;" onclick="alert('준비 중입니다')" data-testid="button-reports">
+            리포트 보기
+          </button>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer>© 2025 <strong>HARU_KIM HYUN JUN</strong></footer>
+
+  <script type="module" src="scripts/bg/scene.js"></script>
+  <script type="module">
+    import { initHeaderMenu } from "./header.js";
+    fetch("header.html").then(r=>r.text()).then(h=>{
+      document.getElementById("header-placeholder").innerHTML=h;
+      initHeaderMenu();
+    });
+  </script>
+  <script type="module" src="admin.js"></script>
+</body>
+</html>

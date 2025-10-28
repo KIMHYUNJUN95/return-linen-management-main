@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>HARU 관리 · 린넨 통계 대시보드</title>
+  <link rel="stylesheet" href="common.css" />
+  <style>
+    .dash-container {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+
+    h2 {
+      margin-bottom: 16px;
+      color: var(--text);
+    }
+
+    /* 필터 영역 */
+    .filters {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+      margin-bottom: 16px;
+      background: var(--elev);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 10px;
+    }
+
+    .filters .group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .filters label {
+      font-weight: 700;
+    }
+
+    .filters input,
+    .filters select,
+    .filters button {
+      height: 38px;
+      border-radius: 10px;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0 12px;
+      border: 1px solid var(--border);
+      background: var(--elev);
+      color: var(--text);
+      cursor: pointer;
+    }
+
+    .btn.primary {
+      background: var(--accent);
+      border-color: transparent;
+      color: #fff;
+    }
+
+    .btn.ghost {
+      background: #101721;
+      color: #fff;
+    }
+
+    .btn-lg {
+      height: 40px;
+      border-radius: 12px;
+    }
+
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-left: auto;
+    }
+
+    /* 카드 리스트 */
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+      gap: 12px;
+      margin-top: 10px;
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      box-shadow: var(--shadow);
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      transition: 0.2s;
+    }
+
+    .card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    }
+
+    .card h3 {
+      font-size: 15px;
+      font-weight: 600;
+      margin-bottom: 8px;
+      color: var(--text);
+    }
+
+    .card p {
+      font-size: 14px;
+      color: var(--muted);
+      margin: 2px 0;
+    }
+
+    .total-summary {
+      display: flex;
+      justify-content: space-around;
+      background: var(--elev);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      margin-top: 18px;
+      padding: 10px;
+      font-size: 15px;
+      color: var(--text);
+      font-weight: 600;
+    }
+
+    @media (max-width: 768px) {
+      .dash-container {
+        padding: 14px;
+      }
+      .actions {
+        width: 100%;
+      }
+      .actions .btn {
+        flex: 1;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="header-placeholder"></div>
+
+  <main>
+    <div class="dash-container">
+      <h2>린넨 통계 대시보드</h2>
+
+      <!-- 필터 -->
+      <div class="filters">
+        <div class="group">
+          <label for="autoMonth" class="muted">한 달 자동</label>
+          <input type="checkbox" id="autoMonth" checked />
+          <input type="month" id="monthPicker" />
+        </div>
+
+        <div class="group">
+          <label class="muted">직접 기간</label>
+          <input type="date" id="startDate" />
+          <span class="muted">~</span>
+          <input type="date" id="endDate" />
+        </div>
+
+        <div class="actions">
+          <button id="btnApply" class="btn primary btn-lg">적용</button>
+          <button id="btnReset" class="btn ghost btn-lg">초기화</button>
+          <button id="btnExportCsv" class="btn btn-lg">CSV 내보내기</button>
+          <button id="btnExportPdf" class="btn btn-lg">PDF 내보내기</button>
+        </div>
+      </div>
+
+      <div id="rangeLabel" class="muted" style="margin: 8px 0;"></div>
+      <div id="updatedLabel" class="muted"></div>
+
+      <!-- 카드형 통계 -->
+      <div class="cards" id="statCards">
+        <div class="card">
+          <h3>불러오는 중...</h3>
+        </div>
+      </div>
+
+      <!-- 총합 -->
+      <div class="total-summary">
+        <div>입고: <span id="totalIncoming">0</span></div>
+        <div>반품: <span id="totalReturns">0</span></div>
+        <div>순입고: <span id="totalNet">0</span></div>
+      </div>
+    </div>
+  </main>
+
+  <footer style="text-align:center;color:#9fb0c6;padding:16px 0;">
+    © 2025 HARU · by KIM HYUN JUN
+  </footer>
+
+  <script type="module">
+    import { initHeaderMenu } from "./header.js";
+    fetch("header.html").then(r => r.text()).then(h => {
+      document.getElementById("header-placeholder").innerHTML = h;
+      initHeaderMenu();
+    });
+  </script>
+
+  <script type="module" src="admin_dashboard.js"></script>
+</body>
+</html>
