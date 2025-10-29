@@ -1,5 +1,5 @@
 // ========================================
-// 📦 HARU 재고 관리 시스템 (모달 폼 버전)
+// 📦 HARU 재고 관리 시스템 (전체화면 모드 + 상태 표시 추가)
 // ========================================
 
 import { db, auth } from "./storage.js";
@@ -22,9 +22,6 @@ import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/f
 // ✅ 권한 기능 임시 설정 (항상 admin으로 반환)
 const getUserRoleByEmail = () => Promise.resolve("admin");
 
-// ========================================
-// ✅ 초기화
-// ========================================
 window.addEventListener("DOMContentLoaded", () => {
   const invBuildingSel = document.getElementById("invBuilding");
   const invSearchInput = document.getElementById("invSearch");
@@ -44,6 +41,12 @@ window.addEventListener("DOMContentLoaded", () => {
   const commonItemSelect = document.getElementById("commonItemSelect");
   const buildingTabs = document.querySelectorAll(".building-tabs button");
   const modalOverlay = document.getElementById("inventoryModal");
+
+  // 📋 전체화면 보기 관련 요소
+  const btnOpenInventoryFull = document.getElementById("btnOpenInventoryFull");
+  const inventoryFullModal = document.getElementById("inventoryFullModal");
+  const btnCloseInventoryFull = document.getElementById("btnCloseInventoryFull");
+  const fullscreenInventory = document.getElementById("fullscreenInventory");
 
   let unsub = null;
   let currentDocId = null;
@@ -79,6 +82,60 @@ window.addEventListener("DOMContentLoaded", () => {
       document.body.style.overflow = "";
     }
   });
+
+  // -------------------------------
+  // 📋 전체화면 재고리스트 모달
+  // -------------------------------
+  btnOpenInventoryFull.addEventListener("click", () => {
+    renderFullInventory();
+    inventoryFullModal.classList.add("active");
+    document.body.style.overflow = "hidden";
+  });
+
+  btnCloseInventoryFull.addEventListener("click", () => {
+    inventoryFullModal.classList.remove("active");
+    document.body.style.overflow = "";
+  });
+
+  function renderFullInventory() {
+    if (!cachedItems.length) {
+      fullscreenInventory.innerHTML = `<p style="text-align:center;opacity:.6;">불러온 데이터가 없습니다.</p>`;
+      return;
+    }
+    fullscreenInventory.innerHTML = `
+      <table style="width:100%;border-collapse:collapse;">
+        <thead>
+          <tr style="background:#f4f6f8;">
+            <th style="padding:8px;">품목명</th>
+            <th style="padding:8px;">재고</th>
+            <th style="padding:8px;">최소</th>
+            <th style="padding:8px;">상태</th>
+            <th style="padding:8px;">건물</th>
+            <th style="padding:8px;">최근 수정</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${cachedItems.map((d)=>{
+            const qty = Number(d.quantity || 0);
+            const min = Number(d.minQuantity || 0);
+            const status = qty <= min
+              ? `<span style="color:#f43f5e;font-weight:600;">품절</span>`
+              : `<span style="color:#10b981;font-weight:600;">정상</span>`;
+            return `
+              <tr style="border-bottom:1px solid #ddd;">
+                <td style="padding:8px;">${d.itemName}</td>
+                <td style="padding:8px;text-align:right;">${qty}</td>
+                <td style="padding:8px;text-align:right;">${min}</td>
+                <td style="padding:8px;text-align:center;">${status}</td>
+                <td style="padding:8px;">${d.building}</td>
+                <td style="padding:8px;">${d.lastUpdated}</td>
+              </tr>
+            `;
+          }).join("")}
+        </tbody>
+      </table>
+    `;
+  }
 
   // -------------------------------
   // 🧾 공통품목 드롭다운
@@ -137,30 +194,37 @@ window.addEventListener("DOMContentLoaded", () => {
       : items;
 
     if (!rows.length) {
-      invTbody.innerHTML = `<tr><td colspan="6" style="text-align:center;opacity:.7;">데이터가 없습니다.</td></tr>`;
+      invTbody.innerHTML = `<tr><td colspan="7" style="text-align:center;opacity:.7;">데이터가 없습니다.</td></tr>`;
       return;
     }
 
     invTbody.innerHTML = rows
-      .map(
-        (d) => `
-      <tr data-id="${d.id}">
-        <td>${d.itemName || ""}</td>
-        <td class="t-right">${Number(d.quantity || 0).toLocaleString()}</td>
-        <td class="t-right">${Number(d.minQuantity || 0).toLocaleString()}</td>
-        <td>${d.building || ""}</td>
-        <td>${d.lastUpdated || ""}</td>
-        <td>
-          ${
-            userRole === "admin"
-              ? `<button class="btn btn-sm" data-action="edit">수정</button>
-                 <button class="btn btn-sm danger" data-action="delete">삭제</button>`
-              : `<button class="btn btn-sm" disabled style="opacity:.5;cursor:not-allowed;">수정</button>
-                 <button class="btn btn-sm danger" disabled style="opacity:.5;cursor:not-allowed;">삭제</button>`
-          }
-        </td>
-      </tr>`
-      )
+      .map((d) => {
+        const qty = Number(d.quantity || 0);
+        const min = Number(d.minQuantity || 0);
+        const statusBadge = qty <= min
+          ? `<span style="color:#f43f5e;font-weight:600;">❌ 품절</span>`
+          : `<span style="color:#10b981;font-weight:600;">✅ 정상</span>`;
+
+        return `
+        <tr data-id="${d.id}">
+          <td>${d.itemName}</td>
+          <td class="t-right">${qty}</td>
+          <td class="t-right">${min}</td>
+          <td>${statusBadge}</td>
+          <td>${d.building || ""}</td>
+          <td>${d.lastUpdated || ""}</td>
+          <td>
+            ${
+              userRole === "admin"
+                ? `<button class="btn btn-sm" data-action="edit">수정</button>
+                   <button class="btn btn-sm danger" data-action="delete">삭제</button>`
+                : `<button class="btn btn-sm" disabled style="opacity:.5;">수정</button>
+                   <button class="btn btn-sm danger" disabled style="opacity:.5;">삭제</button>`
+            }
+          </td>
+        </tr>`;
+      })
       .join("");
   }
 
@@ -184,7 +248,7 @@ window.addEventListener("DOMContentLoaded", () => {
   }
 
   // -------------------------------
-  // 🧾 폼 초기화
+  // 폼 초기화
   // -------------------------------
   function resetForm() {
     currentDocId = null;
@@ -200,7 +264,7 @@ window.addEventListener("DOMContentLoaded", () => {
   btnResetForm.addEventListener("click", resetForm);
 
   // -------------------------------
-  // 💾 저장 (등록 / 수정)
+  // 💾 저장
   // -------------------------------
   btnSaveItem.addEventListener("click", async () => {
     const building = formBuilding.value.trim();
@@ -211,7 +275,7 @@ window.addEventListener("DOMContentLoaded", () => {
 
     if (!itemName) return alert("품목명을 입력하세요.");
     if (userRole !== "admin") {
-      alert("관리자만 재고 데이터를 수정할 수 있습니다.");
+      alert("관리자만 수정 가능합니다.");
       return;
     }
 
@@ -244,6 +308,7 @@ window.addEventListener("DOMContentLoaded", () => {
         await addDoc(collection(db, "inventory"), payload);
         alert("등록되었습니다.");
       }
+
       resetForm();
       modalOverlay.style.display = "none";
       document.body.style.overflow = "";
@@ -281,7 +346,7 @@ window.addEventListener("DOMContentLoaded", () => {
     }
 
     if (action === "delete") {
-      if (userRole !== "admin") return alert("관리자만 삭제할 수 있습니다.");
+      if (userRole !== "admin") return alert("관리자만 삭제 가능합니다.");
       if (!confirm("정말 삭제하시겠습니까?")) return;
       await deleteDoc(docRef);
       alert("삭제되었습니다.");
@@ -289,7 +354,7 @@ window.addEventListener("DOMContentLoaded", () => {
   });
 
   // -------------------------------
-  // 🔍 필터 및 검색
+  // 필터 & 검색
   // -------------------------------
   invBuildingSel.addEventListener("change", subscribeInventory);
   invSearchInput.addEventListener("input", () => {
@@ -312,7 +377,7 @@ window.addEventListener("DOMContentLoaded", () => {
   });
 
   // -------------------------------
-  // 📤 CSV 내보내기
+  // CSV 내보내기
   // -------------------------------
   btnExportInv.addEventListener("click", async () => {
     const building = invBuildingSel.value;
@@ -339,7 +404,7 @@ window.addEventListener("DOMContentLoaded", () => {
   });
 
   // -------------------------------
-  // 🔐 로그인 권한 확인
+  // 로그인 권한 확인
   // -------------------------------
   onAuthStateChanged(auth, async (user) => {
     if (!user?.email) return;
@@ -347,15 +412,14 @@ window.addEventListener("DOMContentLoaded", () => {
       const role = await getUserRoleByEmail(user.email);
       userRole = role === "admin" ? "admin" : "user";
       subscribeInventory();
-    } catch (err) {
-      console.warn("권한 확인 실패:", err);
+    } catch {
       userRole = "user";
       subscribeInventory();
     }
   });
 
   // -------------------------------
-  // 🚀 초기 실행
+  // 초기 실행
   // -------------------------------
   fillCommonDropdown();
   subscribeInventory();
