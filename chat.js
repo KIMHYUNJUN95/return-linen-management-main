@@ -23,6 +23,7 @@ const meName = document.getElementById("meName");
 
 let currentUser = null;
 let isAdmin = false;
+let lastMessageTimestamp = 0;
 
 /* ✅ 관리자 UID 설정 */
 const ADMIN_UIDS = ["YOUR_ADMIN_UID_HERE"];
@@ -85,12 +86,17 @@ function loadMessages() {
   onSnapshot(q, (snapshot) => {
     chatMessages.innerHTML = "";
 
+    let newestTimestamp = lastMessageTimestamp;
+
     snapshot.forEach((docSnap) => {
       const msg = docSnap.data();
       const id = docSnap.id;
 
-      const date = msg.createdAt?.toDate
-        ? msg.createdAt.toDate().toLocaleString("ko-KR", {
+      const createdAt = msg.createdAt?.toDate
+        ? msg.createdAt.toDate()
+        : null;
+      const createdAtString = createdAt
+        ? createdAt.toLocaleString("ko-KR", {
             month: "2-digit",
             day: "2-digit",
             hour: "2-digit",
@@ -98,6 +104,7 @@ function loadMessages() {
           })
         : "";
 
+      // 메시지 렌더링
       const div = document.createElement("div");
       div.classList.add("message");
       div.classList.add(msg.uid === currentUser?.uid ? "self" : "other");
@@ -120,15 +127,27 @@ function loadMessages() {
         <div style="font-weight:600; margin-bottom:2px;">${msg.userName}</div>
         ${contentHtml}
         <div class="meta">
-          <span>${date}</span>
+          <span>${createdAtString}</span>
           ${deleteBtn}
         </div>
       `;
       chatMessages.appendChild(div);
+
+      // 최신 메시지 시간 저장
+      if (createdAt && createdAt.getTime() > newestTimestamp) {
+        newestTimestamp = createdAt.getTime();
+      }
     });
 
     attachDeleteHandlers();
     chatMessages.scrollTop = chatMessages.scrollHeight;
+
+    // ✅ 새 메시지 도착 && 채팅 페이지가 아닐 때 뱃지 표시
+    if (newestTimestamp > lastMessageTimestamp && !location.pathname.includes("chat.html")) {
+      showChatBadge();
+    }
+
+    lastMessageTimestamp = newestTimestamp;
   });
 }
 
@@ -148,4 +167,35 @@ function attachDeleteHandlers() {
       }
     });
   });
+}
+
+/* ===========================================
+   🔔 채팅 뱃지 기능
+=========================================== */
+function showChatBadge() {
+  const chatMenu = document.querySelector('[data-menu="chat"]');
+  if (!chatMenu) return;
+
+  let badge = chatMenu.querySelector(".chat-badge");
+  if (!badge) {
+    badge = document.createElement("span");
+    badge.className = "chat-badge";
+    badge.textContent = "●";
+    badge.style.color = "red";
+    badge.style.fontSize = "14px";
+    badge.style.marginLeft = "6px";
+    chatMenu.appendChild(badge);
+  }
+}
+
+function clearChatBadge() {
+  const chatMenu = document.querySelector('[data-menu="chat"]');
+  if (!chatMenu) return;
+  const badge = chatMenu.querySelector(".chat-badge");
+  if (badge) badge.remove();
+}
+
+// ✅ 채팅 페이지 진입 시 뱃지 제거
+if (location.pathname.includes("chat.html")) {
+  clearChatBadge();
 }
