@@ -1,9 +1,9 @@
 // ========================================
-// 🛒 HARU Orders (주문 요청) - 최종 안정화 버전
+// 🛒 HARU Orders (주문 요청 & 수정 기능 추가)
 // ========================================
 
 import { db, auth } from "./storage.js";
-import { collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { collection, addDoc, doc, updateDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 document.addEventListener("DOMContentLoaded", () => {
   const form = document.getElementById("orderForm");
@@ -18,9 +18,37 @@ document.addEventListener("DOMContentLoaded", () => {
   const itemLinkEl = document.getElementById("itemLink");
   const urgencyEl = document.getElementById("urgency");
   const notesEl = document.getElementById("notes");
+  const editIndicator = document.getElementById("editIndicator");
+  const submitBtn = document.getElementById("submitBtn");
 
-  // 주문 항목 목록
+  // =============================
+  // ✨ 수정 모드 감지
+  // =============================
+  let editMode = false;
+  let editOrderId = null;
   let items = [];
+
+  const savedOrderData = localStorage.getItem("editOrderData");
+  if (savedOrderData) {
+    try {
+      const orderData = JSON.parse(savedOrderData);
+      editMode = true;
+      editOrderId = orderData.id;
+
+      // 상단 안내 표시
+      editIndicator.style.display = "block";
+      submitBtn.textContent = "주문 수정하기";
+
+      // 기존 데이터 반영
+      items = orderData.items || [];
+      urgencyEl.value = orderData.urgency || "일반";
+      notesEl.value = orderData.notes || "";
+
+      renderItems();
+    } catch (err) {
+      console.error("❌ editOrderData 파싱 오류:", err);
+    }
+  }
 
   // =============================
   // 📌 일본어 감지 함수
@@ -60,9 +88,7 @@ document.addEventListener("DOMContentLoaded", () => {
     alert(`✅ "${searchTerm}" 항목이 자동으로 추가되었습니다!`);
   });
 
-  // =============================
   // 🔍 아마존 검색 엔터키 처리
-  // =============================
   amazonSearchEl.addEventListener("keydown", (e) => {
     if (e.key === 'Enter') {
       e.preventDefault();
@@ -142,12 +168,10 @@ document.addEventListener("DOMContentLoaded", () => {
   };
 
   // =============================
-  // 📡 주문 제출
+  // 📡 주문 제출 (등록 또는 수정)
   // =============================
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
-
-    console.log("📦 현재 items 배열 상태:", items);
 
     if (!items || items.length === 0) {
       alert("주문할 물품을 최소 1개 이상 추가하세요.");
@@ -166,21 +190,29 @@ document.addEventListener("DOMContentLoaded", () => {
       status: "pending",
       createdBy: userName,
       userEmail,
-      createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
     };
 
     try {
-      console.log("📡 Firestore로 전송할 데이터:", orderData);
-      const docRef = await addDoc(collection(db, "orders"), orderData);
-      console.log("✅ 주문 요청 성공:", docRef.id);
+      if (editMode && editOrderId) {
+        // ✨ 수정 모드 → updateDoc
+        const orderRef = doc(db, "orders", editOrderId);
+        await updateDoc(orderRef, orderData);
+        localStorage.removeItem("editOrderData");
+        alert("✅ 주문이 성공적으로 수정되었습니다!");
+      } else {
+        // 신규 등록 → addDoc
+        orderData.createdAt = serverTimestamp();
+        const docRef = await addDoc(collection(db, "orders"), orderData);
+        console.log("✅ 주문 요청 성공:", docRef.id);
+        alert("✅ 주문 요청이 완료되었습니다!");
+      }
 
-      alert("✅ 주문 요청이 완료되었습니다!");
       items = [];
       location.href = "orders_list.html";
     } catch (err) {
-      console.error("❌ 주문 요청 오류 발생:", err);
-      alert("주문 요청 중 오류가 발생했습니다: " + err.message);
+      console.error("❌ 주문 처리 오류 발생:", err);
+      alert("주문 처리 중 오류가 발생했습니다: " + err.message);
     }
   });
 

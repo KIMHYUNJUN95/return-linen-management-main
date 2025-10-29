@@ -60,6 +60,16 @@
       text-align: center;
       color: hsl(var(--color-text-tertiary));
     }
+
+    .edit-indicator {
+      background: hsl(var(--color-primary) / 0.1);
+      border: 1px solid hsl(var(--color-primary) / 0.3);
+      padding: var(--space-3);
+      border-radius: var(--radius-md);
+      margin-bottom: var(--space-5);
+      font-size: var(--font-size-sm);
+      color: hsl(var(--color-primary));
+    }
   </style>
 </head>
 <body>
@@ -70,8 +80,12 @@
     <div class="order-container">
       <h1>🛒 주문 요청</h1>
       <p class="text-secondary" style="margin-bottom: var(--space-6);">
-        필요한 물품을 주문 요청하세요
+        필요한 물품을 주문 요청하거나 수정하세요
       </p>
+
+      <div id="editIndicator" class="edit-indicator" style="display:none;">
+        ✨ 현재 수정 모드입니다. 수정 후 저장을 누르면 기존 주문이 업데이트됩니다.
+      </div>
 
       <div class="order-form">
         <form id="orderForm">
@@ -144,7 +158,7 @@
             <textarea id="notes" class="form-textarea" placeholder="추가 요청사항을 입력하세요 (선택)" data-testid="textarea-notes"></textarea>
           </div>
 
-          <button type="submit" class="btn btn-primary" style="width: 100%;" data-testid="button-submit">
+          <button type="submit" id="submitBtn" class="btn btn-primary" style="width: 100%;" data-testid="button-submit">
             주문 요청하기
           </button>
         </form>

@@ -1,9 +1,18 @@
 // ========================================
-// 🛒 HARU Orders List
+// 🛒 HARU Orders List (수정 기능 추가)
 // ========================================
 
 import { db, auth } from "./storage.js";
-import { collection, getDocs, query, orderBy, deleteDoc, doc, updateDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import {
+  collection,
+  getDocs,
+  query,
+  orderBy,
+  deleteDoc,
+  doc,
+  updateDoc,
+  serverTimestamp
+} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 const ordersList = document.getElementById("ordersList");
 const emptyState = document.getElementById("emptyState");
@@ -63,7 +72,9 @@ function renderOrders(orders) {
 
   ordersList.innerHTML = orders.map((order) => {
     const items = (order.items || []).map(item => {
-      const linkHtml = item.link ? `<a href="${item.link}" target="_blank" style="color:hsl(var(--color-primary));font-size:var(--font-size-xs);margin-left:var(--space-2);">🔗 링크</a>` : '';
+      const linkHtml = item.link
+        ? `<a href="${item.link}" target="_blank" style="color:hsl(var(--color-primary));font-size:var(--font-size-xs);margin-left:var(--space-2);">🔗 링크</a>`
+        : '';
       return `
         <div class="item">
           <span>${item.name} (${item.category})${linkHtml}</span>
@@ -95,13 +106,14 @@ function renderOrders(orders) {
 
         <div class="order-actions">
           ${order.status === 'pending' ? `
-            <button class="btn btn-sm btn-primary" onclick="approveOrder('${order.id}')" data-testid="button-approve-${order.id}">승인</button>
-            <button class="btn btn-sm btn-danger" onclick="rejectOrder('${order.id}')" data-testid="button-reject-${order.id}">거부</button>
+            <button class="btn btn-sm btn-primary" onclick="approveOrder('${order.id}')">승인</button>
+            <button class="btn btn-sm btn-danger" onclick="rejectOrder('${order.id}')">거부</button>
+            <button class="btn btn-sm btn-secondary" onclick="editOrder('${order.id}')">수정</button>
           ` : ''}
           ${order.status === 'approved' ? `
-            <button class="btn btn-sm btn-success" onclick="completeOrder('${order.id}')" data-testid="button-complete-${order.id}">완료</button>
+            <button class="btn btn-sm btn-success" onclick="completeOrder('${order.id}')">완료</button>
           ` : ''}
-          <button class="btn btn-sm btn-ghost" onclick="deleteOrder('${order.id}')" data-testid="button-delete-${order.id}">삭제</button>
+          <button class="btn btn-sm btn-ghost" onclick="deleteOrder('${order.id}')">삭제</button>
         </div>
       </div>
     `;
@@ -128,13 +140,8 @@ function applyFilters() {
 
   let filtered = allOrders;
 
-  if (status) {
-    filtered = filtered.filter(o => o.status === status);
-  }
-
-  if (urgency) {
-    filtered = filtered.filter(o => o.urgency === urgency);
-  }
+  if (status) filtered = filtered.filter(o => o.status === status);
+  if (urgency) filtered = filtered.filter(o => o.urgency === urgency);
 
   renderOrders(filtered);
 }
@@ -159,6 +166,18 @@ window.deleteOrder = async (id) => {
   if (!confirm("정말 삭제하시겠습니까?")) return;
   await deleteDoc(doc(db, "orders", id));
   await loadOrders();
+};
+
+// ✨ 주문 수정 기능
+window.editOrder = (id) => {
+  const order = allOrders.find(o => o.id === id);
+  if (!order) return alert("주문 데이터를 찾을 수 없습니다.");
+
+  // 로컬 스토리지에 주문 데이터 저장
+  localStorage.setItem("editOrderData", JSON.stringify(order));
+
+  // 수정 페이지로 이동 (orders.html)
+  location.href = "orders.html?edit=" + id;
 };
 
 // 필터 이벤트
