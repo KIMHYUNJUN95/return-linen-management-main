@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>HARU · 주기 관리 대시보드</title>
+
+  <!-- 🔤 Fonts & Base Styles -->
+  <link rel="stylesheet" href="common.css"/>
+  <link rel="stylesheet" href="background.css"/>
+
+  <!-- 📅 FullCalendar -->
+  <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.css" rel="stylesheet"/>
+
+  <!-- 🎨 Schedule Styles -->
+  <style>
+    :root{
+      --haru-grad: linear-gradient(135deg,#00b4d8,#0077b6);
+      --glass-bg: rgba(255,255,255,0.08);
+      --glass-bd: rgba(255,255,255,0.25);
+    }
+    .page-container{
+      max-width: 1200px; margin: 0 auto; padding: 20px;
+    }
+    h1{font-size:28px;color:#111;font-weight:800;margin:6px 0 16px;}
+
+    .filters{display:flex;gap:10px;align-items:center;flex-wrap:wrap;
+      background:var(--glass-bg);border:1px solid var(--glass-bd);backdrop-filter:blur(12px);
+      border-radius:14px;padding:12px;margin-bottom:14px;box-shadow:0 8px 24px rgba(0,0,0,.12);}
+    .filters label{font-weight:700;font-size:14px;color:#111;}
+    .filters select,.filters input[type="month"]{
+      border-radius:10px;border:1px solid #ccc;padding:8px 12px;background:#fff;color:#111;height:38px;font-size:14px;}
+    .filters .actions{margin-left:auto;display:flex;gap:8px;}
+    .btn{display:inline-flex;align-items:center;justify-content:center;height:38px;padding:0 14px;border-radius:10px;
+      border:1px solid var(--glass-bd);background:#fff;color:#111;font-weight:700;cursor:pointer;transition:.2s;}
+    .btn:hover{transform:translateY(-1px);}
+    .btn-primary{background:#111;color:#fff;border:none;}
+    .btn-gradient{background:var(--haru-grad);color:#fff;border:none;box-shadow:0 8px 18px rgba(0,183,255,.25);}
+    .btn-ghost{background:transparent;color:#111;}
+
+    .calendar-card{background:var(--glass-bg);border:1px solid var(--glass-bd);backdrop-filter:blur(12px);
+      border-radius:14px;padding:10px;box-shadow:0 8px 24px rgba(0,0,0,.12);}
+    .mobile-list{display:none;margin-top:14px;}
+    @media(max-width:768px){.mobile-list{display:block;}}
+
+    /* 모달 공통 */
+    .modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.55);display:none;
+      align-items:center;justify-content:center;z-index:9999;padding:16px;}
+    .modal-card{width:100%;max-width:520px;background:#fff;color:#111;border-radius:14px;padding:18px;
+      box-shadow:0 16px 40px rgba(0,0,0,.28);}
+    .modal-card h3{font-size:18px;font-weight:800;margin-bottom:10px;}
+    .modal-row{display:flex;justify-content:space-between;gap:10px;padding:8px 0;border-bottom:1px solid #f0f2f6;}
+    .modal-row:last-child{border-bottom:none;}
+    .modal-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:14px;}
+    .form-input,.form-textarea{width:100%;border:1px solid #d1d5db;border-radius:10px;padding:10px 12px;
+      background:#fff;color:#111;font-size:14px;}
+    .form-textarea{min-height:90px;resize:vertical;}
+    .photo-card img{width:100%;border-radius:12px;display:block;}
+    .photo-card .caption{text-align:center;margin-top:8px;font-size:12px;color:#6b7280;}
+  </style>
+</head>
+<body>
+  <canvas id="bg-canvas"></canvas>
+  <div id="header-placeholder"></div>
+
+  <main class="page-container">
+    <h1>📅 주기 관리 대시보드</h1>
+
+    <!-- 필터 -->
+    <section class="filters">
+      <div class="group">
+        <label for="fBuilding">건물</label>
+        <select id="fBuilding">
+          <option value="">전체</option>
+          <option>아라키초A</option>
+          <option>아라키초B</option>
+          <option>가부키초</option>
+          <option>다카다노바바</option>
+          <option>다이쿄초</option>
+          <option>오쿠보1</option>
+          <option>오쿠보2</option>
+          <option>오쿠보4</option>
+        </select>
+      </div>
+      <div class="group">
+        <label for="fStatus">상태</label>
+        <select id="fStatus">
+          <option value="">전체</option>
+          <option value="upcoming">예정</option>
+          <option value="progress">진행중</option>
+          <option value="overdue">지연</option>
+          <option value="done">완료</option>
+        </select>
+      </div>
+      <div class="group">
+        <label for="fMonth">월</label>
+        <input type="month" id="fMonth"/>
+      </div>
+      <div class="actions">
+        <a href="schedule_form.html" class="btn btn-gradient">+ 작업 등록</a>
+        <button id="btnGoOverview" class="btn btn-primary">📊 전체 현황 보기</button>
+        <button id="btnRefresh" class="btn btn-ghost">새로고침</button>
+      </div>
+    </section>
+
+    <!-- 캘린더 -->
+    <section class="calendar-card"><div id="calendar"></div></section>
+    <section id="mobileList" class="mobile-list" aria-live="polite"></section>
+  </main>
+
+  <!-- 🔍 상세 모달 -->
+  <div id="detailModal" class="modal-bg">
+    <div class="modal-card">
+      <h3>작업 상세 정보</h3>
+      <div class="modal-row"><b>건물:</b><span id="dBuilding">-</span></div>
+      <div class="modal-row"><b>객실:</b><span id="dRoom">-</span></div>
+      <div class="modal-row"><b>작업:</b><span id="dTask">-</span></div>
+      <div class="modal-row"><b>상태:</b><span id="dStatus">-</span></div>
+      <div class="modal-row"><b>예정일:</b><span id="dNextDue">-</span></div>
+      <div class="modal-row"><b>최근작업:</b><span id="dLastDone">-</span></div>
+      <div class="modal-row"><b>비고:</b><span id="dNote">-</span></div>
+      <div id="dPhotoWrap" class="modal-row" style="display:none;justify-content:space-between;">
+        <b>사진:</b><button id="btnOpenPhoto" class="btn btn-primary btn-sm">보기</button>
+      </div>
+      <div class="modal-actions">
+        <button id="btnDetailClose" class="btn">닫기</button>
+        <button id="btnOpenComplete" class="btn btn-primary">완료 처리</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ✅ 완료 모달 -->
+  <div id="completeModal" class="modal-bg">
+    <div class="modal-card">
+      <h3>완료 처리</h3>
+      <label for="cNote">비고</label>
+      <textarea id="cNote" class="form-textarea" placeholder="비고를 입력하세요."></textarea>
+      <label for="cPhoto" style="margin-top:10px;">현장 사진 (필수)</label>
+      <input type="file" id="cPhoto" accept="image/*" class="form-input"/>
+      <div class="modal-actions">
+        <button id="btnCompleteCancel" class="btn">취소</button>
+        <button id="btnCompleteSubmit" class="btn btn-primary">등록</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 🖼 사진 모달 -->
+  <div id="photoModal" class="modal-bg">
+    <div class="modal-card photo-card">
+      <img id="photoImg" src="" alt="작업 사진"/>
+      <div id="photoCap" class="caption"></div>
+      <div class="modal-actions">
+        <a id="btnPhotoOpen" class="btn btn-gradient" href="#" target="_blank">원본 보기</a>
+        <button id="btnPhotoClose" class="btn">닫기</button>
+      </div>
+    </div>
+  </div>
+
+  <footer style="text-align:center;color:#9fb0c6;padding:16px 0;">© 2025 HARU · by KIM HYUN JUN</footer>
+  <button id="scrollTopBtn" title="맨 위로">↑</button>
+
+  <!-- Scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js"></script>
+  <script type="module">
+    import { initHeaderMenu } from "./header.js";
+    fetch("header.html").then(r=>r.text()).then(h=>{
+      document.getElementById("header-placeholder").innerHTML = h;
+      initHeaderMenu();
+    });
+    const btnGoOverview=document.getElementById("btnGoOverview");
+    if(btnGoOverview){btnGoOverview.addEventListener("click",()=>{location.href="schedule_overview.html";});}
+  </script>
+  <script type="module" src="schedule_dashboard.js?v=20251031A"></script>
+  <script type="module" src="scrollTop.js"></script>
+</body>
+</html>

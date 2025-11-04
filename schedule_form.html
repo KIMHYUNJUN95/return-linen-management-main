@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>HARU · 작업 등록</title>
+  <link rel="stylesheet" href="common.css"/>
+  <link rel="stylesheet" href="background.css"/>
+  <style>
+    /* ===============================
+       🧰 HARU 작업 등록 폼 (Glass + 고가독)
+       =============================== */
+    body {
+      color: #222;
+      font-family: "Inter", sans-serif;
+    }
+    main {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    h1 {
+      font-size: 26px;
+      font-weight: 800;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: #222;
+    }
+    h1::before {
+      content: "🧰";
+      font-size: 22px;
+    }
+
+    /* 🔳 카드 영역 */
+    .form-card {
+      background: rgba(255, 255, 255, 0.8);
+      border-radius: 16px;
+      border: 1px solid rgba(0, 0, 0, 0.1);
+      backdrop-filter: blur(10px);
+      padding: 28px;
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+    }
+
+    label {
+      display: block;
+      font-weight: 700;
+      font-size: 15px;
+      color: #111;
+      margin-top: 18px;
+    }
+
+    select,
+    input,
+    textarea {
+      width: 100%;
+      margin-top: 8px;
+      padding: 12px 14px;
+      border-radius: 10px;
+      border: 1px solid #ccc;
+      background: rgba(255, 255, 255, 0.9);
+      color: #111;
+      font-size: 15px;
+      transition: 0.25s ease;
+      outline: none;
+    }
+
+    select:focus,
+    input:focus,
+    textarea:focus {
+      border-color: #00b4d8;
+      box-shadow: 0 0 8px rgba(0, 180, 216, 0.3);
+    }
+
+    textarea {
+      resize: vertical;
+      min-height: 90px;
+    }
+
+    ::placeholder {
+      color: #888;
+    }
+
+    .hint {
+      font-size: 12px;
+      color: #666;
+      margin-top: 4px;
+    }
+
+    .row-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    /* 🧭 버튼 */
+    .actions {
+      margin-top: 26px;
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+    }
+
+    .btn {
+      border: none;
+      border-radius: 10px;
+      font-weight: 700;
+      padding: 10px 20px;
+      cursor: pointer;
+      font-size: 15px;
+      transition: 0.25s ease;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #00b4d8, #0077b6);
+      color: #fff;
+      box-shadow: 0 3px 10px rgba(0, 180, 216, 0.4);
+    }
+    .btn-primary:hover {
+      opacity: 0.9;
+      transform: translateY(-1px);
+    }
+
+    .btn-ghost {
+      background: #f3f4f6;
+      color: #333;
+      border: 1px solid #ddd;
+    }
+    .btn-ghost:hover {
+      background: #e5e7eb;
+    }
+
+    hr {
+      border: none;
+      border-top: 1px solid rgba(0, 0, 0, 0.1);
+      margin: 20px 0;
+    }
+
+    @media (max-width: 768px) {
+      main {
+        padding: 14px;
+      }
+      .form-card {
+        padding: 18px;
+      }
+      h1 {
+        font-size: 22px;
+      }
+      .row-2 {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- 🌌 배경 -->
+  <canvas id="bg-canvas"></canvas>
+
+  <!-- 🧭 헤더 -->
+  <div id="header-placeholder"></div>
+
+  <main>
+    <h1>작업 등록</h1>
+
+    <section class="form-card">
+      <label for="buildingSelect">건물 선택</label>
+      <select id="buildingSelect">
+        <option value="" selected disabled>건물 선택</option>
+        <option value="아라키초A">아라키초A</option>
+        <option value="아라키초B">아라키초B</option>
+        <option value="가부키초">가부키초</option>
+        <option value="다카다노바바">다카다노바바</option>
+        <option value="다이쿄초">다이쿄초</option>
+        <option value="오쿠보1">오쿠보1</option>
+        <option value="오쿠보2">오쿠보2</option>
+        <option value="오쿠보4">오쿠보4</option>
+      </select>
+
+      <label for="roomSelect">객실 선택</label>
+      <select id="roomSelect" disabled>
+        <option value="" selected disabled>객실 선택</option>
+      </select>
+
+      <div class="row-2">
+        <div>
+          <label for="taskSelect">작업 종류</label>
+          <select id="taskSelect">
+            <option value="" selected disabled>작업 선택</option>
+            <option>에어컨필터</option>
+            <option>환기구 청소</option>
+            <option>바퀴치약/바퀴캡슐</option>
+            <option>제습제 교체</option>
+            <option>탈취제</option>
+            <option>정수기 필터 교체</option>
+            <option>선반 보수</option>
+            <option>왁스작업</option>
+            <option>제초작업</option>
+            <option>오염된 매트리스/카페트/이불</option>
+            <option>기타(직접입력)</option>
+          </select>
+        </div>
+        <div>
+          <label for="intervalMonths">주기 (개월 단위)</label>
+          <input id="intervalMonths" type="number" min="0" placeholder="예: 1 (1개월마다)" />
+          <div class="hint">0 또는 빈 값이면 반복 없음</div>
+        </div>
+      </div>
+
+      <!-- ✅ 추가: 작업일자 입력 -->
+      <label for="startDate">작업일자</label>
+      <input id="startDate" type="date" required />
+
+      <label for="notes">비고 (선택)</label>
+      <textarea id="notes" placeholder="특이사항 입력"></textarea>
+
+      <hr />
+
+      <div class="actions">
+        <button id="cancelBtn" type="button" class="btn btn-ghost">취소</button>
+        <button id="saveBtn" type="button" class="btn btn-primary">저장</button>
+      </div>
+    </section>
+  </main>
+
+  <footer style="text-align:center;color:#9fb0c6;padding:16px 0;">
+    © 2025 HARU · by KIM HYUN JUN
+  </footer>
+
+  <script type="module">
+    import { initHeaderMenu } from "./header.js";
+    fetch("header.html").then(r => r.text()).then(h => {
+      document.getElementById("header-placeholder").innerHTML = h;
+      initHeaderMenu();
+    });
+  </script>
+
+  <script type="module" src="scripts/bg/scene.js"></script>
+  <script type="module" src="scrollTop.js"></script>
+  <script type="module" src="schedule_form.js"></script>
+</body>
+</html>

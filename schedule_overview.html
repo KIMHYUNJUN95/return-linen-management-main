@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>HARU · 전체 작업 현황</title>
+
+  <link rel="stylesheet" href="common.css" />
+  <link rel="stylesheet" href="background.css" />
+
+  <style>
+    :root {
+      --haru-grad: linear-gradient(135deg, #00b4d8, #0077b6);
+    }
+
+    body {
+      font-family: "Inter", sans-serif;
+      color: #111;
+    }
+
+    main {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+
+    h1 {
+      font-size: 26px;
+      font-weight: 800;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    h1::before {
+      content: "📊";
+      font-size: 22px;
+    }
+
+    .filters {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      flex-wrap: wrap;
+      background: rgba(255, 255, 255, 0.8);
+      border-radius: 12px;
+      padding: 12px 16px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+      margin-bottom: 16px;
+    }
+
+    .filters label {
+      font-weight: 700;
+      color: #333;
+      margin-right: 4px;
+    }
+
+    select {
+      padding: 8px 12px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      background: #fff;
+      color: #111;
+      font-size: 14px;
+    }
+
+    .actions {
+      margin-left: auto;
+      display: flex;
+      gap: 8px;
+    }
+
+    .btn {
+      border: none;
+      border-radius: 8px;
+      padding: 8px 14px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: 0.2s;
+      font-size: 14px;
+    }
+
+    .btn:hover {
+      transform: translateY(-1px);
+    }
+
+    .btn-primary {
+      background: var(--haru-grad);
+      color: #fff;
+    }
+
+    .btn-ghost {
+      background: #f1f5f9;
+      color: #333;
+      border: 1px solid #ccc;
+    }
+
+    /* 📋 테이블 */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      border-radius: 12px;
+      overflow: hidden;
+      background: #fff;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+    }
+
+    th, td {
+      text-align: center;
+      padding: 12px;
+      vertical-align: middle;
+    }
+
+    th {
+      background: #0077b6;
+      color: #fff;
+      font-weight: 700;
+      font-size: 15px;
+    }
+
+    tr:nth-child(even) td {
+      background: rgba(245, 247, 250, 0.7);
+    }
+
+    tr:hover td {
+      background: rgba(0, 180, 216, 0.08);
+    }
+
+    .badge {
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-weight: 700;
+      font-size: 12px;
+      display: inline-block;
+    }
+
+    .b-done {
+      background: #d1fae5;
+      color: #065f46;
+    }
+    .b-overdue {
+      background: #fee2e2;
+      color: #991b1b;
+    }
+    .b-progress {
+      background: #fef3c7;
+      color: #78350f;
+    }
+    .b-upcoming {
+      background: #e5e7eb;
+      color: #111;
+    }
+
+    /* 버튼 (테이블 내부용) */
+    .btn-sm {
+      font-size: 12px;
+      padding: 5px 10px;
+      border-radius: 6px;
+      margin: 0 2px;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+
+    .btn-edit {
+      background: #bfdbfe;
+      color: #1e3a8a;
+      border: 1px solid #93c5fd;
+    }
+    .btn-edit:hover {
+      background: #93c5fd;
+    }
+
+    .btn-del {
+      background: #fecaca;
+      color: #7f1d1d;
+      border: 1px solid #fca5a5;
+    }
+    .btn-del:hover {
+      background: #fca5a5;
+    }
+
+    .btn-photo {
+      background: #f1f5f9;
+      color: #1e3a8a;
+      border: 1px solid #cbd5e1;
+    }
+    .btn-photo:hover {
+      background: #e2e8f0;
+    }
+
+    /* 🖼 사진 미리보기 모달 */
+    .modal-bg {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.6);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+      padding: 16px;
+    }
+
+    .modal-card {
+      background: #fff;
+      color: #111;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.25);
+      width: 100%;
+      max-width: 600px;
+    }
+
+    .modal-card img {
+      width: 100%;
+      border-radius: 10px;
+      margin-bottom: 12px;
+    }
+
+    .modal-actions {
+      text-align: right;
+      display: flex;
+      gap: 8px;
+      justify-content: flex-end;
+    }
+
+    /* 모바일 카드 */
+    .mobile-list {
+      display: none;
+      margin-top: 16px;
+    }
+
+    @media (max-width: 768px) {
+      table {
+        display: none;
+      }
+      .mobile-list {
+        display: block;
+      }
+    }
+
+    .ml-card {
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+      padding: 14px;
+      margin-bottom: 10px;
+    }
+
+    .ml-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .ml-meta {
+      font-size: 13px;
+      color: #555;
+      margin-top: 8px;
+      line-height: 1.4;
+    }
+
+    .ml-actions {
+      display: flex;
+      gap: 6px;
+      margin-top: 10px;
+      justify-content: flex-end;
+    }
+  </style>
+</head>
+
+<body>
+  <canvas id="bg-canvas"></canvas>
+  <div id="header-placeholder"></div>
+
+  <main>
+    <h1>전체 작업 현황</h1>
+
+    <section class="filters">
+      <div>
+        <label for="buildingFilter">건물</label>
+        <select id="buildingFilter">
+          <option value="">전체</option>
+          <option>아라키초A</option>
+          <option>아라키초B</option>
+          <option>가부키초</option>
+          <option>가부키초</option>
+          <option>다카다노바바</option>
+          <option>다이쿄초</option>
+          <option>오쿠보1</option>
+          <option>오쿠보2</option>
+          <option>오쿠보4</option>
+        </select>
+      </div>
+
+      <div>
+        <label for="statusFilter">상태</label>
+        <select id="statusFilter">
+          <option value="">전체</option>
+          <option value="upcoming">예정</option>
+          <option value="progress">진행중</option>
+          <option value="overdue">지연</option>
+          <option value="done">완료</option>
+        </select>
+      </div>
+
+      <div class="actions">
+        <button id="btnBack" class="btn btn-ghost" onclick="history.back()">← 돌아가기</button>
+        <button id="btnRefresh" class="btn btn-primary">새로고침</button>
+      </div>
+    </section>
+
+    <table>
+      <thead>
+        <tr>
+          <th>건물</th>
+          <th>객실</th>
+          <th>작업명</th>
+          <th>상태</th>
+          <th>작업일자</th>
+          <th>다음주기</th>
+          <th>비고</th>
+          <th>사진</th>
+          <th>관리</th>
+        </tr>
+      </thead>
+      <tbody id="taskTableBody">
+        <tr><td colspan="9">불러오는 중...</td></tr>
+      </tbody>
+    </table>
+
+    <section id="mobileList" class="mobile-list"></section>
+  </main>
+
+  <footer style="text-align:center;color:#9fb0c6;padding:16px 0;">
+    © 2025 HARU · by KIM HYUN JUN
+  </footer>
+
+  <script type="module" src="schedule_overview.js?v=20251031B"></script>
+</body>
+</html>
