@@ -1,5 +1,5 @@
 // ========================================
-// 🛒 HARU Orders (주문 요청 & 수정 기능 추가)
+// 🛒 HARU Orders (건물 선택 + 이름 기입 추가)
 // ========================================
 
 import { db, auth } from "./storage.js";
@@ -20,6 +20,45 @@ document.addEventListener("DOMContentLoaded", () => {
   const notesEl = document.getElementById("notes");
   const editIndicator = document.getElementById("editIndicator");
   const submitBtn = document.getElementById("submitBtn");
+
+  // ✅ 새로 추가된 요소
+  const buildingEl = document.createElement("select");
+  buildingEl.id = "buildingSelect";
+  buildingEl.className = "form-select";
+  buildingEl.innerHTML = `
+    <option value="">건물 선택</option>
+    <option value="아라키초A">아라키초A</option>
+    <option value="아라키초B">아라키초B</option>
+    <option value="다이쿄초">다이쿄초</option>
+    <option value="가부키초">가부키초</option>
+    <option value="다카다노바바">다카다노바바</option>
+    <option value="오쿠보1">오쿠보1</option>
+    <option value="오쿠보2">오쿠보2</option>
+    <option value="오쿠보4">오쿠보4</option>
+  `;
+
+  const requesterEl = document.createElement("input");
+  requesterEl.type = "text";
+  requesterEl.id = "requesterName";
+  requesterEl.className = "form-input";
+  requesterEl.placeholder = "요청자 이름 입력 (예: 김현준)";
+
+  // ✅ DOM에 주입 (긴급도 select 위로)
+  const urgencyGroup = urgencyEl.closest(".form-group");
+  if (urgencyGroup) {
+    const buildingWrap = document.createElement("div");
+    buildingWrap.className = "form-group";
+    buildingWrap.innerHTML = `<label class="form-label" for="buildingSelect">건물</label>`;
+    buildingWrap.appendChild(buildingEl);
+
+    const nameWrap = document.createElement("div");
+    nameWrap.className = "form-group";
+    nameWrap.innerHTML = `<label class="form-label" for="requesterName">이름</label>`;
+    nameWrap.appendChild(requesterEl);
+
+    urgencyGroup.parentElement.insertBefore(nameWrap, urgencyGroup);
+    urgencyGroup.parentElement.insertBefore(buildingWrap, nameWrap);
+  }
 
   // =============================
   // ✨ 수정 모드 감지
@@ -43,6 +82,8 @@ document.addEventListener("DOMContentLoaded", () => {
       items = orderData.items || [];
       urgencyEl.value = orderData.urgency || "일반";
       notesEl.value = orderData.notes || "";
+      buildingEl.value = orderData.building || "";
+      requesterEl.value = orderData.requesterName || "";
 
       renderItems();
     } catch (err) {
@@ -51,26 +92,17 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // =============================
-  // 📌 일본어 감지 함수
+  // 🔍 아마존 검색 기능
   // =============================
   function containsJapanese(text) {
     const japaneseRegex = /[\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FAF]/;
     return japaneseRegex.test(text);
   }
 
-  // =============================
-  // 🔍 아마존 검색 기능
-  // =============================
   searchAmazonBtn.addEventListener("click", () => {
     const searchTerm = amazonSearchEl.value.trim();
-    if (!searchTerm) {
-      alert("검색어를 입력하세요.");
-      return;
-    }
-    if (!containsJapanese(searchTerm)) {
-      alert("일본어로 입력해주세요 (히라가나, 가타카나, 한자)");
-      return;
-    }
+    if (!searchTerm) return alert("검색어를 입력하세요.");
+    if (!containsJapanese(searchTerm)) return alert("일본어로 입력해주세요.");
 
     const amazonUrl = `https://www.amazon.co.jp/s?k=${encodeURIComponent(searchTerm)}`;
     itemLinkEl.value = amazonUrl;
@@ -82,15 +114,13 @@ document.addEventListener("DOMContentLoaded", () => {
       quantity: 1,
       link: amazonUrl
     });
-
     renderItems();
     amazonSearchEl.value = "";
-    alert(`✅ "${searchTerm}" 항목이 자동으로 추가되었습니다!`);
+    alert(`✅ "${searchTerm}" 항목이 추가되었습니다.`);
   });
 
-  // 🔍 아마존 검색 엔터키 처리
   amazonSearchEl.addEventListener("keydown", (e) => {
-    if (e.key === 'Enter') {
+    if (e.key === "Enter") {
       e.preventDefault();
       searchAmazonBtn.click();
     }
@@ -105,23 +135,25 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    itemList.innerHTML = items.map((item, idx) => {
-      const linkHtml = item.link 
-        ? `<a href="${item.link}" target="_blank" style="color:hsl(var(--color-primary));font-size:var(--font-size-xs);margin-top:var(--space-1);display:inline-block;">🔗 링크 보기</a>` 
-        : '';
-      return `
-        <div class="item-row">
-          <div class="item-info">
-            <div class="item-name">${item.name}</div>
-            <div class="item-qty">${item.category} · ${item.quantity}개</div>
-            ${linkHtml}
+    itemList.innerHTML = items
+      .map((item, idx) => {
+        const linkHtml = item.link
+          ? `<a href="${item.link}" target="_blank" style="color:hsl(var(--color-primary));font-size:var(--font-size-xs);margin-top:var(--space-1);display:inline-block;">🔗 링크 보기</a>`
+          : "";
+        return `
+          <div class="item-row">
+            <div class="item-info">
+              <div class="item-name">${item.name}</div>
+              <div class="item-qty">${item.category} · ${item.quantity}개</div>
+              ${linkHtml}
+            </div>
+            <button type="button" class="btn btn-sm btn-ghost" onclick="removeItem(${idx})">
+              삭제
+            </button>
           </div>
-          <button type="button" class="btn btn-sm btn-ghost" onclick="removeItem(${idx})">
-            삭제
-          </button>
-        </div>
-      `;
-    }).join('');
+        `;
+      })
+      .join("");
   }
 
   // =============================
@@ -133,22 +165,12 @@ document.addEventListener("DOMContentLoaded", () => {
     const quantity = parseInt(quantityEl.value);
     const link = itemLinkEl.value.trim();
 
-    if (!category) {
-      alert("카테고리를 선택하세요.");
-      return;
-    }
-    if (!name) {
-      alert("물품명을 입력하세요.");
-      return;
-    }
-    if (!quantity || quantity < 1) {
-      alert("수량은 1 이상이어야 합니다.");
-      return;
-    }
+    if (!category) return alert("카테고리를 선택하세요.");
+    if (!name) return alert("물품명을 입력하세요.");
+    if (!quantity || quantity < 1) return alert("수량은 1 이상이어야 합니다.");
 
     const item = { category, name, quantity };
     if (link) item.link = link;
-
     items.push(item);
     renderItems();
 
@@ -173,35 +195,37 @@ document.addEventListener("DOMContentLoaded", () => {
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
 
-    if (!items || items.length === 0) {
-      alert("주문할 물품을 최소 1개 이상 추가하세요.");
-      return;
-    }
+    if (!items || items.length === 0)
+      return alert("주문할 물품을 최소 1개 이상 추가하세요.");
+
+    const building = buildingEl.value.trim();
+    const requesterName = requesterEl.value.trim();
+    if (!building) return alert("건물을 선택하세요.");
+    if (!requesterName) return alert("이름을 입력하세요.");
 
     const urgency = urgencyEl.value;
     const notes = notesEl.value.trim();
     const userEmail = auth?.currentUser?.email || null;
-    const userName = auth?.currentUser?.displayName || "익명";
 
     const orderData = {
+      building,
+      requesterName,
       items: [...items],
       urgency,
       notes,
       status: "pending",
-      createdBy: userName,
+      createdBy: requesterName,
       userEmail,
       updatedAt: serverTimestamp(),
     };
 
     try {
       if (editMode && editOrderId) {
-        // ✨ 수정 모드 → updateDoc
         const orderRef = doc(db, "orders", editOrderId);
         await updateDoc(orderRef, orderData);
         localStorage.removeItem("editOrderData");
         alert("✅ 주문이 성공적으로 수정되었습니다!");
       } else {
-        // 신규 등록 → addDoc
         orderData.createdAt = serverTimestamp();
         const docRef = await addDoc(collection(db, "orders"), orderData);
         console.log("✅ 주문 요청 성공:", docRef.id);
@@ -216,8 +240,5 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  // =============================
-  // 🧭 초기 렌더링
-  // =============================
   renderItems();
 });

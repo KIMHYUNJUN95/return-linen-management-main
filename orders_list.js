@@ -1,5 +1,5 @@
 // ========================================
-// 🛒 HARU Orders List (수정 기능 추가)
+// 🛒 HARU Orders List (건물 + 이름 표시 추가)
 // ========================================
 
 import { db, auth } from "./storage.js";
@@ -83,13 +83,18 @@ function renderOrders(orders) {
       `;
     }).join('');
 
+    // ✅ 건물과 요청자 이름 표시 추가
+    const buildingInfo = order.building ? `🏢 ${order.building}` : "";
+    const requesterInfo = order.requesterName ? `👤 ${order.requesterName}` : (order.createdBy || "익명");
+
     return `
       <div class="order-card" data-testid="order-card-${order.id}">
         <div class="order-header">
           <div>
             <h3 style="margin-bottom: var(--space-2);">주문 #${order.id.substring(0, 8)}</h3>
             <div class="order-meta">
-              ${formatDate(order.createdAt)} · ${order.createdBy || "익명"}
+              ${formatDate(order.createdAt)} · ${requesterInfo}
+              ${buildingInfo ? ` · ${buildingInfo}` : ""}
             </div>
           </div>
           <div style="display:flex;gap:var(--space-2);align-items:center;">
@@ -173,10 +178,7 @@ window.editOrder = (id) => {
   const order = allOrders.find(o => o.id === id);
   if (!order) return alert("주문 데이터를 찾을 수 없습니다.");
 
-  // 로컬 스토리지에 주문 데이터 저장
   localStorage.setItem("editOrderData", JSON.stringify(order));
-
-  // 수정 페이지로 이동 (orders.html)
   location.href = "orders.html?edit=" + id;
 };
 
