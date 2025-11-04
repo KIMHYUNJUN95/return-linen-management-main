@@ -1,5 +1,5 @@
 // ========================================
-// 🧰 HARU 작업 등록 (주기 + 일정 계산 + 초기 상태 upoming)
+// 🧰 HARU 작업 등록 (주기 + 일정 계산 + 초기 상태 upcoming)
 // ========================================
 
 import { db, auth } from "./storage.js";
@@ -91,7 +91,7 @@ if (taskEl) {
 }
 
 /* ========================================
-   💾 Firestore 저장
+   💾 Firestore 저장 (수정 완료)
 ======================================== */
 if (btnSave) {
   btnSave.addEventListener("click", async () => {
@@ -107,10 +107,9 @@ if (btnSave) {
       return;
     }
 
-    // 📆 다음 예정일 계산 (startDate + cycle 개월)
-    const next = new Date(startDate);
-    next.setMonth(next.getMonth() + (cycle || 0));
-    const nextDue = next.toISOString().slice(0, 10);
+    // ✅ 최초 등록 시: 오늘(또는 지정 startDate) 일정만 등록
+    // 다음 주기(nextDue)는 완료 처리 시 자동 생성됨
+    const nextDue = startDate;
 
     try {
       await addDoc(collection(db, "maintenance_schedule"), {
@@ -119,9 +118,9 @@ if (btnSave) {
         taskName: task,
         cycleMonths: cycle || 0,
         note,
-        status: "upcoming", // ✅ 최초 등록 시 항상 예정
+        status: "upcoming", // 항상 예정 상태로 시작
         startDate,
-        nextDue,
+        nextDue, // ✅ 시작일 그대로 저장
         lastDone: null,
         createdBy: currentUser?.email || "unknown",
         timestamp: serverTimestamp(),

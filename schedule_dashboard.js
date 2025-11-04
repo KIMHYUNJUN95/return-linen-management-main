@@ -1,5 +1,10 @@
 // ========================================
-// 📅 HARU 주기 관리 대시보드 (FullCalendar + 사진 + 다음주기 자동생성 + 이번달 요약)
+// 📅 HARU 주기 관리 대시보드
+// - FullCalendar
+// - 완료 시 사진 업로드
+// - 다음 주기 자동 생성 (DB에는 저장)
+// - 하지만 화면에는 이번 달 것만 표시
+// - JST(도쿄) 기준 날짜 보정
 // ========================================
 
 import { db, storage, auth } from "./storage.js";
@@ -48,45 +53,56 @@ let allItems = [];
 let isProcessing = false;
 
 /* ========================================
-   🧭 유틸
+   🧭 JST 기준 유틸
 ======================================== */
-const todayISO = () => new Date().toISOString().slice(0, 10);
+// 오늘날짜를 "YYYY-MM-DD" 로, 일본시간 기준으로
+const todayISO = () => {
+  const now = new Date();
+  const jst = new Date(
+    now.getTime() + now.getTimezoneOffset() * 60000 + 9 * 60 * 60 * 1000
+  );
+  const y = jst.getFullYear();
+  const m = String(jst.getMonth() + 1).padStart(2, "0");
+  const d = String(jst.getDate()).padStart(2, "0");
+  return `${y}-${m}-${d}`;
+};
 
+// Firestore Timestamp, 문자열, Date 를 전부 "YYYY-MM-DD" 로 바꿔줌 (JST)
 function toISODate(d) {
   if (!d) return null;
   try {
-    if (typeof d === "string") {
-      if (/^\d{4}-\d{2}-\d{2}$/.test(d)) return d;
-      const dt = new Date(d);
-      if (!Number.isNaN(dt.getTime())) return dt.toISOString().slice(0, 10);
-      return null;
-    }
+    let base;
     if (typeof d === "object" && d.seconds) {
-      return new Date(d.seconds * 1000).toISOString().slice(0, 10);
+      base = new Date(d.seconds * 1000);
+    } else {
+      base = new Date(d);
     }
-    const dt = new Date(d);
-    if (Number.isNaN(dt.getTime())) return null;
-    return dt.toISOString().slice(0, 10);
+    if (isNaN(base)) return null;
+    const jst = new Date(
+      base.getTime() + base.getTimezoneOffset() * 60000 + 9 * 60 * 60 * 1000
+    );
+    const y = jst.getFullYear();
+    const m = String(jst.getMonth() + 1).padStart(2, "0");
+    const dd = String(jst.getDate()).padStart(2, "0");
+    return `${y}-${m}-${dd}`;
   } catch {
     return null;
   }
 }
 
+// "YYYY-MM-DD" 에서 개월수 더해서 다시 "YYYY-MM-DD"
 function addMonths(isoYYYYMMDD, months) {
-  const base = isoYYYYMMDD ? new Date(isoYYYYMMDD) : new Date();
-  base.setMonth(base.getMonth() + months);
-  return base.toISOString().slice(0, 10);
-}
-
-function isSameYearMonth(isoDate, yyyymm) {
-  const d = toISODate(isoDate);
-  if (!d || !yyyymm) return false;
-  return d.startsWith(yyyymm);
+  const [y, m, d] = isoYYYYMMDD.split("-").map(Number);
+  const newDate = new Date(y, m - 1 + months, d);
+  const ny = newDate.getFullYear();
+  const nm = String(newDate.getMonth() + 1).padStart(2, "0");
+  const nd = String(newDate.getDate()).padStart(2, "0");
+  return `${ny}-${nm}-${nd}`;
 }
 
 function yyyymmOf(date = new Date()) {
   const y = date.getFullYear();
-  const m = `${date.getMonth() + 1}`.padStart(2, "0");
+  const m = String(date.getMonth() + 1).padStart(2, "0");
   return `${y}-${m}`;
 }
 
@@ -99,11 +115,7 @@ onAuthStateChanged(auth, (user) => {
     location.href = "login.html";
   } else {
     currentUser = user;
-    if (document.readyState === "loading") {
-      window.addEventListener("DOMContentLoaded", loadSchedule, { once: true });
-    } else {
-      loadSchedule();
-    }
+    loadSchedule();
   }
 });
 
@@ -112,16 +124,13 @@ onAuthStateChanged(auth, (user) => {
 ======================================== */
 async function loadSchedule() {
   try {
-    const colRef = collection(db, "maintenance_schedule");
-    const qy = query(colRef, orderBy("nextDue", "asc"));
+    const qy = query(collection(db, "maintenance_schedule"), orderBy("nextDue", "asc"));
     const snap = await getDocs(qy);
-
     const items = [];
     snap.forEach((s) => items.push({ id: s.id, ...s.data() }));
 
+    // 상태 계산
     const today = todayISO();
-
-    // ✅ 수정된 상태 계산 로직 (완료 항목 확실히 제외)
     items.forEach((it) => {
       const due = toISODate(it.nextDue);
       if (it.status === "done") {
@@ -134,10 +143,23 @@ async function loadSchedule() {
     });
 
     allItems = items;
-    const filtered = applyFilters(items);
 
-    renderCalendar(filtered);
-    renderMobileList(filtered);
+    // ✅ 화면에는 이번 달 것만 보이게 (다음 주기로 자동 생성된 12월 일정은 숨김)
+    const ymNow = yyyymmOf(new Date());
+    const displayItems = applyFilters(items).filter((it) => {
+      const nd = toISODate(it.nextDue);
+      const sd = toISODate(it.startDate);
+      // 날짜가 아예 없으면 보여준다 (등록 중 이상치 막기)
+      if (!nd && !sd) return true;
+      // nextDue가 이번 달이거나, startDate가 이번 달이면 표시
+      if (nd && nd.startsWith(ymNow)) return true;
+      if (sd && sd.startsWith(ymNow)) return true;
+      // 나머지(다음달 이후 자동생성)는 화면에서만 숨김
+      return false;
+    });
+
+    renderCalendar(displayItems);
+    renderMobileList(displayItems);
     renderMonthlySummary(allItems);
   } catch (err) {
     console.error("🚨 스케줄 불러오기 오류:", err);
@@ -148,20 +170,18 @@ async function loadSchedule() {
    🔍 필터
 ======================================== */
 function applyFilters(items) {
-  const b = fBuilding ? fBuilding.value : "";
-  const s = fStatus ? fStatus.value : "";
-  const m = fMonth ? fMonth.value : "";
-
+  const b = fBuilding?.value || "";
+  const s = fStatus?.value || "";
+  const m = fMonth?.value || "";
   return items.filter((d) => {
-    let ok = true;
-    if (b && d.building !== b) ok = false;
+    if (b && d.building !== b) return false;
     const stat = d._computedStatus || d.status || "upcoming";
-    if (s && stat !== s) ok = false;
+    if (s && stat !== s) return false;
     if (m) {
       const nd = toISODate(d.nextDue);
-      if (!(nd && nd.startsWith(m))) ok = false;
+      if (!(nd && nd.startsWith(m))) return false;
     }
-    return ok;
+    return true;
   });
 }
 
@@ -174,31 +194,19 @@ function renderCalendar(data) {
 
   const events = data
     .filter((d) => (d._computedStatus || d.status) !== "done")
-    .map((d) => {
-      const start = toISODate(d.nextDue) || toISODate(d.startDate) || null;
-      return {
-        title: `${d.building}-${d.room || "-"} · ${d.taskName}`,
-        start,
-        classNames: [
-          (d._computedStatus === "overdue" && "ev-overdue") ||
-            (d._computedStatus === "progress" && "ev-progress") ||
-            (d._computedStatus === "upcoming" && "ev-upcoming") ||
-            "ev-upcoming",
-        ],
-        extendedProps: d,
-      };
-    })
+    .map((d) => ({
+      title: `${d.building}-${d.room || "-"} · ${d.taskName}`,
+      start: toISODate(d.nextDue),
+      extendedProps: d,
+    }))
     .filter((e) => !!e.start);
-
-  let initialDate = undefined;
-  if (events.length > 0) initialDate = events[0].start;
 
   if (calendar) calendar.destroy();
   calendar = new FullCalendar.Calendar(calendarEl, {
     initialView: "dayGridMonth",
     locale: "ko",
     height: "auto",
-    ...(initialDate ? { initialDate } : {}),
+    initialDate: new Date(), // 항상 이번 달
     events,
     eventClick: (info) => openDetailModal(info.event.extendedProps),
   });
@@ -215,23 +223,14 @@ function renderMobileList(data) {
     return;
   }
 
-  const html = data
+  mobileList.innerHTML = data
     .map((d) => {
       const st = d._computedStatus || d.status || "upcoming";
-      const badgeClass =
-        st === "done"
-          ? "b-done"
-          : st === "overdue"
-          ? "b-overdue"
-          : st === "progress"
-          ? "b-progress"
-          : "b-upcoming";
-
       return `
       <div class="ml-item" data-id="${d.id}">
         <div class="ml-top">
           <div><b>${d.building}</b> - ${d.room || "-"}</div>
-          <div class="badge ${badgeClass}">${statusText(st)}</div>
+          <div class="badge">${statusText(st)}</div>
         </div>
         <div style="margin-top:4px;font-weight:600;">${d.taskName}</div>
         <div class="ml-meta">📅 예정일: ${toISODate(d.nextDue) || "-"} | 🕓 최근: ${toISODate(d.lastDone) || "-"}</div>
@@ -247,8 +246,6 @@ function renderMobileList(data) {
     })
     .join("");
 
-  mobileList.innerHTML = html;
-
   mobileList.querySelectorAll(".ml-item button").forEach((btn) => {
     btn.addEventListener("click", () => {
       const id = btn.closest(".ml-item").dataset.id;
@@ -259,6 +256,20 @@ function renderMobileList(data) {
       if (action === "complete") openCompleteModal(target);
     });
   });
+}
+
+/* ========================================
+   상태 텍스트
+======================================== */
+function statusText(s) {
+  return (
+    {
+      upcoming: "예정",
+      progress: "진행중",
+      overdue: "지연",
+      done: "완료",
+    }[s] || s
+  );
 }
 
 /* ========================================
@@ -282,20 +293,21 @@ function openDetailModal(data) {
   setText("dLastDone", toISODate(data.lastDone));
   setText("dNote", data.note);
 
-  const photoWrap = document.getElementById("dPhotoWrap");
-  if (photoWrap) {
-    if (data.photoUrl) {
-      photoWrap.style.display = "flex";
-      const btn = document.getElementById("btnOpenPhoto");
-      if (btn) btn.onclick = () => openPhotoModal(data.photoUrl);
-    } else {
-      photoWrap.style.display = "none";
-    }
+  // 사진 있으면 버튼 보여주기
+  if (data.photoUrl) {
+    const wrap = document.getElementById("dPhotoWrap");
+    if (wrap) wrap.style.display = "flex";
+    const btn = document.getElementById("btnOpenPhoto");
+    if (btn) btn.onclick = () => openPhotoModal(data.photoUrl, data.note || "");
+  } else {
+    const wrap = document.getElementById("dPhotoWrap");
+    if (wrap) wrap.style.display = "none";
   }
 }
 
-// 닫기 버튼 동작
-if (btnDetailClose) btnDetailClose.onclick = () => (detailModal.style.display = "none");
+if (btnDetailClose)
+  btnDetailClose.onclick = () => (detailModal.style.display = "none");
+
 if (btnOpenComplete) {
   btnOpenComplete.onclick = () => {
     detailModal.style.display = "none";
@@ -310,23 +322,23 @@ if (btnOpenComplete) {
   };
 }
 
-
 /* ========================================
-   🧾 상태 텍스트
+   🖼 사진 모달
 ======================================== */
-function statusText(s) {
-  return (
-    {
-      upcoming: "예정",
-      progress: "진행중",
-      overdue: "지연",
-      done: "완료",
-    }[s] || s
-  );
+function openPhotoModal(url, cap) {
+  if (!photoModal) return;
+  const img = document.getElementById("photoImg");
+  const caption = document.getElementById("photoCap");
+  const btnOpen = document.getElementById("btnPhotoOpen");
+  if (img) img.src = url;
+  if (caption) caption.textContent = cap || "";
+  if (btnOpen) btnOpen.href = url;
+  photoModal.style.display = "flex";
 }
+if (btnPhotoClose) btnPhotoClose.onclick = () => (photoModal.style.display = "none");
 
 /* ========================================
-   ✅ 완료 처리
+   ✅ 완료 모달 & 처리
 ======================================== */
 function openCompleteModal(data) {
   if (!completeModal) return;
@@ -335,7 +347,8 @@ function openCompleteModal(data) {
   completeModal.style.display = "flex";
 }
 
-if (btnCompleteCancel) btnCompleteCancel.onclick = () => (completeModal.style.display = "none");
+if (btnCompleteCancel)
+  btnCompleteCancel.onclick = () => (completeModal.style.display = "none");
 
 if (btnCompleteSubmit) {
   btnCompleteSubmit.onclick = async () => {
@@ -343,11 +356,8 @@ if (btnCompleteSubmit) {
     if (isProcessing) return;
     isProcessing = true;
 
-    const noteEl = document.getElementById("cNote");
-    const fileEl = document.getElementById("cPhoto");
-    const note = noteEl ? noteEl.value.trim() : "";
-    const file = fileEl ? fileEl.files[0] : null;
-
+    const note = document.getElementById("cNote").value.trim();
+    const file = document.getElementById("cPhoto").files[0];
     if (!file) {
       alert("사진은 필수입니다.");
       isProcessing = false;
@@ -355,14 +365,15 @@ if (btnCompleteSubmit) {
     }
 
     try {
+      // 1) 사진 업로드
       const path = `maintenance_photos/${selectedDoc.building}_${selectedDoc.room || "-"}_${Date.now()}_${file.name}`;
       const fileRef = ref(storage, path);
       const snap = await uploadBytes(fileRef, file);
       const url = await getDownloadURL(snap.ref);
-      const docRef = doc(db, "maintenance_schedule", selectedDoc.id);
-      const doneDate = todayISO();
 
-      await updateDoc(docRef, {
+      // 2) 원래 문서 완료처리
+      const doneDate = todayISO();
+      await updateDoc(doc(db, "maintenance_schedule", selectedDoc.id), {
         status: "done",
         note,
         photoUrl: url,
@@ -371,8 +382,7 @@ if (btnCompleteSubmit) {
         timestamp: serverTimestamp(),
       });
 
-      await new Promise((r) => setTimeout(r, 800));
-
+      // 3) 다음 주기 자동 생성 (DB에는 넣지만, 화면에서는 이번 달만 보여서 안 보임)
       const cycle = Number(selectedDoc.cycleMonths || 0);
       if (cycle > 0) {
         const nextDue = addMonths(doneDate, cycle);
@@ -393,7 +403,9 @@ if (btnCompleteSubmit) {
 
       alert("✅ 완료 처리되었습니다.");
       completeModal.style.display = "none";
+
       await loadSchedule();
+      if (calendar) calendar.gotoDate(new Date());
     } catch (err) {
       console.error("🚨 완료 처리 오류:", err);
       alert("처리 중 오류가 발생했습니다.");
@@ -404,7 +416,7 @@ if (btnCompleteSubmit) {
 }
 
 /* ========================================
-   📊 월별 요약
+   📊 이번달 요약
 ======================================== */
 function ensureSummaryContainer() {
   let summary = document.getElementById("monthlySummary");
@@ -421,8 +433,8 @@ function ensureSummaryContainer() {
 }
 
 function renderMonthlySummary(items) {
-  const summaryWrap = ensureSummaryContainer();
-  if (!summaryWrap) return;
+  const wrap = ensureSummaryContainer();
+  if (!wrap) return;
   const container = document.getElementById("monthlySummaryInner");
   if (!container) return;
 
@@ -430,38 +442,42 @@ function renderMonthlySummary(items) {
   const currentMonthItems = items.filter((it) => {
     const next = toISODate(it.nextDue);
     const start = toISODate(it.startDate);
-    return (next && isSameYearMonth(next, ym)) || (start && isSameYearMonth(start, ym));
+    return (next && next.startsWith(ym)) || (start && start.startsWith(ym));
   });
 
   const done = currentMonthItems.filter((it) => (it.status || it._computedStatus) === "done").length;
   const notDone = currentMonthItems.filter((it) => (it.status || it._computedStatus) !== "done");
+  const overdue = notDone.filter((it) => (it._computedStatus || it.status) === "overdue").length;
   const upcoming = notDone.filter((it) => (it._computedStatus || it.status) === "upcoming").length;
   const progress = notDone.filter((it) => (it._computedStatus || it.status) === "progress").length;
-  const overdue = notDone.filter((it) => (it._computedStatus || it.status) === "overdue").length;
-  const notDoneCount = notDone.length;
 
   container.innerHTML = `
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;">
-      <div style="background:#fff;border:1px solid #e6eaf0;border-radius:12px;padding:14px;box-shadow:0 6px 14px rgba(0,0,0,.06);">
+      <div style="background:#fff;border:1px solid #e6eaf0;border-radius:12px;padding:14px;">
         <div style="font-weight:800;color:#111;">이번달 완료</div>
         <div style="font-size:28px;font-weight:900;color:#10b981;margin-top:4px;">${done}</div>
       </div>
-      <div style="background:#fff;border:1px solid #e6eaf0;border-radius:12px;padding:14px;box-shadow:0 6px 14px rgba(0,0,0,.06);">
+      <div style="background:#fff;border:1px solid #e6eaf0;border-radius:12px;padding:14px;">
         <div style="font-weight:800;color:#111;">이번달 미완료</div>
-        <div style="font-size:28px;font-weight:900;color:#ef4444;margin-top:4px;">${notDoneCount}</div>
+        <div style="font-size:28px;font-weight:900;color:#ef4444;margin-top:4px;">${notDone.length}</div>
       </div>
-      <div style="background:#fff;border:1px solid #e6eaf0;border-radius:12px;padding:14px;box-shadow:0 6px 14px rgba(0,0,0,.06);">
+      <div style="background:#fff;border:1px solid #e6eaf0;border-radius:12px;padding:14px;">
         <div style="font-weight:800;color:#111;">지연</div>
         <div style="font-size:28px;font-weight:900;color:#b91c1c;margin-top:4px;">${overdue}</div>
       </div>
-      <div style="background:#fff;border:1px solid #e6eaf0;border-radius:12px;padding:14px;box-shadow:0 6px 14px rgba(0,0,0,.06);">
+      <div style="background:#fff;border:1px solid #e6eaf0;border-radius:12px;padding:14px;">
         <div style="font-weight:800;color:#111;">예정</div>
         <div style="font-size:28px;font-weight:900;color:#0ea5e9;margin-top:4px;">${upcoming}</div>
       </div>
-      <div style="background:#fff;border:1px solid #e6eaf0;border-radius:12px;padding:14px;box-shadow:0 6px 14px rgba(0,0,0,.06);">
+      <div style="background:#fff;border:1px solid #e6eaf0;border-radius:12px;padding:14px;">
         <div style="font-weight:800;color:#111;">진행중</div>
         <div style="font-size:28px;font-weight:900;color:#a16207;margin-top:4px;">${progress}</div>
       </div>
     </div>
   `;
 }
+
+/* ========================================
+   🔄 새로고침 버튼
+======================================== */
+if (btnRefresh) btnRefresh.onclick = () => loadSchedule();
