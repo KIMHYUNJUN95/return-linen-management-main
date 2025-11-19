@@ -1,5 +1,6 @@
 ﻿// ========================================
-// 🧭 HARU Header Controller (Super Admin + Firestore Admin + 이름 미기입 제한 + 자동 이동)
+// 🧭 HARU Header Controller
+// Super Admin + Firestore Admin + 이름 미기입 제한 + 자동 이동
 // ========================================
 
 import { auth, db } from "./storage.js";
@@ -12,14 +13,13 @@ export function initHeaderMenu() {
   const menuToggle = document.querySelector(".menu-toggle");
   const navMenu = document.querySelector(".menu-list");
 
-  // 📌 메뉴 토글 기능
+  // 📌 메뉴 토글
   if (menuToggle && navMenu) {
     menuToggle.addEventListener("click", () => {
       const isOpen = navMenu.classList.toggle("open");
       menuToggle.setAttribute("aria-expanded", isOpen);
     });
 
-    // 📌 외부 클릭 시 닫기
     document.addEventListener("click", (e) => {
       if (!menuToggle.contains(e.target) && !navMenu.contains(e.target)) {
         navMenu.classList.remove("open");
@@ -40,7 +40,7 @@ export function initHeaderMenu() {
       if (!confirm("로그아웃 하시겠습니까?")) return;
       try {
         await signOut(auth);
-        alert("로그아웃이 완료되었습니다.");
+        alert("로그아웃 완료되었습니다.");
         location.href = "signup.html";
       } catch (err) {
         console.error("❌ 로그아웃 오류:", err);
@@ -51,7 +51,9 @@ export function initHeaderMenu() {
 
   attachLogoutEvent();
 
-  // 👑 권한 + 이름 확인
+  // ========================================
+  // 👤 로그인 후 권한 + 이름 체크
+  // ========================================
   onAuthStateChanged(auth, async (user) => {
     const adminTab = document.querySelector(".admin-only");
     const superAdminTabs = document.querySelectorAll(".super-admin-only");
@@ -59,32 +61,35 @@ export function initHeaderMenu() {
 
     if (!user) return;
 
-    const superAdminEmail = "rlaguswns95@haru-tokyo.com"; // 슈퍼관리자 계정
+    const superAdminEmail = "rlaguswns95@haru-tokyo.com";
 
     try {
-      // Firestore users 컬렉션에서 사용자 정보 가져오기
+      // Firestore users 컬렉션 불러오기
       const userRef = doc(db, "users", user.email);
       const userSnap = await getDoc(userRef);
       const userData = userSnap.exists() ? userSnap.data() : {};
+
       const userName = userData.name || user.displayName || "";
 
-      const isMyInfoPage = location.href.includes("myinfo.html") || location.href.includes("profile.html");
+      // 현재 페이지가 내정보 페이지인지 체크
+      const isProfilePage =
+        location.href.includes("profile.html") ||
+        location.href.includes("myinfo.html");
 
       // ========================================
-      // 🔥 (핵심) 내정보 페이지(myinfo.html)에서는 제한을 절대 적용하지 않음
+      // 🛡 내정보 페이지에서는 제한 절대 적용하지 않음
       // ========================================
-      if (isMyInfoPage) {
-        console.log("ℹ️ myinfo.html - 이름 없어도 기능 제한 안함");
-        return; // 여기서 끝 → 모든 기능 정상작동
+      if (isProfilePage) {
+        console.log("ℹ️ profile.html → 이름 없어도 문제 없음 (제한 OFF)");
+        return;
       }
 
       // ========================================
-      // ⚠️ 이름 없으면 제한 + 자동 이동 (myinfo.html 제외)
+      // ⚠️ 이름이 없으면 기능 제한 + 내정보로 이동
       // ========================================
       if (!userName || userName === "(이름 없음)") {
         alert("⚠️ 이름이 등록되지 않아 메뉴 사용이 제한됩니다.\n지금 내 정보 페이지로 이동합니다.");
 
-        // 메뉴 클릭 막기
         menuItems.forEach((el) => {
           if (!el.id?.includes("logout")) {
             el.style.pointerEvents = "none";
@@ -92,11 +97,7 @@ export function initHeaderMenu() {
           }
         });
 
-        // 강제 이동
-        if (!isMyInfoPage) {
-          location.href = "myinfo.html";
-        }
-
+        location.href = "profile.html"; // 🔥 여기 중요 (myinfo → profile)
         return;
       }
 
@@ -110,14 +111,14 @@ export function initHeaderMenu() {
       }
 
       // ========================================
-      // 👮 일반 관리자 Firestore roles 확인
+      // 👮 일반 관리자 Firestore roles 체크
       // ========================================
       const roleRef = doc(db, "roles", user.email);
       const roleSnap = await getDoc(roleRef);
 
       if (roleSnap.exists()) {
-        const data = roleSnap.data();
-        if (data.role === "admin" && adminTab) {
+        const roleData = roleSnap.data();
+        if (roleData.role === "admin" && adminTab) {
           adminTab.style.display = "block";
         }
       }

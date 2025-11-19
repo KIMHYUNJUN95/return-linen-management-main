@@ -2,7 +2,7 @@
 // 👤 HARU Profile (내 정보)
 // ========================================
 
-import { auth } from "./storage.js";
+import { auth, db } from "./storage.js";
 import {
   onAuthStateChanged,
   updateProfile,
@@ -10,6 +10,13 @@ import {
   deleteUser,
   sendPasswordResetEmail
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+
+import {
+  doc,
+  setDoc,
+  getDoc,
+  updateDoc
+} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 const form = document.getElementById("updateProfileForm");
 const userNameEl = document.getElementById("userName");
@@ -34,26 +41,30 @@ function formatDate(timestamp) {
 }
 
 // 사용자 정보 로드
-onAuthStateChanged(auth, (user) => {
-  if (user) {
-    const name = user.displayName || "익명 사용자";
-    const email = user.email || "";
-
-    userNameEl.textContent = name;
-    userEmailEl.textContent = email;
-    displayNameEl.value = user.displayName || "";
-    joinDateEl.textContent = formatDate(user.metadata.creationTime);
-    lastLoginEl.textContent = formatDate(user.metadata.lastSignInTime);
-    
-    emailVerifiedEl.innerHTML = user.emailVerified
-      ? '<span class="badge badge-success">인증됨</span>'
-      : '<span class="badge badge-warning">미인증</span>';
-
-    // 아바타 아이콘 (이름 첫 글자)
-    avatarIcon.textContent = name.charAt(0).toUpperCase();
-  } else {
+onAuthStateChanged(auth, async (user) => {
+  if (!user) {
     location.href = "signup.html";
+    return;
   }
+
+  const email = user.email;
+  const userDoc = doc(db, "users", email);
+  const snap = await getDoc(userDoc);
+  const userData = snap.exists() ? snap.data() : {};
+
+  const name = user.displayName || userData.name || "익명 사용자";
+
+  userNameEl.textContent = name;
+  userEmailEl.textContent = email;
+  displayNameEl.value = name;
+  joinDateEl.textContent = formatDate(user.metadata.creationTime);
+  lastLoginEl.textContent = formatDate(user.metadata.lastSignInTime);
+
+  emailVerifiedEl.innerHTML = user.emailVerified
+    ? '<span class="badge badge-success">인증됨</span>'
+    : '<span class="badge badge-warning">미인증</span>';
+
+  avatarIcon.textContent = name.charAt(0).toUpperCase();
 });
 
 // 프로필 업데이트
@@ -61,6 +72,7 @@ form.addEventListener("submit", async (e) => {
   e.preventDefault();
 
   const newName = displayNameEl.value.trim();
+  const email = auth.currentUser.email;
 
   if (!newName) {
     alert("이름을 입력해주세요.");
@@ -68,9 +80,15 @@ form.addEventListener("submit", async (e) => {
   }
 
   try {
-    await updateProfile(auth.currentUser, {
-      displayName: newName
-    });
+    // 1) Firebase Auth 업데이트
+    await updateProfile(auth.currentUser, { displayName: newName });
+
+    // 2) Firestore users 컬렉션에도 업데이트
+    await setDoc(
+      doc(db, "users", email),
+      { name: newName, email },
+      { merge: true }
+    );
 
     alert("✅ 프로필이 업데이트되었습니다!");
     location.reload();
@@ -95,7 +113,7 @@ window.changePassword = async () => {
 
   try {
     await sendPasswordResetEmail(auth, email);
-    alert("✅ 비밀번호 재설정 이메일이 발송되었습니다. 이메일을 확인해주세요.");
+    alert("✅ 비밀번호 재설정 이메일이 발송되었습니다.");
   } catch (err) {
     console.error("❌ 비밀번호 재설정 오류:", err);
     alert("비밀번호 재설정 이메일 발송 중 오류가 발생했습니다.");
@@ -104,13 +122,8 @@ window.changePassword = async () => {
 
 // 계정 삭제
 window.deleteAccount = async () => {
-  if (!confirm("⚠️ 정말로 계정을 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.")) {
-    return;
-  }
-
-  if (!confirm("⚠️ 모든 데이터가 영구적으로 삭제됩니다. 계속하시겠습니까?")) {
-    return;
-  }
+  if (!confirm("⚠️ 정말로 계정을 삭제하시겠습니까?")) return;
+  if (!confirm("⚠️ 모든 데이터가 영구적으로 삭제됩니다.")) return;
 
   try {
     await deleteUser(auth.currentUser);
@@ -118,9 +131,9 @@ window.deleteAccount = async () => {
     location.href = "signup.html";
   } catch (err) {
     console.error("❌ 계정 삭제 오류:", err);
-    
+
     if (err.code === "auth/requires-recent-login") {
-      alert("❌ 보안을 위해 다시 로그인이 필요합니다. 로그아웃 후 다시 로그인해주세요.");
+      alert("❌ 다시 로그인이 필요합니다.");
     } else {
       alert("계정 삭제 중 오류가 발생했습니다.");
     }
