@@ -81,13 +81,19 @@ export function initHeaderMenu() {
           }
         });
 
-        // 💡 자동 이동
-        if (!location.href.includes("myinfo.html")) {
-          location.href = "myinfo.html";
+        // 🔥 profile.html 로 강제 이동 (정확한 파일명)
+        if (!location.href.includes("profile.html")) {
+          location.href = "profile.html";
         }
 
         return;
       }
+
+      // 이름 정상일 때 메뉴 복구
+      menuItems.forEach((el) => {
+        el.style.pointerEvents = "auto";
+        el.style.opacity = "1";
+      });
 
       // ✅ 현준 계정은 슈퍼관리자 메뉴 표시
       if (user.email === superAdminEmail) {

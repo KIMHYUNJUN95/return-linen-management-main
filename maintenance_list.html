@@ -1,3 +1,4 @@
+<!-- 📄 maintenance_list.html (유지보수 목록 페이지 전체 코드 - 보수방법 줄바꿈 처리 적용) -->
 <!DOCTYPE html>
 <html lang="ko">
 <head>
@@ -60,17 +61,23 @@
     }
     button.btn-green:hover { background-color: #15803d !important; transform: translateY(-1px); }
     button.btn-green:disabled { background-color: #9ca3af; cursor: not-allowed; box-shadow: none; }
+
+    /* ✅ 표 줄바꿈/폭 고정 (보수방법 길어져도 옆으로 안 퍼지게) */
     table {
       width: 100%;
       border-collapse: collapse;
       text-align: center;
       font-size: 15px;
+      table-layout: fixed;               /* 칸 폭 고정 */
     }
     th, td {
       border-bottom: 1px solid hsl(var(--color-border-subtle));
       padding: 10px;
       vertical-align: middle;
+      word-break: break-word;            /* 단어 중간이라도 줄바꿈 */
+      white-space: normal;              /* 옆으로 늘어나지 않고 줄바꿈 */
     }
+
     th {
       background: hsl(var(--color-bg-card));
       font-weight: 600;
@@ -90,6 +97,8 @@
       padding: 12px;
       margin-bottom: 10px;
       box-shadow: var(--shadow-sm);
+      word-break: break-word;
+      white-space: normal;
     }
     .mobile-card img {
       width: 100%;
@@ -122,6 +131,8 @@
       width: 90%;
       max-height: 80vh;
       overflow-y: auto;
+      word-break: break-word;
+      white-space: normal;
     }
     .modal-card img {
       width: 100%;
@@ -176,6 +187,7 @@
               <th>건물</th>
               <th>객실</th>
               <th>내용</th>
+              <th>보수방법</th>
               <th>등록자</th>
               <th>비고</th>
               <th>사진</th>
@@ -221,7 +233,7 @@
   <script type="module" src="storage.js?v=20251028A"></script>
 
   <!-- ✅ 유지보수 기능 스크립트 -->
-  <script type="module" src="maintenance_list.js?v=20251028A"></script>
+  <script type="module" src="maintenance_list.js?v=20251120A"></script>
   <script type="module" src="scrollTop.js"></script>
 
 </body>
