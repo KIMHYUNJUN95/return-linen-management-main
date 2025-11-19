@@ -8,19 +8,35 @@
   
   <!-- Styles -->
   <link rel="stylesheet" href="common.css" />
-  
+
   <style>
+    /* -------------------------------
+       🔥 화면 전체 중앙 배치 핵심 설정
+       ------------------------------- */
     body {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      min-height: 100vh;
-      background: hsl(var(--color-bg-base));
       margin: 0;
+      width: 100%;
+      height: 100vh;
+      background: hsl(var(--color-bg-base));
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      position: relative;
+      overflow: hidden;
     }
 
+    /* 3D 배경 캔버스 */
+    #bg-canvas {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      z-index: -1;
+    }
+
+    /* 로그인/회원가입 박스 */
     .auth-container {
+      position: relative;
       background: hsla(var(--color-bg-glass), 0.6);
       backdrop-filter: blur(var(--blur-lg));
       -webkit-backdrop-filter: blur(var(--blur-lg));
@@ -31,7 +47,6 @@
       width: 100%;
       max-width: 420px;
       text-align: center;
-      margin: var(--space-4);
       animation: scaleIn var(--transition-base);
     }
 
@@ -106,6 +121,16 @@
       text-decoration: underline;
     }
 
+    footer {
+      position: absolute;
+      bottom: 10px;
+      text-align: center;
+      width: 100%;
+      color: #888;
+      font-size: 13px;
+      pointer-events: none;
+    }
+
     @media (max-width: 768px) {
       .auth-container {
         padding: var(--space-6) var(--space-4);
@@ -118,11 +143,12 @@
   </style>
 </head>
 <body>
+
   <!-- 3D Background Canvas -->
   <canvas id="bg-canvas"></canvas>
 
   <!-- Auth Container -->
-  <main>
+  <main style="display:flex;justify-content:center;align-items:center;width:100%;height:100%;">
     <div class="auth-container">
       <div class="logo">HARU</div>
       <h2 id="formTitle">로그인</h2>
@@ -136,7 +162,6 @@
           placeholder="이메일"
           required
           autocomplete="username"
-          data-testid="input-email"
         />
         <input
           type="password"
@@ -145,11 +170,8 @@
           placeholder="비밀번호"
           required
           autocomplete="current-password"
-          data-testid="input-password"
         />
-        <button type="submit" class="btn btn-primary btn-submit" data-testid="button-login">
-          로그인
-        </button>
+        <button type="submit" class="btn btn-primary btn-submit">로그인</button>
       </form>
 
       <!-- 회원가입 폼 -->
@@ -161,7 +183,6 @@
           placeholder="이름"
           required
           autocomplete="name"
-          data-testid="input-name"
         />
         <input
           type="email"
@@ -170,7 +191,6 @@
           placeholder="이메일"
           required
           autocomplete="email"
-          data-testid="input-signup-email"
         />
         <input
           type="password"
@@ -179,21 +199,19 @@
           placeholder="비밀번호"
           required
           autocomplete="new-password"
-          data-testid="input-signup-password"
         />
-        <button type="submit" class="btn btn-primary btn-submit" data-testid="button-signup">
-          회원가입
-        </button>
+        <button type="submit" class="btn btn-primary btn-submit">회원가입</button>
       </form>
 
       <div id="toggleText" class="toggle-text">
-        계정이 없나요? <span class="toggle-link" id="toSignup" data-testid="link-toggle">회원가입</span>
+        계정이 없나요?
+        <span class="toggle-link" id="toSignup">회원가입</span>
       </div>
     </div>
   </main>
 
   <!-- Footer -->
-  <footer style="margin-top: auto;">
+  <footer>
     © 2025 <strong>HARU_KIM HYUN JUN</strong>
   </footer>
 
