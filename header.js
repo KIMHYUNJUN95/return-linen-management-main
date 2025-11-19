@@ -64,28 +64,28 @@ export function initHeaderMenu() {
     const superAdminEmail = "rlaguswns95@haru-tokyo.com";
 
     try {
+      // ⭐⭐ 중요: 유저 정보 즉시 리로드하여 displayName 지연 버그 제거
+      await user.reload();
+
       // Firestore users 컬렉션 불러오기
       const userRef = doc(db, "users", user.email);
       const userSnap = await getDoc(userRef);
       const userData = userSnap.exists() ? userSnap.data() : {};
 
+      // 최신 displayName 반영됨
       const userName = userData.name || user.displayName || "";
 
       // 현재 페이지가 내정보 페이지인지 체크
-      const isProfilePage =
-        location.href.includes("profile.html") ||
-        location.href.includes("myinfo.html");
+      const isProfilePage = location.href.includes("profile.html");
 
-      // ========================================
-      // 🛡 내정보 페이지에서는 제한 절대 적용하지 않음
-      // ========================================
+      // 🔥 profile.html에서는 제한 OFF
       if (isProfilePage) {
-        console.log("ℹ️ profile.html → 이름 없어도 문제 없음 (제한 OFF)");
+        console.log("ℹ️ profile.html → 이름 없어도 제한 없음");
         return;
       }
 
       // ========================================
-      // ⚠️ 이름이 없으면 기능 제한 + 내정보로 이동
+      // ⚠️ 이름 누락 → 강제 이동
       // ========================================
       if (!userName || userName === "(이름 없음)") {
         alert("⚠️ 이름이 등록되지 않아 메뉴 사용이 제한됩니다.\n지금 내 정보 페이지로 이동합니다.");
@@ -97,7 +97,7 @@ export function initHeaderMenu() {
           }
         });
 
-        location.href = "profile.html"; // 🔥 여기 중요 (myinfo → profile)
+        location.href = "profile.html";
         return;
       }
 

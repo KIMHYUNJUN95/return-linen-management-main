@@ -1,5 +1,5 @@
 // ========================================
-// 🔐 HARU Authentication (Login & Signup) - 개선버전
+// 🔐 HARU Authentication (Login & Signup) - 최종 고정 버전
 // ========================================
 
 import { auth, db } from "./storage.js";
@@ -13,23 +13,35 @@ import {
   doc,
   setDoc,
   serverTimestamp,
+  getDoc,
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-/* ✅ 로그인 상태 확인: 이미 로그인된 사용자는 게시판으로 이동 */
+/* ========================================
+   ✅ 로그인 상태 확인 (자동 이동)
+   → Firestore 덮어쓰기 금지 처리 포함
+======================================== */
 onAuthStateChanged(auth, async (user) => {
-  if (user) {
+  if (!user) return;
+
+  const userRef = doc(db, "users", user.email);
+  const userSnap = await getDoc(userRef);
+
+  // 🔥 Firestore에 기존 데이터가 있으면 덮어쓰기 금지
+  if (!userSnap.exists()) {
     await setDoc(
-      doc(db, "users", user.email),
+      userRef,
       {
         email: user.email,
         name: user.displayName || "(이름 없음)",
-        role: "user", // 기본 권한
+        role: "user",
         createdAt: serverTimestamp(),
       },
       { merge: true }
     );
-    location.href = "board.html";
   }
+
+  // 🔥 displayName이 비어있으면 profile.html로 이동하도록 header.js가 체크함
+  location.href = "board.html";
 });
 
 /* 🔧 DOM 요소 연결 */
@@ -39,7 +51,7 @@ const toSignup = document.getElementById("toSignup");
 const toggleText = document.getElementById("toggleText");
 const formTitle = document.getElementById("formTitle");
 
-/* ⚠️ 에러 메시지 표시용 DOM 추가 */
+/* ⚠️ 에러 메시지 추가 */
 const errorBox = document.createElement("div");
 errorBox.id = "authErrorBox";
 errorBox.style.color = "#ef4444";
@@ -49,7 +61,6 @@ errorBox.style.fontSize = "14px";
 errorBox.style.display = "none";
 loginForm.parentNode.insertBefore(errorBox, toggleText);
 
-/* ✨ 에러 메시지 표시/초기화 함수 */
 function showError(msg) {
   errorBox.textContent = msg;
   errorBox.style.display = "block";
@@ -68,8 +79,8 @@ toSignup.onclick = () => {
   formTitle.textContent = isLoginMode ? "회원가입" : "로그인";
 
   toggleText.innerHTML = isLoginMode
-    ? `이미 계정이 있나요? <span class="toggle-link" id="toSignup" data-testid="link-toggle">로그인</span>`
-    : `계정이 없나요? <span class="toggle-link" id="toSignup" data-testid="link-toggle">회원가입</span>`;
+    ? `이미 계정이 있나요? <span class="toggle-link" id="toSignup">로그인</span>`
+    : `계정이 없나요? <span class="toggle-link" id="toSignup">회원가입</span>`;
 
   document.getElementById("toSignup").onclick = toSignup.onclick;
 };
@@ -87,7 +98,6 @@ loginForm.addEventListener("submit", async (e) => {
   try {
     await signInWithEmailAndPassword(auth, email, pw);
     alert("✅ 로그인 성공!");
-    // Firestore 저장은 onAuthStateChanged에서 자동 처리됨
   } catch (err) {
     console.error("❌ 로그인 오류:", err);
     let message = "로그인에 실패했습니다.";
@@ -102,10 +112,8 @@ loginForm.addEventListener("submit", async (e) => {
         message = "이메일 형식이 올바르지 않습니다.";
         break;
       case "auth/too-many-requests":
-        message = "로그인 시도가 너무 많습니다. 잠시 후 다시 시도해주세요.";
+        message = "시도가 너무 많습니다. 잠시 후 다시 시도해주세요.";
         break;
-      default:
-        message = "로그인 중 오류가 발생했습니다.";
     }
     showError(message);
   }
@@ -124,10 +132,16 @@ signupForm.addEventListener("submit", async (e) => {
   if (pw.length < 6) return showError("비밀번호는 6자 이상이어야 합니다.");
 
   try {
+    // 🔥 사용자 생성
     const userCred = await createUserWithEmailAndPassword(auth, email, pw);
+
+    // 🔥 Auth displayName 저장
     await updateProfile(userCred.user, { displayName: name });
 
-    // Firestore 저장
+    // 🔥 필수! 사용자 정보 최신화
+    await userCred.user.reload();
+
+    // 🔥 Firestore users 저장
     await setDoc(
       doc(db, "users", email),
       {
@@ -139,8 +153,9 @@ signupForm.addEventListener("submit", async (e) => {
       { merge: true }
     );
 
-    alert("✅ 회원가입 완료! 게시판으로 이동합니다.");
+    alert("✅ 회원가입 완료!");
     location.href = "board.html";
+
   } catch (err) {
     console.error("❌ 회원가입 오류:", err);
     let message = "회원가입에 실패했습니다.";
@@ -149,16 +164,14 @@ signupForm.addEventListener("submit", async (e) => {
         message = "이미 사용 중인 이메일입니다.";
         break;
       case "auth/weak-password":
-        message = "비밀번호가 너무 약합니다. (6자 이상 입력)";
+        message = "비밀번호가 너무 약합니다.";
         break;
       case "auth/invalid-email":
         message = "이메일 형식이 올바르지 않습니다.";
         break;
       case "auth/network-request-failed":
-        message = "네트워크 오류입니다. 인터넷 연결을 확인해주세요.";
+        message = "네트워크 오류입니다.";
         break;
-      default:
-        message = "회원가입 중 오류가 발생했습니다.";
     }
     showError(message);
   }
