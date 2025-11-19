@@ -278,8 +278,13 @@
         </div>
       </div>
 
-      <!-- 출근자 현황 -->
-      <h3 style="margin-top: var(--space-8); margin-bottom: var(--space-4);">오늘 출근자 현황</h3>
+      <!-- 출근자 현황 + (관리자 전용) 월간 대시보드 버튼 -->
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:var(--space-8);margin-bottom:var(--space-4);">
+        <h3>오늘 출근자 현황</h3>
+        <button id="btnGoWorklogOverview" class="btn btn-gradient admin-only" style="display:none;">
+          📊 월간 근무 현황 보기
+        </button>
+      </div>
       <div id="recentLogs" data-testid="container-recent-logs"></div>
     </div>
   </main>
@@ -328,6 +333,39 @@
       initHeaderMenu();
     });
   </script>
+
+  <!-- ✅ 관리자 전용 버튼 제어 & 이동 -->
+  <script type="module">
+    import { auth, db } from "./storage.js";
+    import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+    const btnOverview = document.getElementById("btnGoWorklogOverview");
+    if (btnOverview) {
+      // 클릭 시 월간 대시보드 이동
+      btnOverview.addEventListener("click", () => {
+        location.href = "worklog_overview.html";
+      });
+
+      // 관리자/슈퍼관리자만 표시
+      auth.onAuthStateChanged(async (user) => {
+        if (!user) return;
+        const superAdmin = "rlaguswns95@haru-tokyo.com";
+        if (user.email === superAdmin) {
+          btnOverview.style.display = "inline-flex";
+          return;
+        }
+        try {
+          const roleSnap = await getDoc(doc(db, "roles", user.email));
+          if (roleSnap.exists() && roleSnap.data().role === "admin") {
+            btnOverview.style.display = "inline-flex";
+          }
+        } catch (e) {
+          console.warn("권한 확인 실패:", e);
+        }
+      });
+    }
+  </script>
+
   <script type="module" src="worklog.js"></script>
   <script type="module" src="scrollTop.js"></script>
 

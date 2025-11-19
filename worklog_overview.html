@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>HARU 근무 현황 대시보드</title>
+  <link rel="stylesheet" href="common.css" />
+  <style>
+    .overview-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: var(--space-6);
+    }
+    h1 { margin-bottom: var(--space-6); }
+
+    .filters {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      flex-wrap: wrap;
+      margin-bottom: var(--space-6);
+    }
+    select, input[type="month"] {
+      padding: 8px 12px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      border: 1px solid #ccc;
+      background: white;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    th, td {
+      padding: 10px 12px;
+      text-align: center;
+      border-bottom: 1px solid #eee;
+    }
+    th {
+      background: linear-gradient(135deg, #0077b6, #00b4d8);
+      color: #fff;
+    }
+    tr:hover {
+      background: #f7f9fc;
+    }
+
+    .summary-box {
+      background: hsla(var(--color-bg-glass), 0.3);
+      border: 1px solid hsl(var(--color-border-glass));
+      border-radius: var(--radius-md);
+      padding: var(--space-4);
+      display: flex;
+      justify-content: space-around;
+      margin-bottom: var(--space-6);
+    }
+
+    .summary-item {
+      text-align: center;
+    }
+
+    .summary-item strong {
+      font-size: 20px;
+      color: hsl(var(--color-primary));
+      display: block;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="bg-canvas"></canvas>
+  <div id="header-placeholder"></div>
+
+  <main>
+    <div class="overview-container">
+      <h1>📊 월간 근무 현황</h1>
+
+      <div class="filters">
+        <label>월 선택</label>
+        <input type="month" id="monthPicker" />
+        <button id="loadBtn" class="btn btn-primary">조회</button>
+        <button id="backBtn" class="btn btn-ghost">뒤로가기</button>
+      </div>
+
+      <!-- 요약 -->
+      <div class="summary-box">
+        <div class="summary-item">
+          <strong id="totalWorkdays">0</strong>
+          <span>출근일수</span>
+        </div>
+        <div class="summary-item">
+          <strong id="totalWorkHours">0h</strong>
+          <span>총 근무시간</span>
+        </div>
+        <div class="summary-item">
+          <strong id="avgWorkHours">0h</strong>
+          <span>평균 근무시간</span>
+        </div>
+      </div>
+
+      <!-- 근무 리스트 -->
+      <table id="worklogTable">
+        <thead>
+          <tr>
+            <th>이름</th>
+            <th>날짜</th>
+            <th>출근</th>
+            <th>퇴근</th>
+            <th>총 근무시간</th>
+            <th>휴식</th>
+            <th>청소상태</th>
+          </tr>
+        </thead>
+        <tbody id="worklogBody">
+          <tr><td colspan="7">데이터를 불러오는 중...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </main>
+
+  <footer>© 2025 <strong>HARU_KIM HYUN JUN</strong></footer>
+
+  <script type="module" src="scripts/bg/scene.js"></script>
+  <script type="module">
+    import { initHeaderMenu } from "./header.js";
+    fetch("header.html").then(r=>r.text()).then(h=>{
+      document.getElementById("header-placeholder").innerHTML=h;
+      initHeaderMenu();
+    });
+  </script>
+
+  <script type="module" src="worklog_overview.js"></script>
+  <script type="module" src="scrollTop.js"></script>
+</body>
+</html>

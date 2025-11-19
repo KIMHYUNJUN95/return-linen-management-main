@@ -26,7 +26,11 @@
       <button data-building="가부키초">가부키초</button>
       <button data-building="다카다노바바">다카다노바바</button>
       <button data-building="오쿠보1">오쿠보1</button>
-      <button data-building="오쿠보2">오쿠보2</button>
+
+      <!-- 🔥 여기부터 변경됨: 오쿠보2 분리 -->
+      <button data-building="오쿠보2">오쿠보2(비품)</button>
+      <button data-building="오쿠보2_린넨">오쿠보2(린넨)</button>
+
       <button data-building="오쿠보4">오쿠보4</button>
     </div>
 
@@ -42,7 +46,11 @@
           <option value="가부키초">가부키초</option>
           <option value="다카다노바바">다카다노바바</option>
           <option value="오쿠보1">오쿠보1</option>
-          <option value="오쿠보2">오쿠보2</option>
+
+          <!-- 🔥 오쿠보2 선택 분리 -->
+          <option value="오쿠보2">오쿠보2(비품)</option>
+          <option value="오쿠보2_린넨">오쿠보2(린넨)</option>
+
           <option value="오쿠보4">오쿠보4</option>
         </select>
       </div>
@@ -53,10 +61,12 @@
         <button id="btnResetSearch">초기화</button>
       </div>
 
-      <div class="group actions">
-        <button id="btnExportInv" class="btn">📄 CSV 내보내기</button>
-        <button id="openFormBtn" class="btn primary">📦 품목 추가</button>
-      </div>
+<div class="group actions">
+  <button id="btnExportInv" class="btn">📄 CSV 내보내기</button>
+  <button id="openFormBtn" class="btn primary">📦 품목 추가</button>
+  <button id="btnDeleteAllInv" class="btn danger">🗑 전체 삭제</button>
+</div>
+
     </section>
 
     <!-- 📋 재고 목록 -->
@@ -99,7 +109,11 @@
           <option value="가부키초">가부키초</option>
           <option value="다카다노바바">다카다노바바</option>
           <option value="오쿠보1">오쿠보1</option>
-          <option value="오쿠보2">오쿠보2</option>
+
+          <!-- 🔥 여기 또한 동일하게 분리 -->
+          <option value="오쿠보2">오쿠보2(비품)</option>
+          <option value="오쿠보2_린넨">오쿠보2(린넨)</option>
+
           <option value="오쿠보4">오쿠보4</option>
         </select>
       </label>
@@ -149,7 +163,7 @@
   <!-- 📱 모바일용 플로팅 버튼 -->
   <button id="btnOpenInventoryFull">📋 재고리스트 보기</button>
 
-  <!-- ✅ 헤더 로드 -->
+  <!-- 헤더 -->
   <script type="module">
     import { initHeaderMenu } from "./header.js";
     fetch("header.html").then(r=>r.text()).then(h=>{
@@ -158,7 +172,7 @@
     });
   </script>
 
-  <!-- ✅ 검색 초기화 -->
+  <!-- 검색 초기화 -->
   <script type="module">
     const invSearch = document.getElementById("invSearch");
     const btnResetSearch = document.getElementById("btnResetSearch");
@@ -168,7 +182,7 @@
     });
   </script>
 
-  <!-- ✅ JS -->
+  <!-- JS -->
   <script type="module" src="inventory.js"></script>
   <script type="module" src="scrollTop.js"></script>
 </body>

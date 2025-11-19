@@ -1,5 +1,5 @@
 ﻿// ========================================
-// 🧭 HARU Header Controller (Super Admin + Firestore Admin)
+// 🧭 HARU Header Controller (Super Admin + Firestore Admin + 이름 미기입 제한 + 자동 이동)
 // ========================================
 
 import { auth, db } from "./storage.js";
@@ -52,24 +52,51 @@ export function initHeaderMenu() {
 
   attachLogoutEvent();
 
-  // 👑 관리자 & 슈퍼관리자 권한 체크
+  // 👑 관리자 & 슈퍼관리자 권한 체크 + 이름 확인
   onAuthStateChanged(auth, async (user) => {
     const adminTab = document.querySelector(".admin-only");
     const superAdminTabs = document.querySelectorAll(".super-admin-only");
+    const menuItems = document.querySelectorAll("a, button, .menu-item, .nav-link, .btn");
 
     if (!user) return;
 
-    const superAdminEmail = "rlaguswns95@haru-tokyo.com"; // ✅ 너 이메일 고정
+    const superAdminEmail = "rlaguswns95@haru-tokyo.com"; // ✅ 현준 계정 고정
 
     try {
-      // ✅ 1. 너 이메일이면 바로 슈퍼관리자 메뉴 표시
+      // ✅ Firestore에서 사용자 정보 확인
+      const userRef = doc(db, "users", user.email);
+      const userSnap = await getDoc(userRef);
+      const userData = userSnap.exists() ? userSnap.data() : {};
+      const userName = userData.name || user.displayName || "";
+
+      // ✅ 이름이 없거나 '(이름 없음)'이면 메뉴 제한 + 자동 이동
+      if (!userName || userName === "(이름 없음)") {
+        alert("⚠️ 이름이 등록되지 않아 메뉴 사용이 제한됩니다.\n지금 내 정보 페이지로 이동합니다.");
+
+        // 메뉴 클릭 비활성화
+        menuItems.forEach((el) => {
+          if (!el.id.includes("logout")) {
+            el.style.pointerEvents = "none";
+            el.style.opacity = "0.4";
+          }
+        });
+
+        // 💡 자동 이동
+        if (!location.href.includes("myinfo.html")) {
+          location.href = "myinfo.html";
+        }
+
+        return;
+      }
+
+      // ✅ 현준 계정은 슈퍼관리자 메뉴 표시
       if (user.email === superAdminEmail) {
-        superAdminTabs.forEach(el => el.style.display = "block");
+        superAdminTabs.forEach((el) => (el.style.display = "block"));
         if (adminTab) adminTab.style.display = "block";
         return;
       }
 
-      // ✅ 2. Firestore에서 관리자 여부 확인
+      // ✅ 일반 관리자 Firestore roles 체크
       const roleRef = doc(db, "roles", user.email);
       const roleSnap = await getDoc(roleRef);
 
@@ -80,7 +107,7 @@ export function initHeaderMenu() {
         }
       }
     } catch (err) {
-      console.error("❌ 관리자 권한 확인 실패:", err);
+      console.error("❌ 관리자/이름 확인 오류:", err);
     }
   });
 }
