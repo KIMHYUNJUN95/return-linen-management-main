@@ -11,6 +11,7 @@ import {
   deleteDoc,
   doc,
   query,
+  orderBy
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 import { getUserRoleByEmail } from "./roles.js";
@@ -24,7 +25,7 @@ let repairModalEl = null;
 let repairTextEl = null;
 
 // ========================================
-// 🔧 보수방법 밝은 모달 생성 (A안)
+// 🔧 보수방법 밝은 모달 생성
 // ========================================
 function setupRepairModal() {
   if (repairModalEl) return;
@@ -166,7 +167,11 @@ async function loadMaintenanceList() {
   }
 
   try {
-    const qy = query(collection(db, "maintenance"));
+    // 🔥 날짜 최신순 정렬 적용
+    const qy = query(
+      collection(db, "maintenance"),
+      orderBy("createdAt", "desc")
+    );
     const snapshot = await getDocs(qy);
 
     if (snapshot.empty) {
@@ -191,7 +196,6 @@ async function loadMaintenanceList() {
       const status = data.status || "-";
       const createdByEmail = data.createdByEmail || null;
 
-      // 🔧 보수 방법 읽기 (여러 키 대응)
       const repairMethodRaw =
         data.repairMethod ||
         data.repair_method ||
@@ -212,13 +216,11 @@ async function loadMaintenanceList() {
           ? data.imageUrls[0]
           : "");
 
-      // 🔐 권한
       const canEdit =
         currentUser &&
         (currentRole === "admin" || currentUser.email === createdByEmail);
       const canDelete = currentRole === "admin";
 
-      // 🔒 버튼 data-repair에 텍스트를 직접 실어둔다 (숨겨진 span 안 씀)
       const encodedRepair = encodeURIComponent(repairMethodRaw || "");
 
       // ---------------- PC 테이블 ----------------
@@ -268,7 +270,7 @@ async function loadMaintenanceList() {
               hasRepair
                 ? `<button 
                      class="btn-view-repair" 
-                     data-id="${id}"
+                     data-id="${id}" 
                      data-repair="${encodedRepair}"
                      style="margin-top:4px;padding:4px 10px;border-radius:999px;border:1px solid rgba(148,163,184,0.7);background:#f9fafb;color:#111827;font-size:12px;cursor:pointer;">
                      보수방법 보기
@@ -298,6 +300,7 @@ async function loadMaintenanceList() {
     attachDeleteEvents();
     attachEditEvents();
     attachRepairEvents();
+
   } catch (err) {
     console.error("🔥 Firestore 불러오기 오류:", err);
     tbody.innerHTML = `<tr><td colspan="10">데이터 불러오기 오류가 발생했습니다.</td></tr>`;
