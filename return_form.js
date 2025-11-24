@@ -1,4 +1,7 @@
-// return_form.js — 린넨명 통일 + 레거시 스키마 맞춤 저장
+// ===============================
+// 🧺 return_form.js — 린넨명 통일 + 레거시 스키마 맞춤 저장
+// ===============================
+
 import { db, auth, storage } from "./storage.js";
 import {
   collection,
@@ -109,7 +112,12 @@ form.addEventListener("submit", async (e) => {
     imageUrls: [],
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp(),
-    userEmail
+
+    // 🔥 기존 필드 유지 (통계 영향 NO)
+    userEmail,
+
+    // 🔥 신규 필드 추가 (내역관리 권한 핵심)
+    authorEmail: userEmail
   };
 
   try {

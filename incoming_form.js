@@ -111,6 +111,7 @@ form.addEventListener("submit", async (e) => {
   if (!staffName) return alert("담당자 이름을 입력하세요.");
   if (!items.length) return alert("린넨을 최소 1개 이상 추가하세요.");
 
+  // 🔥 이메일 정보
   const userEmail = auth?.currentUser?.email || null;
 
   const payload = {
@@ -123,7 +124,12 @@ form.addEventListener("submit", async (e) => {
     imageUrls: [],
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp(),
-    userEmail
+
+    // ⭐ 기존 필드 유지
+    userEmail,
+
+    // ⭐ 신규 필드 추가 (내역관리 권한 핵심)
+    authorEmail: userEmail
   };
 
   try {
