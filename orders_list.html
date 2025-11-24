@@ -14,17 +14,25 @@
 
     .toolbar {
       display: flex;
+      flex-wrap: wrap;
       justify-content: space-between;
       align-items: center;
       gap: var(--space-4);
       margin-bottom: var(--space-6);
-      flex-wrap: wrap;
     }
 
     .filter-group {
       display: flex;
       gap: var(--space-3);
       flex-wrap: wrap;
+    }
+
+    /* 🔵 추가된 기간 검색 UI */
+    .date-filter {
+      display: flex;
+      gap: var(--space-3);
+      flex-wrap: wrap;
+      align-items: center;
     }
 
     .order-card {
@@ -75,6 +83,14 @@
       margin-top: var(--space-4);
       flex-wrap: wrap;
     }
+
+    /* 🔵 기간 검색 결과 카운트 */
+    #orderCount {
+      margin-bottom: var(--space-4);
+      font-size: var(--font-size-md);
+      color: hsl(var(--color-primary));
+      font-weight: 600;
+    }
   </style>
 </head>
 <body>
@@ -85,8 +101,11 @@
     <div class="orders-container">
       <h1>🛒 주문 목록</h1>
 
+      <!-- 🔵 기간 검색 + 상태/긴급도 검색 -->
       <div class="toolbar">
         <div class="filter-group">
+
+          <!-- 기존 상태/긴급도 -->
           <select id="filterStatus" class="form-select" data-testid="select-filter-status">
             <option value="">전체 상태</option>
             <option value="pending">대기중</option>
@@ -94,6 +113,7 @@
             <option value="completed">완료</option>
             <option value="rejected">거부됨</option>
           </select>
+
           <select id="filterUrgency" class="form-select" data-testid="select-filter-urgency">
             <option value="">전체 긴급도</option>
             <option value="일반">일반</option>
@@ -101,10 +121,23 @@
             <option value="매우긴급">매우긴급</option>
           </select>
         </div>
+
         <a href="orders.html" class="btn btn-primary" data-testid="button-new-order">+ 새 주문</a>
       </div>
 
+      <!-- 🔵 기간 검색 UI -->
+      <div class="date-filter" style="margin-bottom: var(--space-4);">
+        <input type="date" id="startDate" class="form-input" />
+        <input type="date" id="endDate" class="form-input" />
+        <button id="btnDateSearch" class="btn btn-secondary">기간 검색</button>
+      </div>
+
+      <!-- 🔵 검색된 주문 개수 -->
+      <div id="orderCount"></div>
+
+      <!-- 리스트 -->
       <div id="ordersList" data-testid="container-orders-list"></div>
+
       <div id="emptyState" style="display:none;" class="empty-state">
         <div class="empty-state-icon">📭</div>
         <div class="empty-state-text">주문 내역이 없습니다</div>
@@ -122,6 +155,7 @@
       initHeaderMenu();
     });
   </script>
+
   <script type="module" src="orders_list.js"></script>
   <script type="module" src="scrollTop.js"></script>
 

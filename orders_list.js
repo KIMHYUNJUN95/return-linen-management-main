@@ -1,5 +1,5 @@
 // ========================================
-// 🛒 HARU Orders List (건물 + 이름 표시 추가)
+// 🛒 HARU Orders List (건물 + 이름 + 기간검색 + 검색건수 표시)
 // ========================================
 
 import { db, auth } from "./storage.js";
@@ -18,6 +18,11 @@ const ordersList = document.getElementById("ordersList");
 const emptyState = document.getElementById("emptyState");
 const filterStatus = document.getElementById("filterStatus");
 const filterUrgency = document.getElementById("filterUrgency");
+
+const startDateEl = document.getElementById("startDate");
+const endDateEl = document.getElementById("endDate");
+const btnDateSearch = document.getElementById("btnDateSearch");
+const orderCountEl = document.getElementById("orderCount");
 
 let allOrders = [];
 
@@ -59,16 +64,20 @@ function getUrgencyBadge(urgency) {
   return badges[urgency] || '';
 }
 
-// 주문 렌더링
+// ✨ 단일 렌더링 함수
 function renderOrders(orders) {
   if (orders.length === 0) {
     ordersList.style.display = "none";
     emptyState.style.display = "block";
+    orderCountEl.textContent = "";
     return;
   }
 
   ordersList.style.display = "block";
   emptyState.style.display = "none";
+
+  // 🔵 검색된 건수 표시
+  orderCountEl.textContent = `검색된 주문: ${orders.length}건`;
 
   ordersList.innerHTML = orders.map((order) => {
     const items = (order.items || []).map(item => {
@@ -83,12 +92,11 @@ function renderOrders(orders) {
       `;
     }).join('');
 
-    // ✅ 건물과 요청자 이름 표시 추가
     const buildingInfo = order.building ? `🏢 ${order.building}` : "";
     const requesterInfo = order.requesterName ? `👤 ${order.requesterName}` : (order.createdBy || "익명");
 
     return `
-      <div class="order-card" data-testid="order-card-${order.id}">
+      <div class="order-card">
         <div class="order-header">
           <div>
             <h3 style="margin-bottom: var(--space-2);">주문 #${order.id.substring(0, 8)}</h3>
@@ -103,11 +111,9 @@ function renderOrders(orders) {
           </div>
         </div>
 
-        <div class="order-items">
-          ${items}
-        </div>
+        <div class="order-items">${items}</div>
 
-        ${order.notes ? `<p style="font-size:var(--font-size-sm);color:hsl(var(--color-text-secondary));margin-top:var(--space-2);">비고: ${order.notes}</p>` : ''}
+        ${order.notes ? `<p class="order-notes">비고: ${order.notes}</p>` : ''}
 
         <div class="order-actions">
           ${order.status === 'pending' ? `
@@ -125,30 +131,53 @@ function renderOrders(orders) {
   }).join('');
 }
 
-// 주문 로드
-async function loadOrders() {
-  try {
-    const q = query(collection(db, "orders"), orderBy("createdAt", "desc"));
-    const snapshot = await getDocs(q);
-    allOrders = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-    applyFilters();
-  } catch (err) {
-    console.error("❌ 주문 로드 오류:", err);
-    alert("주문을 불러오는데 실패했습니다.");
-  }
+// 🔵 기간 필터 적용
+function filterByDate(list) {
+  const start = startDateEl.value ? new Date(startDateEl.value) : null;
+  const end = endDateEl.value ? new Date(endDateEl.value + " 23:59:59") : null;
+
+  if (!start && !end) return list;
+
+  return list.filter(order => {
+    if (!order.createdAt) return false;
+
+    const created = order.createdAt.toDate ? order.createdAt.toDate() : new Date(order.createdAt);
+
+    if (start && created < start) return false;
+    if (end && created > end) return false;
+
+    return true;
+  });
 }
 
-// 필터 적용
+// 전체 필터
 function applyFilters() {
   const status = filterStatus.value;
   const urgency = filterUrgency.value;
 
-  let filtered = allOrders;
+  let filtered = [...allOrders];
+
+  // 기간 필터
+  filtered = filterByDate(filtered);
 
   if (status) filtered = filtered.filter(o => o.status === status);
   if (urgency) filtered = filtered.filter(o => o.urgency === urgency);
 
   renderOrders(filtered);
+}
+
+// 데이터 로드
+async function loadOrders() {
+  try {
+    const q = query(collection(db, "orders"), orderBy("createdAt", "desc"));
+    const snapshot = await getDocs(q);
+    allOrders = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+    applyFilters();
+  } catch (err) {
+    console.error("❌ 주문 로드 오류:", err);
+    alert("주문 데이터를 불러오는 중 오류 발생");
+  }
 }
 
 // 상태 변경
@@ -173,7 +202,7 @@ window.deleteOrder = async (id) => {
   await loadOrders();
 };
 
-// ✨ 주문 수정 기능
+// 수정 기능
 window.editOrder = (id) => {
   const order = allOrders.find(o => o.id === id);
   if (!order) return alert("주문 데이터를 찾을 수 없습니다.");
@@ -182,9 +211,10 @@ window.editOrder = (id) => {
   location.href = "orders.html?edit=" + id;
 };
 
-// 필터 이벤트
+// 이벤트
 filterStatus.addEventListener("change", applyFilters);
 filterUrgency.addEventListener("change", applyFilters);
+btnDateSearch.addEventListener("click", applyFilters);
 
-// 초기 로드
+// 시작
 loadOrders();
