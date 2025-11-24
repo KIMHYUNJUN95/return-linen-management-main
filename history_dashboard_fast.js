@@ -1,7 +1,7 @@
 // ===============================
-// 🧺 history_dashboard_fast.js — 메모 필드 반영 + 기존 기능 유지
+// 🧺 history_dashboard_fast.js — 본인+관리자 수정/삭제 허용 (최종본)
 // ===============================
-import { db } from "./storage.js";
+import { db, auth } from "./storage.js";
 import {
   collection,
   getDocs,
@@ -38,13 +38,23 @@ function showLoading() {
 
 /* ✅ 카드 렌더링 */
 function renderCards(list) {
+  const currentUser = auth.currentUser;
+  const currentEmail = currentUser?.email || null;
+  const adminEmail = "rlaguswns95@haru-tokyo.com";
+
   if (!list || list.length === 0) {
     cardBody.innerHTML = `<p style="text-align:center;color:#888;">등록된 내역이 없습니다.</p>`;
     return;
   }
+
   list.sort((a, b) => new Date(b.date) - new Date(a.date));
 
-  cardBody.innerHTML = list.map(d => `
+  cardBody.innerHTML = list.map(d => {
+    const isOwner = currentEmail && d.authorEmail === currentEmail;
+    const isAdmin = currentEmail === adminEmail;
+    const isEditable = isOwner || isAdmin;
+
+    return `
     <div class="history-card" style="
       background:${d.type === "입고" ? "#f0f6ff" : "#fff7f7"};
       border:1px solid #ccc;
@@ -60,26 +70,47 @@ function renderCards(list) {
         </span>
         <span class="meta" style="color:#777;font-size:13px;">${d.date}</span>
       </header>
+
       <div class="content" style="margin-bottom:4px;"><b>건물:</b> ${d.building}</div>
       <div class="content" style="margin-bottom:4px;"><b>담당자:</b> ${d.staff}</div>
-      <div class="content" style="margin-bottom:6px;color:#333;">
-        ${(d.items || []).map(i => `<span style="display:inline-block;margin-right:6px;">${i.linenType} <b>${i.count}개</b></span>`).join("")}
-      </div>
-      ${d.desc && d.desc !== "-" ? `<div class="content" style="margin-top:6px;color:#555;"><b>📌 메모:</b> ${d.desc}</div>` : ""}
-      <div style="margin-top:8px;display:flex;gap:8px;justify-content:flex-end;">
-        <button class="btn-edit" data-id="${d.id}" data-col="${d.col}"
-          style="background:#007bff;color:#fff;border:none;padding:6px 14px;border-radius:6px;cursor:pointer;">수정</button>
-        <button class="btn-del" data-id="${d.id}" data-col="${d.col}"
-          style="background:#d32f2f;color:#fff;border:none;padding:6px 14px;border-radius:6px;cursor:pointer;">삭제</button>
-      </div>
-    </div>`).join("");
 
-  document.querySelectorAll(".btn-edit").forEach(b => {
-    b.addEventListener("click", () => openEditModal(b.dataset.id, b.dataset.col));
-  });
-  document.querySelectorAll(".btn-del").forEach(b => {
-    b.addEventListener("click", () => deleteRecord(b.dataset.id, b.dataset.col));
-  });
+      <div class="content" style="margin-bottom:6px;color:#333;">
+        ${(d.items || [])
+          .map(i => `<span style="display:inline-block;margin-right:6px;">${i.linenType} <b>${i.count}개</b></span>`)
+          .join("")}
+      </div>
+
+      ${d.desc && d.desc !== "-" 
+        ? `<div class="content" style="margin-top:6px;color:#555;"><b>📌 메모:</b> ${d.desc}</div>`
+        : ""
+      }
+
+      <div style="margin-top:8px;display:flex;gap:8px;justify-content:flex-end;">
+        ${
+          isEditable
+            ? `
+              <button class="btn-edit" data-id="${d.id}" data-col="${d.col}"
+                style="background:#007bff;color:#fff;border:none;padding:6px 14px;border-radius:6px;cursor:pointer;">
+                수정
+              </button>
+              <button class="btn-del" data-id="${d.id}" data-col="${d.col}"
+                style="background:#d32f2f;color:#fff;border:none;padding:6px 14px;border-radius:6px;cursor:pointer;">
+                삭제
+              </button>
+            `
+            : ``
+        }
+      </div>
+    </div>`;
+  }).join("");
+
+  document.querySelectorAll(".btn-edit").forEach(b =>
+    b.addEventListener("click", () => openEditModal(b.dataset.id, b.dataset.col))
+  );
+
+  document.querySelectorAll(".btn-del").forEach(b =>
+    b.addEventListener("click", () => deleteRecord(b.dataset.id, b.dataset.col))
+  );
 }
 
 /* ✅ 데이터 파싱 */
@@ -95,6 +126,7 @@ function parseSnap(snap, type) {
       building: x.buildingId || x.building || "-",
       staff: x.staffName || x.staff || "-",
       desc: x.desc || "-",
+      authorEmail: x.authorEmail || null,
       items: (x.items || []).map(i => ({
         linenType: normalizeLinenName(i.linenType || i.type || ""),
         count: i.receivedCount ?? i.defectCount ?? 0,
@@ -122,7 +154,11 @@ async function loadHistory() {
   for (const job of jobs) {
     (async () => {
       try {
-        const q = query(collection(job.db, job.col), orderBy("date", "desc"), limit(100));
+        const q = query(
+          collection(job.db, job.col),
+          orderBy("date", "desc"),
+          limit(100)
+        );
         const snap = await getDocs(q);
         let parsed = parseSnap(snap, job.type);
 
@@ -143,18 +179,37 @@ async function loadHistory() {
   }
 }
 
-/* ✅ 수정 모달 */
+/* ======================================
+   🔧 수정 모달 — 본인 + 관리자만 가능
+====================================== */
 async function openEditModal(id, col) {
+  const user = auth.currentUser;
+  const adminEmail = "rlaguswns95@haru-tokyo.com";
+
+  if (!user) return alert("로그인 후 이용해주세요.");
+
   const snap = await getDocs(collection(db, col));
   const docData = snap.docs.find(d => d.id === id)?.data();
+
   if (!docData) return alert("데이터를 찾을 수 없습니다.");
+
+  const isOwner = docData.authorEmail === user.email;
+  const isAdmin = user.email === adminEmail;
+
+  if (!isOwner && !isAdmin) {
+    alert("본인 또는 관리자만 수정할 수 있습니다.");
+    return;
+  }
 
   const bg = document.createElement("div");
   Object.assign(bg.style, {
-    position: "fixed", top: 0, left: 0,
+    position: "fixed",
+    top: 0, left: 0,
     width: "100%", height: "100%",
     background: "rgba(0,0,0,0.5)",
-    display: "flex", justifyContent: "center", alignItems: "center",
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
     zIndex: "9999"
   });
 
@@ -175,26 +230,42 @@ async function openEditModal(id, col) {
     <p><b>날짜:</b> ${docData.date || "-"}</p>
     <p><b>건물:</b> ${docData.buildingId || docData.building || "-"}</p>
     <p><b>담당자:</b>
-      <input id="editStaff" value="${docData.staffName || docData.staff || ""}" 
+      <input id="editStaff" value="${docData.staffName || docData.staff || ""}"
         style="width:100%;padding:6px;border:1px solid #ccc;border-radius:6px;">
     </p>
+
     <h4 style="margin-top:14px;">린넨 목록</h4>
     <ul style="margin-top:6px;padding-left:18px;">
       ${(docData.items || [])
-        .map((i, idx) => `
+        .map(
+          (i, idx) => `
           <li style="margin-bottom:6px;">
-            ${normalizeLinenName(i.linenType || i.type || "")} 
-            <input type="number" id="editQty${idx}" value="${i.receivedCount ?? i.defectCount ?? 0}"
+            ${normalizeLinenName(i.linenType || i.type || "")}
+            <input type="number" id="editQty${idx}" value="${
+              i.receivedCount ?? i.defectCount ?? 0
+            }"
               style="width:60px;padding:4px;border:1px solid #ccc;border-radius:6px;"> 개
-          </li>`).join("")}
+          </li>`
+        )
+        .join("")}
     </ul>
+
     <div style="margin-top:10px;">
       <label><b>📌 메모</b></label>
-      <textarea id="editDesc" style="width:100%;padding:6px;border:1px solid #ccc;border-radius:6px;">${docData.desc || ""}</textarea>
+      <textarea id="editDesc" style="width:100%;padding:6px;border:1px solid #ccc;border-radius:6px;">${
+        docData.desc || ""
+      }</textarea>
     </div>
+
     <div style="text-align:right;margin-top:16px;">
-      <button id="btnSave" style="background:#007bff;color:white;border:none;padding:8px 16px;border-radius:8px;cursor:pointer;">저장</button>
-      <button id="btnClose" style="background:#ccc;border:none;padding:8px 16px;border-radius:8px;cursor:pointer;">닫기</button>
+      <button id="btnSave" style="
+        background:#007bff;color:white;border:none;padding:8px 16px;border-radius:8px;cursor:pointer;">
+        저장
+      </button>
+      <button id="btnClose" style="
+        background:#ccc;border:none;padding:8px 16px;border-radius:8px;cursor:pointer;">
+        닫기
+      </button>
     </div>
   `;
 
@@ -202,6 +273,7 @@ async function openEditModal(id, col) {
   document.body.appendChild(bg);
 
   modal.querySelector("#btnClose").addEventListener("click", () => bg.remove());
+
   modal.querySelector("#btnSave").addEventListener("click", async () => {
     const newStaff = modal.querySelector("#editStaff").value.trim();
     const newDesc = modal.querySelector("#editDesc").value.trim();
@@ -219,23 +291,48 @@ async function openEditModal(id, col) {
       desc: newDesc,
       items: updatedItems,
     });
+
     alert("수정되었습니다.");
     bg.remove();
     loadHistory();
   });
 }
 
-/* ✅ 삭제 */
+/* ======================================
+   🗑 삭제 — 본인 + 관리자만 가능
+====================================== */
 async function deleteRecord(id, col) {
+  const user = auth.currentUser;
+  const adminEmail = "rlaguswns95@haru-tokyo.com";
+
+  if (!user) return alert("로그인 후 이용해주세요.");
+
+  const snap = await getDocs(collection(db, col));
+  const docData = snap.docs.find(d => d.id === id)?.data();
+
+  if (!docData) return alert("데이터를 찾을 수 없습니다.");
+
+  const isOwner = docData.authorEmail === user.email;
+  const isAdmin = user.email === adminEmail;
+
+  if (!isOwner && !isAdmin) {
+    alert("본인 또는 관리자만 삭제할 수 있습니다.");
+    return;
+  }
+
   if (!confirm("정말 삭제하시겠습니까?")) return;
+
   await deleteDoc(doc(db, col, id));
   alert("삭제되었습니다.");
   loadHistory();
 }
 
-/* ✅ 실행 */
+/* ======================================
+   🚀 실행
+====================================== */
 window.addEventListener("DOMContentLoaded", () => {
   document.getElementById("filterBtn").addEventListener("click", loadHistory);
+
   document.getElementById("resetBtn").addEventListener("click", () => {
     document.getElementById("filterType").value = "";
     document.getElementById("filterBuilding").value = "";
