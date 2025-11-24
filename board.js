@@ -17,7 +17,7 @@ import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/f
    📌 DOM 요소
 =========================================== */
 const postForm = document.getElementById("postForm");
-const postList = document.getElementById("postList"); 
+const postList = document.getElementById("postList");
 const pinnedBox = document.getElementById("pinned");
 const togglePostFormBtn = document.getElementById("togglePostForm");
 
@@ -85,13 +85,15 @@ postForm.addEventListener("submit", async (e) => {
 
 /* ===========================================
    📜 게시글 목록 렌더링
+   - 리스트에는 수정/삭제 버튼 없음
+   - No / 제목(-작성자) / 작성시간 3열만 사용
 =========================================== */
 async function loadPosts() {
   if (!postList) return;
 
   postList.innerHTML = `
     <tr>
-      <td colspan="4" style="text-align:center;padding:16px;">게시글을 불러오는 중...</td>
+      <td colspan="3" style="text-align:center;padding:16px;">게시글을 불러오는 중...</td>
     </tr>
   `;
 
@@ -108,7 +110,7 @@ async function loadPosts() {
   if (snap.empty) {
     postList.innerHTML = `
       <tr>
-        <td colspan="4" style="text-align:center;padding:16px;">게시글이 없습니다.</td>
+        <td colspan="3" style="text-align:center;padding:16px;">게시글이 없습니다.</td>
       </tr>
     `;
     return;
@@ -127,49 +129,21 @@ async function loadPosts() {
 
     const isPinned = !!data.pinned;
 
-    /* ===========================================
-       🟦 수정/삭제 권한 조건
-       ✔ 글쓴이 OR ✔ 슈퍼관리자 이메일 → 승인
-    ============================================ */
-    const isOwner = currentUser && (
-      currentUser.uid === data.uid ||
-      currentUser.email === SUPER_ADMIN_EMAIL
-    );
-
     no += 1;
+
+    // 제목 뒤에 작성자 표시 (예: 제목-김현준)
+    const titleDisplay = data.author
+      ? `${data.title || "(제목 없음)"} - ${data.author}`
+      : data.title || "(제목 없음)";
 
     const tr = document.createElement("tr");
     if (isPinned) tr.classList.add("pinned-row");
 
     tr.innerHTML = `
-      <td class="board-no">
-        ${isPinned ? "" : no}
-      </td>
+      <td class="board-no">${isPinned ? "" : no}</td>
       <td class="board-title" data-id="${id}">
-        <span class="board-title-inner">
-          <span class="board-title-text">${data.title || "(제목 없음)"}</span>
-
-          ${
-            isOwner
-              ? `
-            <span class="board-actions-inline">
-              <button type="button"
-                class="btn btn-sm btn-secondary btn-edit"
-                data-id="${id}">
-                수정
-              </button>
-              <button type="button"
-                class="btn btn-sm btn-danger btn-del"
-                data-id="${id}">
-                삭제
-              </button>
-            </span>
-          `
-              : ""
-          }
-        </span>
+        <div class="board-title-text">${titleDisplay}</div>
       </td>
-      <td class="board-author">${data.author || "익명"}</td>
       <td class="board-date">${date}</td>
     `;
 
@@ -227,7 +201,8 @@ async function loadComments(postId, containerEl) {
 }
 
 /* ===========================================
-   🔍 상세 모달
+   🔍 상세 모달 (내용 + 댓글 + 수정/삭제)
+   - 수정/삭제 버튼은 여기에서만 노출
 =========================================== */
 function openViewModal(id) {
   const post = postsCache.find((p) => p.id === id);
@@ -241,6 +216,11 @@ function openViewModal(id) {
   const formattedContent = (post.content || "")
     .replace(/\n/g, "<br>")
     .replace(/\s{2,}/g, (s) => "&nbsp;".repeat(s.length));
+
+  const isOwner =
+    currentUser &&
+    (currentUser.uid === post.uid ||
+      currentUser.email === SUPER_ADMIN_EMAIL);
 
   const bg = document.createElement("div");
   bg.className = "modal-bg";
@@ -270,6 +250,14 @@ function openViewModal(id) {
     </div>
 
     <div class="modal-actions" style="margin-top:14px;display:flex;justify-content:flex-end;gap:8px;">
+      ${
+        isOwner
+          ? `
+        <button id="btnEdit" class="secondary">수정</button>
+        <button id="btnDelete" class="danger">삭제</button>
+      `
+          : ""
+      }
       <button id="btnViewClose" class="secondary">닫기</button>
     </div>
   `;
@@ -281,11 +269,16 @@ function openViewModal(id) {
   const inputEl = modal.querySelector("#view-cmt-input");
   const addBtn = modal.querySelector("#view-cmt-add");
   const closeBtn = modal.querySelector("#btnViewClose");
+  const editBtn = modal.querySelector("#btnEdit");
+  const deleteBtn = modal.querySelector("#btnDelete");
 
+  // 댓글 불러오기
   loadComments(post.id, listEl);
 
+  // 닫기
   closeBtn.addEventListener("click", () => bg.remove());
 
+  // 댓글 등록
   addBtn.addEventListener("click", async () => {
     if (!inputEl) return;
     const text = inputEl.value.trim();
@@ -300,6 +293,7 @@ function openViewModal(id) {
     await loadComments(post.id, listEl);
   });
 
+  // 댓글 삭제
   modal.addEventListener("click", async (e) => {
     const target = e.target;
     if (!(target instanceof HTMLElement)) return;
@@ -313,6 +307,24 @@ function openViewModal(id) {
     await deleteDoc(doc(db, `board/${postId}/comments`, cId));
     await loadComments(postId, listEl);
   });
+
+  // 수정 버튼 (모달 안)
+  if (editBtn) {
+    editBtn.addEventListener("click", () => {
+      bg.remove();
+      openEditModal(post.id);
+    });
+  }
+
+  // 삭제 버튼 (모달 안)
+  if (deleteBtn) {
+    deleteBtn.addEventListener("click", async () => {
+      if (!confirm("이 게시글을 삭제하시겠습니까?")) return;
+      await deleteDoc(doc(db, "board", post.id));
+      bg.remove();
+      loadPosts();
+    });
+  }
 }
 
 /* ===========================================
@@ -377,44 +389,16 @@ async function openEditModal(id) {
 
 /* ===========================================
    🧭 리스트 클릭 이벤트
+   - 이제 리스트에는 버튼이 없고, 제목 클릭만 상세 보기
 =========================================== */
 postList.addEventListener("click", async (e) => {
   const target = e.target;
   if (!(target instanceof HTMLElement)) return;
 
-  // 삭제
-  if (target.classList.contains("btn-del")) {
-    const id = target.dataset.id;
-    if (!id) return;
-
-    if (!confirm("이 게시글을 삭제하시겠습니까?")) return;
-
-    await deleteDoc(doc(db, "board", id));
-    loadPosts();
-    return;
-  }
-
-  // 수정
-  if (target.classList.contains("btn-edit")) {
-    const id = target.dataset.id;
-    if (!id) return;
-
-    openEditModal(id);
-    return;
-  }
-
-  // 상세보기
   const titleCell = target.closest(".board-title");
   if (titleCell && titleCell instanceof HTMLElement) {
     const id = titleCell.dataset.id;
     if (!id) return;
-
-    if (
-      target.classList.contains("btn-edit") ||
-      target.classList.contains("btn-del")
-    ) {
-      return;
-    }
     openViewModal(id);
   }
 });
