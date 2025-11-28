@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>HARU 운영 관리 시스템</title>
+  <title>HARU - Tokyo Winter Edition</title>
   <meta name="description" content="린넨, 시설 유지보수, 분실물, 주문, 근무기록을 통합 관리합니다." />
   
   <!-- PWA -->
@@ -11,113 +11,249 @@
   <meta name="theme-color" content="#0a0e14" />
   <link rel="icon" href="icons/icon-192.png" />
   
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Inter:wght@300;400;600&family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
+
   <!-- Styles -->
   <link rel="stylesheet" href="common.css" />
 
   <style>
+    /* -------------------------------
+       ❄️ Tokyo Winter Glass Theme
+       ------------------------------- */
+    :root {
+      --glass-bg: rgba(255, 255, 255, 0.1);
+      --glass-border: rgba(255, 255, 255, 0.15);
+      --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+      --accent-gold: #FFD700;
+      --accent-red: #D42E2E;
+      --text-white: #FFFFFF;
+      --font-display: 'Cinzel', serif;
+      --font-body: 'Inter', 'Noto Sans KR', sans-serif;
+    }
+
+    body {
+      margin: 0;
+      background: url('https://images.unsplash.com/photo-1503899036084-c55cdd92da26?q=80&w=1974&auto=format&fit=crop') no-repeat center center/cover;
+      background-attachment: fixed; /* 스크롤 시 배경 고정 */
+      color: var(--text-white);
+      font-family: var(--font-body);
+      overflow-x: hidden;
+    }
+
+    /* 배경 오버레이 */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background: radial-gradient(circle at center, rgba(10, 10, 20, 0.4), rgba(0, 0, 0, 0.85));
+      z-index: -1;
+    }
+
+    /* 기존 3D 캔버스 숨김 (새 디자인 적용을 위해) */
+    #bg-canvas {
+      display: none !important;
+    }
+
+    /* ❄️ 눈 내리는 효과 컨테이너 */
+    .snow-container {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      overflow: hidden;
+    }
+    
+    .snow {
+      position: absolute;
+      top: -10px;
+      background: white;
+      border-radius: 50%;
+      opacity: 0.8;
+      animation: fall linear infinite;
+    }
+
+    @keyframes fall {
+      to { transform: translateY(110vh); }
+    }
+
+    /* --- Hero Section --- */
     .hero-section {
-      min-height: 80vh;
+      min-height: 70vh;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
       text-align: center;
-      padding: var(--space-8) var(--space-4);
+      padding: 100px 20px 60px;
       position: relative;
+      z-index: 10;
+    }
+
+    .hero-glass-card {
+      background: var(--glass-bg);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      border: 1px solid var(--glass-border);
+      padding: 40px;
+      border-radius: 20px;
+      box-shadow: var(--glass-shadow);
+      max-width: 800px;
+      width: 100%;
+      animation: floatHero 6s ease-in-out infinite;
+    }
+
+    @keyframes floatHero {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-10px); }
     }
 
     .hero-title {
       font-family: var(--font-display);
-      font-size: var(--font-size-4xl);
-      font-weight: 900;
-      margin-bottom: var(--space-4);
-      background: linear-gradient(135deg, hsl(var(--color-primary)), hsl(var(--color-secondary)));
+      font-size: 3.5rem;
+      font-weight: 700;
+      margin-bottom: 20px;
+      /* Gold Gradient Text */
+      background: linear-gradient(to right, #fff, var(--accent-gold));
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
-      background-clip: text;
-      animation: fadeIn 0.8s ease-out;
+      text-shadow: 0 0 20px rgba(255, 215, 0, 0.3);
     }
 
     .hero-subtitle {
-      font-size: var(--font-size-xl);
-      color: hsl(var(--color-text-secondary));
-      margin-bottom: var(--space-8);
-      max-width: 600px;
-      animation: fadeIn 1s ease-out 0.2s both;
+      font-size: 1.1rem;
+      color: rgba(255, 255, 255, 0.8);
+      margin-bottom: 40px;
+      line-height: 1.6;
+      font-weight: 300;
     }
 
     .hero-cta {
       display: flex;
-      gap: var(--space-4);
-      flex-wrap: wrap;
+      gap: 20px;
       justify-content: center;
-      animation: fadeIn 1.2s ease-out 0.4s both;
+      flex-wrap: wrap;
     }
 
+    /* Buttons */
+    .btn {
+      padding: 14px 32px;
+      border-radius: 50px;
+      font-weight: 600;
+      text-decoration: none;
+      transition: all 0.3s;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--accent-red), #8e0e0e);
+      color: white;
+      box-shadow: 0 4px 15px rgba(212, 46, 46, 0.4);
+      border: none;
+    }
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(212, 46, 46, 0.6);
+    }
+
+    .btn-secondary {
+      background: transparent;
+      color: var(--accent-gold);
+      border: 1px solid var(--accent-gold);
+    }
+    .btn-secondary:hover {
+      background: rgba(255, 215, 0, 0.1);
+      box-shadow: 0 0 15px rgba(255, 215, 0, 0.2);
+    }
+
+    /* --- Features Grid --- */
     .features {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-      gap: var(--space-6);
-      padding: var(--space-8) var(--space-4);
+      gap: 30px;
+      padding: 20px 40px 80px;
       max-width: 1200px;
       margin: 0 auto;
+      position: relative;
+      z-index: 10;
     }
 
     .feature-card {
-      background: hsla(var(--color-bg-glass), 0.4);
-      backdrop-filter: blur(var(--blur-md));
-      border: 1px solid hsl(var(--color-border-glass));
-      border-radius: var(--radius-lg);
-      padding: var(--space-6);
+      background: var(--glass-bg);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid var(--glass-border);
+      border-radius: 16px;
+      padding: 30px;
       text-align: center;
-      transition: all var(--transition-base);
+      transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .feature-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0; height: 3px;
+      background: linear-gradient(90deg, transparent, var(--accent-gold), transparent);
+      opacity: 0.5;
     }
 
     .feature-card:hover {
-      transform: translateY(-4px);
-      box-shadow: var(--shadow-lg), var(--shadow-glow);
-      border-color: hsl(var(--color-primary) / 0.5);
+      transform: translateY(-10px) scale(1.02);
+      background: rgba(255, 255, 255, 0.15);
+      box-shadow: 0 15px 30px rgba(0,0,0,0.4);
+      border-color: var(--accent-gold);
     }
 
     .feature-icon {
-      font-size: var(--font-size-4xl);
-      margin-bottom: var(--space-4);
+      font-size: 3rem;
+      margin-bottom: 20px;
+      filter: drop-shadow(0 0 10px rgba(255,255,255,0.3));
     }
 
     .feature-title {
-      font-size: var(--font-size-xl);
+      font-family: var(--font-display);
+      font-size: 1.25rem;
       font-weight: 700;
-      margin-bottom: var(--space-2);
-      color: hsl(var(--color-text-primary));
+      margin-bottom: 10px;
+      color: var(--accent-gold);
     }
 
     .feature-desc {
-      color: hsl(var(--color-text-secondary));
-      font-size: var(--font-size-sm);
+      color: rgba(255, 255, 255, 0.7);
+      font-size: 0.9rem;
+      line-height: 1.5;
+    }
+
+    /* Footer */
+    footer {
+      text-align: center;
+      padding: 40px;
+      color: rgba(255, 255, 255, 0.4);
+      font-size: 0.8rem;
+      position: relative;
+      z-index: 10;
     }
 
     @media (max-width: 768px) {
-      .hero-title {
-        font-size: var(--font-size-3xl);
-      }
-
-      .hero-subtitle {
-        font-size: var(--font-size-lg);
-      }
-
-      .hero-cta {
-        flex-direction: column;
-        width: 100%;
-      }
-
-      .hero-cta .btn {
-        width: 100%;
-      }
+      .hero-title { font-size: 2.2rem; }
+      .hero-section { padding: 120px 20px 40px; } /* 헤더 공간 확보 */
+      .features { padding: 0 20px 60px; gap: 20px; }
+      .hero-glass-card { padding: 30px 20px; }
     }
   </style>
 </head>
 <body>
-  <!-- 3D Background Canvas -->
+  
+  <!-- ❄️ 눈 내리는 효과 컨테이너 -->
+  <div class="snow-container" id="snowContainer"></div>
+
+  <!-- 3D Background Canvas (기존 코드 유지하되 CSS로 숨김) -->
   <canvas id="bg-canvas"></canvas>
 
   <!-- Header -->
@@ -127,17 +263,20 @@
   <main>
     <!-- Hero Section -->
     <section class="hero-section">
-      <h1 class="hero-title">HARU 운영 관리 시스템</h1>
-      <p class="hero-subtitle">
-        린넨, 시설 유지보수, 분실물, 주문, 근무기록을 효율적으로 통합 관리하세요.
-      </p>
-      <div class="hero-cta">
-        <a href="signup.html" class="btn btn-primary btn-lg" data-testid="button-get-started">
-          시작하기
-        </a>
-        <a href="board.html" class="btn btn-secondary btn-lg" data-testid="button-dashboard">
-          대시보드
-        </a>
+      <div class="hero-glass-card">
+        <h1 class="hero-title">HARU SYSTEM</h1>
+        <p class="hero-subtitle">
+          Tokyo Winter Edition<br>
+          린넨, 시설 유지보수, 분실물, 주문, 근무기록 통합 관리
+        </p>
+        <div class="hero-cta">
+          <a href="signup.html" class="btn btn-primary" data-testid="button-get-started">
+            Get Started
+          </a>
+          <a href="board.html" class="btn btn-secondary" data-testid="button-dashboard">
+            Dashboard
+          </a>
+        </div>
       </div>
     </section>
 
@@ -145,81 +284,118 @@
     <section class="features">
       <div class="feature-card" data-testid="feature-linen">
         <div class="feature-icon">📦</div>
-        <h3 class="feature-title">린넨 관리</h3>
-        <p class="feature-desc">입고/재고/출고 흐름을 한눈에 관리</p>
+        <h3 class="feature-title">Linen</h3>
+        <p class="feature-desc">입고/재고/출고 흐름 관리</p>
       </div>
 
       <div class="feature-card" data-testid="feature-maintenance">
         <div class="feature-icon">🔧</div>
-        <h3 class="feature-title">시설 유지보수</h3>
-        <p class="feature-desc">객실 설비 점검과 수리 요청을 체계적으로 처리</p>
+        <h3 class="feature-title">Maintenance</h3>
+        <p class="feature-desc">객실 설비 점검 및 수리 요청</p>
       </div>
 
       <div class="feature-card" data-testid="feature-lost-items">
         <div class="feature-icon">🔍</div>
-        <h3 class="feature-title">분실물 관리</h3>
-        <p class="feature-desc">분실물 등록과 인수인계 이력 관리</p>
+        <h3 class="feature-title">Lost & Found</h3>
+        <p class="feature-desc">분실물 등록 및 인수인계</p>
       </div>
 
       <div class="feature-card" data-testid="feature-orders">
         <div class="feature-icon">🛒</div>
-        <h3 class="feature-title">발주 관리</h3>
-        <p class="feature-desc">소모품 발주와 승인 내역을 효율적으로 관리</p>
+        <h3 class="feature-title">Orders</h3>
+        <p class="feature-desc">소모품 발주 및 승인 관리</p>
       </div>
 
       <div class="feature-card" data-testid="feature-worklog">
         <div class="feature-icon">⏰</div>
-        <h3 class="feature-title">근무기록</h3>
-        <p class="feature-desc">근무시간과 작업 내역 기록</p>
+        <h3 class="feature-title">Work Log</h3>
+        <p class="feature-desc">근무시간 및 작업 내역 기록</p>
       </div>
 
       <div class="feature-card" data-testid="feature-notices">
         <div class="feature-icon">📢</div>
-        <h3 class="feature-title">공지사항</h3>
-        <p class="feature-desc">업무 공지와 주요 알림 전달</p>
+        <h3 class="feature-title">Notice</h3>
+        <p class="feature-desc">업무 공지 및 주요 알림</p>
       </div>
     </section>
   </main>
 
   <!-- Footer -->
   <footer>
-    © 2025 <strong>HARU_KIM HYUN JUN</strong>
+    © 2025 <strong>HARU_KIM HYUN JUN</strong> | TOKYO WINTER EDITION
   </footer>
 
-  <!-- PWA Service Worker -->
+  <!-- ❄️ 눈 내리는 효과 스크립트 (UI 전용) -->
   <script>
-    if ("serviceWorker" in navigator) {
+    const snowContainer = document.getElementById('snowContainer');
+    const snowCount = 40; // 성능을 위해 개수 적절히 조절
+    
+    for(let i=0; i<snowCount; i++) {
+      const snow = document.createElement('div');
+      snow.className = 'snow';
+      const size = Math.random() * 4 + 2;
+      snow.style.width = `${size}px`;
+      snow.style.height = `${size}px`;
+      snow.style.left = `${Math.random() * 100}vw`;
+      snow.style.animationDuration = `${Math.random() * 10 + 5}s`;
+      snow.style.animationDelay = `${Math.random() * 5}s`;
+      snow.style.opacity = Math.random() * 0.5 + 0.3;
+      snowContainer.appendChild(snow);
+    }
+  </script>
+
+  <!-- PWA Service Worker (오류 수정됨) -->
+  <script>
+    // 프로토콜이 http 또는 https일 때만 실행 (blob: 오류 방지)
+    if ("serviceWorker" in navigator && (window.location.protocol === 'http:' || window.location.protocol === 'https:')) {
       navigator.serviceWorker
         .register("service-worker.js")
         .then(() => console.log("✅ Service Worker Registered"))
-        .catch(err => console.error("❌ Service Worker Registration Failed:", err));
+        .catch(err => console.warn("⚠️ Service Worker Registration Failed (Expected in preview):", err));
     }
   </script>
 
   <!-- Install Prompt -->
   <script src="install.js"></script>
 
-  <!-- 3D Background -->
-  <script type="module" src="scripts/bg/scene.js"></script>
-
-  <!-- Header -->
+  <!-- Scripts Loading (오류 수정됨: Dynamic Import 사용) -->
   <script type="module">
-    import { initHeaderMenu } from "./header.js";
-    fetch("header.html")
-      .then(res => res.text())
-      .then(html => {
-        document.getElementById("header-placeholder").innerHTML = html;
-        initHeaderMenu();
-      })
-      .catch(err => console.error("❌ 헤더 로드 실패:", err));
+    // 3D Background
+    try {
+      await import("./scripts/bg/scene.js");
+    } catch (e) {
+      console.warn("Skipping 3D Scene load (module missing in preview)");
+    }
+
+    // Header Load
+    try {
+      const { initHeaderMenu } = await import("./header.js");
+      fetch("header.html")
+        .then(res => res.text())
+        .then(html => {
+          const headerEl = document.getElementById("header-placeholder");
+          if(headerEl) {
+            headerEl.innerHTML = html;
+            initHeaderMenu();
+          }
+        })
+        .catch(err => console.log("Header HTML fetch skipped"));
+    } catch (e) {
+      console.warn("Skipping Header load (module missing in preview)");
+      // Fallback: Show simple text if needed, or leave empty for clean design
+    }
+
+    // Global Notice Popup
+    try {
+      await import("./notice_popup.js");
+    } catch (e) { console.log("Notice Popup module skipped"); }
+
+    // Text normalization & ScrollTop
+    try {
+      await import("./index_text_fix.js");
+      await import("./scrollTop.js");
+    } catch (e) { console.log("Utility modules skipped"); }
   </script>
-
-  <!-- Global Notice Popup -->
-  <script type="module" src="notice_popup.js"></script>
-
-  <!-- Text normalization for Korean (runtime fix) -->
-  <script type="module" src="index_text_fix.js"></script>
-  <script type="module" src="scrollTop.js"></script>
 
 </body>
 </html>
