@@ -1,23 +1,21 @@
 ﻿// ========================================
-// 📢 HARU Global Notice Popup (Important Only)
-// Design System: Tokyo Day Bright
-// Function: Auto-show LATEST IMPORTANT notice (Per-Notice Control)
+// 📢 HARU Notice Popup (Firebase-safe)
 // ========================================
 
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { 
-  getFirestore, 
-  collection, 
-  query, 
-  orderBy, 
-  limit, 
-  getDocs, 
-  where 
+import { initializeApp, getApps } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import {
+  getFirestore,
+  collection,
+  query,
+  where,
+  getDocs
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-// 1. Firebase Initialization
-console.log("🚀 [Notice Popup] Script Start");
+console.log("🚀 [Notice Popup] Loaded");
 
+// ----------------------------------------
+// 1) Firebase Config
+// ----------------------------------------
 let firebaseConfig = {
   apiKey: "AIzaSyAyD0Gn5-zqzPzdXjQzZhVlMQvqTzUmHKs",
   authDomain: "return-linen-management.firebaseapp.com",
@@ -28,171 +26,180 @@ let firebaseConfig = {
   measurementId: "G-D6BDRRKD9Y"
 };
 
-// HTML 설정 우선
-if (window.__firebase_config) {
-  try {
-    const envConfig = JSON.parse(window.__firebase_config);
-    if (envConfig.apiKey) firebaseConfig = envConfig;
-  } catch (e) {
-    console.warn("Config parse failed");
-  }
-}
-
-let db;
+// HTML Inject Config 우선 적용
 try {
-    const app = initializeApp(firebaseConfig);
-    db = getFirestore(app);
+  if (typeof window.__firebase_config === "string") {
+    const parsed = JSON.parse(window.__firebase_config);
+    if (parsed.apiKey) firebaseConfig = parsed;
+  }
 } catch (e) {
-    db = null;
+  console.warn("⚠ Config parse failed");
 }
 
-// 현재 표시 중인 공지 ID 저장용
-let currentNoticeId = null;
+// ----------------------------------------
+// 2) Firebase Initialize (Duplicate 방지)
+// ----------------------------------------
+let app = null;
+let db = null;
 
-// ========================================
-// 🎨 UI Generation
-// ========================================
+try {
+  if (!getApps().length) {
+    app = initializeApp(firebaseConfig);
+    console.log("🔥 Firebase Initialized (new)");
+  } else {
+    app = getApps()[0]; // 이미 있는 앱 재사용
+    console.log("♻️ Firebase Reused Existing App");
+  }
+  db = getFirestore(app);
+} catch (e) {
+  console.error("❌ Firebase Init Error:", e);
+}
 
-function ensureNoticeModal() {
+// ----------------------------------------
+// 3) 모달 생성
+// ----------------------------------------
+function createNoticeModal() {
   if (document.getElementById("noticeModalGlobal")) return;
 
   const style = document.createElement("style");
   style.textContent = `
-    .notice-modal-global {
-      position: fixed; inset: 0; background: rgba(44, 62, 80, 0.5); backdrop-filter: blur(3px);
-      display: none; justify-content: center; align-items: center; z-index: 9999; animation: fadeIn 0.3s ease;
+    .notice-modal-bg {
+      position: fixed;
+      inset: 0;
+      background: rgba(44, 62, 80, 0.5);
+      backdrop-filter: blur(4px);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 9999;
     }
-    .notice-card-global {
-      background: #FFFFFF; border: 1px solid #E74C3C; padding: 0; max-width: 480px; width: 90%;
-      box-shadow: 0 20px 50px rgba(0,0,0,0.2); position: relative; animation: slideUp 0.3s ease;
-      font-family: 'Inter', 'Noto Sans KR', sans-serif;
+    .notice-card {
+      background: white;
+      width: 90%;
+      max-width: 480px;
+      border: 1px solid #E74C3C;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+      animation: fadeIn 0.25s ease-out;
+      font-family: 'Inter','Noto Sans KR',sans-serif;
     }
-    .notice-header-global {
-      padding: 16px 24px; background: #E74C3C; display: flex; justify-content: space-between; align-items: center;
+    .notice-header {
+      background: #E74C3C;
+      padding: 16px 20px;
+      color: white;
+      font-size: 16px;
+      font-weight: 800;
     }
-    .notice-card-global h2 {
-      margin: 0; font-size: 1rem; font-weight: 800; color: #FFFFFF; letter-spacing: 0.05em; text-transform: uppercase;
-      display: flex; align-items: center; gap: 8px;
+    .notice-body {
+      padding: 20px;
+      font-size: 14px;
+      color: #334155;
+      white-space: pre-wrap;
+      line-height: 1.6;
+      max-height: 240px;
+      overflow-y: auto;
     }
-    .notice-card-global h2::before { content: '📢'; font-size: 1.2rem; }
-    .notice-body-global {
-      padding: 24px; font-size: 0.95rem; line-height: 1.6; color: #2C3E50; white-space: pre-wrap; max-height: 50vh; overflow-y: auto;
+    .notice-footer {
+      padding: 14px 20px;
+      background: #F8FAFC;
+      border-top: 1px solid #E2E8F0;
+      display: flex;
+      justify-content: space-between;
     }
-    .notice-footer-global {
-      padding: 12px 24px; border-top: 1px solid #F1F5F9; background: #F8FAFC; text-align: right;
-      display: flex; justify-content: space-between; align-items: center;
+    .notice-close-btn {
+      background: #2C3E50;
+      color: white;
+      padding: 8px 20px;
+      border: none;
+      font-weight: 700;
+      cursor: pointer;
     }
-    .btn-close-global {
-      background: #2C3E50; color: #FFFFFF; border: none; padding: 8px 20px; font-weight: 700; font-size: 0.8rem;
-      cursor: pointer; transition: background 0.2s; letter-spacing: 0.05em;
+    .notice-check-btn {
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      font-size: 12px;
+      color: #64748B;
+      display: flex;
+      align-items: center;
+      gap: 6px;
     }
-    .btn-close-global:hover { background: #34495E; }
-    .btn-check-global {
-        background: transparent; color: #64748B; border: none; padding: 0; font-weight: 500; font-size: 0.8rem;
-        cursor: pointer; display: flex; align-items: center; gap: 6px;
-    }
-    .btn-check-global:hover { color: #2C3E50; text-decoration: underline; }
-    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-    @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
   `;
 
-  const overlay = document.createElement("div");
-  overlay.id = "noticeModalGlobal";
-  overlay.className = "notice-modal-global";
-  
-  overlay.innerHTML = `
-    <div class="notice-card-global">
-      <div class="notice-header-global">
-        <h2 id="noticeTitleGlobal">IMPORTANT NOTICE</h2>
-      </div>
-      <div class="notice-body-global" id="noticeContentGlobal"></div>
-      <div class="notice-footer-global">
-        <button id="closeForeverBtn" class="btn-check-global">
+  const modal = document.createElement("div");
+  modal.id = "noticeModalGlobal";
+  modal.className = "notice-modal-bg";
+
+  modal.innerHTML = `
+    <div class="notice-card">
+      <div class="notice-header" id="noticeTitleGlobal"></div>
+      <div class="notice-body" id="noticeContentGlobal"></div>
+      <div class="notice-footer">
+        <button class="notice-check-btn" id="noticeHideTodayBtn">
           <input type="checkbox" style="pointer-events:none;"> 오늘 하루 보지 않기
         </button>
-        <button id="closeNoticeBtnGlobal" class="btn-close-global">CLOSE</button>
+        <button class="notice-close-btn" id="noticeCloseBtn">닫기</button>
       </div>
     </div>
   `;
 
   document.head.appendChild(style);
-  document.body.appendChild(overlay);
+  document.body.appendChild(modal);
 
-  const close = () => { overlay.style.display = "none"; };
-  overlay.addEventListener("click", (e) => { if (e.target === overlay) close(); });
-  document.getElementById("closeNoticeBtnGlobal").addEventListener("click", close);
+  document.getElementById("noticeCloseBtn").onclick = () => {
+    modal.style.display = "none";
+  };
   
-  // ✅ "오늘 하루 보지 않기" (글 ID별 저장)
-  document.getElementById("closeForeverBtn").addEventListener("click", () => {
-      if (currentNoticeId) {
-          const today = new Date().toDateString();
-          // 키를 'notice_closed_{ID}' 형식으로 저장하여 글마다 다르게 처리
-          localStorage.setItem("notice_closed_" + currentNoticeId, today);
-          console.log(`[Notice Popup] Hiding notice ${currentNoticeId} until tomorrow.`);
-      }
-      close();
-  });
+  document.getElementById("noticeHideTodayBtn").onclick = () => {
+    if (window.__CURRENT_NOTICE_ID) {
+      const today = new Date().toDateString();
+      localStorage.setItem("notice_closed_" + window.__CURRENT_NOTICE_ID, today);
+    }
+    modal.style.display = "none";
+  };
 }
 
-// ========================================
-// 🚀 Main Logic
-// ========================================
+// ----------------------------------------
+// 4) Timestamp 보정
+// ----------------------------------------
+function safeTimestamp(t) {
+  if (!t) return 0;
+  if (t.seconds) return t.seconds;
+  if (typeof t === "number") return t;
+  return 0;
+}
 
+// ----------------------------------------
+// 5) 실행
+// ----------------------------------------
 window.addEventListener("DOMContentLoaded", async () => {
   if (!db) return;
 
   try {
-    // 1. 중요 공지 쿼리 (최신 1개)
     const q = query(
-      collection(db, "notices"), 
+      collection(db, "notices"),
       where("important", "==", true)
     );
-    
+
     const snap = await getDocs(q);
-    
-    if (snap.empty) {
-        console.log("ℹ️ [Notice Popup] No important notices found.");
-        return;
-    }
+    if (snap.empty) return;
 
-    // 최신순 정렬 (Client-side sort to avoid index issues)
-    const notices = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-    notices.sort((a, b) => {
-        const tA = a.createdAt?.seconds || 0;
-        const tB = b.createdAt?.seconds || 0;
-        return tB - tA;
-    });
+    const notices = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    notices.sort((a,b) => safeTimestamp(b.createdAt) - safeTimestamp(a.createdAt));
 
-    const target = notices[0];
-    
-    // ✅ 2. 로컬 스토리지 체크 (ID별 확인)
+    const latest = notices[0];
+    window.__CURRENT_NOTICE_ID = latest.id;
+
     const today = new Date().toDateString();
-    const closedDate = localStorage.getItem("notice_closed_" + target.id);
-    
-    if (closedDate === today) {
-        console.log(`[Notice Popup] Notice ${target.id} hidden by user preference (Today)`);
-        return; 
-    }
+    if (localStorage.getItem("notice_closed_" + latest.id) === today) return;
 
-    // 3. UI 생성
-    ensureNoticeModal();
-    
-    // 현재 표시할 공지 ID 저장 (닫기 버튼용)
-    currentNoticeId = target.id;
+    createNoticeModal();
 
-    const titleEl = document.getElementById("noticeTitleGlobal");
-    const contentEl = document.getElementById("noticeContentGlobal");
+    document.getElementById("noticeTitleGlobal").textContent = "[중요] " + latest.title;
+    document.getElementById("noticeContentGlobal").textContent = latest.content;
 
-    if (titleEl) titleEl.textContent = `[중요] ${target.title}`;
-    if (contentEl) contentEl.textContent = target.content;
+    document.getElementById("noticeModalGlobal").style.display = "flex";
 
-    // 4. 표시
-    const modal = document.getElementById("noticeModalGlobal");
-    if (modal) {
-        modal.style.display = "flex";
-    }
-
-  } catch (err) {
-    console.error("❌ [Notice Popup] Error:", err);
+  } catch (e) {
+    console.error("❌ Notice Popup Error:", e);
   }
 });
