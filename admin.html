@@ -3,190 +3,296 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>HARU 관리자</title>
+  <title>HARU 관리자 대시보드</title>
+  
+  <!-- 공통 스타일 -->
   <link rel="stylesheet" href="common.css" />
+
   <style>
-    .admin-container {
+    /* -------------------------------
+       🎨 Page Specific Styles
+       Theme: Tokyo Day Bright (Minimal)
+       ------------------------------- */
+    
+    body {
+      background-color: var(--bg-base); /* Soft Gray (#F8FAFC) */
+      color: var(--haru-navy);
+    }
+
+    main {
       max-width: 1200px;
-      margin: 0 auto;
-      padding: var(--space-6);
+      margin: 60px auto;
+      padding: 0 24px;
+      animation: fadeIn 0.5s ease-out;
     }
 
-    .admin-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-      gap: var(--space-6);
-      margin-top: var(--space-6);
+    /* 타이틀 섹션 */
+    .page-header {
+      margin-bottom: 40px;
+      border-bottom: 1px solid #E2E8F0;
+      padding-bottom: 20px;
     }
 
-    .admin-card {
-      background: hsla(var(--color-bg-glass), 0.5);
-      backdrop-filter: blur(var(--blur-md));
-      border: 1px solid hsl(var(--color-border-glass));
-      border-radius: var(--radius-lg);
-      padding: var(--space-6);
-      transition: all var(--transition-base);
+    h1 {
+      margin: 0;
+      color: var(--haru-navy);
+      font-weight: 900;
+      font-size: 32px;
+      letter-spacing: -0.02em;
     }
 
-    .admin-card:hover {
-      transform: translateY(-4px);
-      box-shadow: var(--shadow-lg), var(--shadow-glow);
-      border-color: hsl(var(--color-primary) / 0.5);
+    .sub-title {
+      display: block;
+      margin-top: 8px;
+      font-size: 14px;
+      color: #94A3B8;
+      font-family: var(--font-en);
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
     }
 
-    .admin-icon {
-      font-size: var(--font-size-4xl);
-      margin-bottom: var(--space-4);
-    }
-
-    .admin-title {
-      font-size: var(--font-size-xl);
-      font-weight: 700;
-      margin-bottom: var(--space-2);
-    }
-
-    .admin-desc {
-      color: hsl(var(--color-text-secondary));
-      font-size: var(--font-size-sm);
-      margin-bottom: var(--space-4);
-    }
-
+    /* 📊 상단 통계 그리드 */
     .stats-grid {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
-      gap: var(--space-4);
-      margin-bottom: var(--space-8);
-    }
-
-    @media (max-width: 1024px) {
-      .stats-grid {
-        grid-template-columns: repeat(2, 1fr);
-      }
-    }
-
-    @media (max-width: 640px) {
-      .stats-grid {
-        grid-template-columns: 1fr;
-      }
+      gap: 24px;
+      margin-bottom: 50px;
     }
 
     .stat-card {
-      background: hsla(var(--color-bg-elevated), 0.5);
-      border: 1px solid hsl(var(--color-border-glass));
-      border-radius: var(--radius-md);
-      padding: var(--space-4);
+      background: #FFFFFF;
+      border: 1px solid #E2E8F0;
+      padding: 24px;
       text-align: center;
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .stat-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 10px 20px rgba(0,0,0,0.05);
+      border-color: var(--haru-navy);
     }
 
     .stat-value {
-      font-size: var(--font-size-3xl);
-      font-weight: 700;
-      color: hsl(var(--color-primary));
+      font-family: var(--font-en);
+      font-size: 36px;
+      font-weight: 800;
+      color: var(--haru-navy);
+      margin-bottom: 4px;
+      line-height: 1.2;
     }
 
     .stat-label {
-      font-size: var(--font-size-sm);
-      color: hsl(var(--color-text-secondary));
-      margin-top: var(--space-1);
+      font-size: 13px;
+      color: #94A3B8;
+      font-weight: 600;
+      letter-spacing: -0.01em;
+    }
+
+    /* 🎛 관리 메뉴 그리드 */
+    .admin-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 24px;
+    }
+
+    .admin-card {
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      background: #FFFFFF;
+      border: 1px solid #E2E8F0;
+      padding: 32px;
+      text-decoration: none;
+      color: inherit;
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      height: 100%;
+      min-height: 220px;
+    }
+
+    .admin-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 15px 30px rgba(0,0,0,0.04);
+      border-color: var(--haru-gold);
+    }
+
+    /* 카드 내부 타이포그래피 (아이콘 대체) */
+    .card-type {
+      font-family: var(--font-en);
+      font-size: 11px;
+      font-weight: 800;
+      color: #CBD5E1;
+      text-transform: uppercase;
+      letter-spacing: 0.15em;
+      margin-bottom: 16px;
+      display: block;
+      transition: color 0.3s;
+    }
+
+    .admin-card:hover .card-type {
+      color: var(--haru-gold);
+    }
+
+    .admin-title {
+      font-size: 20px;
+      font-weight: 800;
+      color: var(--haru-navy);
+      margin: 0 0 8px 0;
+    }
+
+    .admin-desc {
+      font-size: 14px;
+      color: #64748B;
+      margin: 0 0 24px 0;
+      line-height: 1.5;
+      flex-grow: 1;
+    }
+
+    /* 카드 내부 버튼 스타일 */
+    .card-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      height: 44px;
+      background: #F8FAFC;
+      color: var(--haru-navy);
+      font-size: 13px;
+      font-weight: 700;
+      border: 1px solid #E2E8F0;
+      transition: all 0.2s;
+      border-radius: 0; /* 각지게 */
+      text-transform: uppercase;
+      font-family: var(--font-en);
+      letter-spacing: 0.05em;
+    }
+
+    .admin-card:hover .card-btn {
+      background: var(--haru-navy);
+      color: #FFFFFF;
+      border-color: var(--haru-navy);
+    }
+
+    /* Footer */
+    footer {
+      text-align: center;
+      color: #CBD5E1;
+      padding: 60px 0;
+      font-size: 12px;
+      letter-spacing: 0.05em;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* 반응형 */
+    @media (max-width: 1024px) {
+      .stats-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (max-width: 640px) {
+      .stats-grid { grid-template-columns: 1fr; }
+      .page-header { margin-top: 20px; }
     }
   </style>
 </head>
 <body>
-  <canvas id="bg-canvas"></canvas>
+  
+  <!-- ✅ 헤더 로드 -->
   <div id="header-placeholder"></div>
 
   <main>
-    <div class="admin-container">
-      <h1>👨‍💼 관리자 대시보드</h1>
-      <p class="text-secondary" style="margin-bottom: var(--space-6);">
-        시스템 전체 현황을 관리하세요
-      </p>
+    <div class="page-header">
+      <h1>관리자 대시보드</h1>
+      <span class="sub-title">System Overview & Management</span>
+    </div>
 
-      <!-- 통계 -->
-      <div class="stats-grid">
-        <div class="stat-card">
-          <div class="stat-value" id="totalUsers" data-testid="stat-total-users">0</div>
-          <div class="stat-label">전체 사용자</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-value" id="totalOrders" data-testid="stat-total-orders">0</div>
-          <div class="stat-label">주문 요청</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-value" id="totalNotices" data-testid="stat-total-notices">0</div>
-          <div class="stat-label">공지사항</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-value" id="totalLogs" data-testid="stat-total-logs">0</div>
-          <div class="stat-label">근무 기록</div>
-        </div>
+    <!-- 📊 상단 통계 (숫자 중심, 이모지 제거) -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-value" id="totalUsers">0</div>
+        <div class="stat-label">전체 사용자</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" id="totalOrders">0</div>
+        <div class="stat-label">주문 요청</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" id="totalNotices">0</div>
+        <div class="stat-label">공지사항</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" id="totalLogs">0</div>
+        <div class="stat-label">근무 기록</div>
+      </div>
+    </div>
+
+    <!-- 🎛 관리 메뉴 그리드 -->
+    <div class="admin-grid">
+      
+      <!-- 공지사항 -->
+      <a href="notices_admin.html" class="admin-card">
+        <span class="card-type">NOTICE</span>
+        <h3 class="admin-title">공지사항 관리</h3>
+        <p class="admin-desc">전체 공지사항을 작성, 수정 및 삭제합니다.</p>
+        <div class="card-btn">MANAGE</div>
+      </a>
+
+      <!-- 주문 관리 -->
+      <a href="orders_list.html" class="admin-card">
+        <span class="card-type">ORDER</span>
+        <h3 class="admin-title">주문 관리</h3>
+        <p class="admin-desc">접수된 주문 요청을 승인하고 처리 상태를 변경합니다.</p>
+        <div class="card-btn">MANAGE</div>
+      </a>
+
+      <!-- 린넨 통계 -->
+      <a href="admin_dashboard.html" class="admin-card">
+        <span class="card-type">STATISTICS</span>
+        <h3 class="admin-title">린넨 통계</h3>
+        <p class="admin-desc">린넨 입출고 현황과 실재고 데이터를 분석합니다.</p>
+        <div class="card-btn">VIEW STATS</div>
+      </a>
+
+      <!-- 시스템 설정 (기능 준비중) -->
+      <div class="admin-card">
+        <span class="card-type">SYSTEM</span>
+        <h3 class="admin-title">시스템 설정</h3>
+        <p class="admin-desc">시스템 환경 변수 및 기본 설정을 관리합니다.</p>
+        <button class="card-btn" onclick="alert('기능 준비 중입니다.')">SETTINGS</button>
       </div>
 
-      <!-- 관리 메뉴 -->
-      <div class="admin-grid">
-        <a href="notices_admin.html" class="admin-card" data-testid="link-manage-notices" style="text-decoration:none;color:inherit;">
-          <div class="admin-icon">📢</div>
-          <h3 class="admin-title">공지사항 관리</h3>
-          <p class="admin-desc">공지사항을 작성하고 관리합니다</p>
-          <div class="btn btn-secondary" style="width:100%;">관리하기</div>
-        </a>
-
-        <a href="orders_list.html" class="admin-card" data-testid="link-manage-orders" style="text-decoration:none;color:inherit;">
-          <div class="admin-icon">🛒</div>
-          <h3 class="admin-title">주문 관리</h3>
-          <p class="admin-desc">주문 요청을 승인하고 관리합니다</p>
-          <div class="btn btn-secondary" style="width:100%;">관리하기</div>
-        </a>
-
-        <a href="admin_dashboard.html" class="admin-card" data-testid="link-linen-stats" style="text-decoration:none;color:inherit;">
-          <div class="admin-icon">📊</div>
-          <h3 class="admin-title">린넨 통계</h3>
-          <p class="admin-desc">린넨 입출고 통계를 확인합니다</p>
-          <div class="btn btn-secondary" style="width:100%;">통계 보기</div>
-        </a>
-
-        <div class="admin-card">
-          <div class="admin-icon">⚙️</div>
-          <h3 class="admin-title">시스템 설정</h3>
-          <p class="admin-desc">시스템 전반적인 설정을 관리합니다</p>
-          <button class="btn btn-secondary" style="width:100%;" onclick="alert('준비 중입니다')" data-testid="button-system-settings">
-            설정하기
-          </button>
-        </div>
-
-        <div class="admin-card">
-          <div class="admin-icon">📁</div>
-          <h3 class="admin-title">데이터 백업</h3>
-          <p class="admin-desc">전체 데이터를 백업하고 복원합니다</p>
-          <button class="btn btn-secondary" style="width:100%;" onclick="alert('준비 중입니다')" data-testid="button-backup">
-            백업하기
-          </button>
-        </div>
-
-        <div class="admin-card">
-          <div class="admin-icon">📈</div>
-          <h3 class="admin-title">통계 리포트</h3>
-          <p class="admin-desc">전체 시스템 사용 현황을 확인합니다</p>
-          <button class="btn btn-secondary" style="width:100%;" onclick="alert('준비 중입니다')" data-testid="button-reports">
-            리포트 보기
-          </button>
-        </div>
+      <!-- 데이터 백업 (기능 준비중) -->
+      <div class="admin-card">
+        <span class="card-type">DATA</span>
+        <h3 class="admin-title">데이터 백업</h3>
+        <p class="admin-desc">전체 데이터를 안전하게 백업하고 복원합니다.</p>
+        <button class="card-btn" onclick="alert('기능 준비 중입니다.')">BACKUP</button>
       </div>
+
+      <!-- 리포트 (기능 준비중) -->
+      <div class="admin-card">
+        <span class="card-type">REPORT</span>
+        <h3 class="admin-title">통계 리포트</h3>
+        <p class="admin-desc">월간/연간 시스템 사용 리포트를 생성합니다.</p>
+        <button class="card-btn" onclick="alert('기능 준비 중입니다.')">VIEW REPORT</button>
+      </div>
+
     </div>
   </main>
 
-  <footer>© 2025 <strong>HARU_KIM HYUN JUN</strong></footer>
+  <footer>
+    © 2025 HARU SYSTEM · TOKYO
+  </footer>
 
-  <script type="module" src="scripts/bg/scene.js"></script>
-  <script type="module">
-    import { initHeaderMenu } from "./header.js";
-    fetch("header.html").then(r=>r.text()).then(h=>{
-      document.getElementById("header-placeholder").innerHTML=h;
-      initHeaderMenu();
-    });
-  </script>
+  <!-- ✅ 기능 스크립트 -->
   <script type="module" src="admin.js"></script>
   <script type="module" src="scrollTop.js"></script>
+  <script type="module" src="notice_popup.js"></script>
+
 
 </body>
 </html>

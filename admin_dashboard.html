@@ -3,299 +3,368 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>🧺 HARU 관리 · 린넨 통계 대시보드</title>
+  <title>HARU 관리자 · 린넨 통계</title>
+  
+  <!-- 공통 스타일 -->
   <link rel="stylesheet" href="common.css" />
+
   <style>
+    /* -------------------------------
+       🎨 Page Specific Styles
+       Theme: Tokyo Day Bright (No Emoji, Minimal)
+       ------------------------------- */
+    
     :root {
-      --incoming-color: #4c9aff;
-      --return-color: #ff6b6b;
-      --net-color: #32c48d;
-      --bg: #f6f8fa;
-      --card-bg: #ffffff;
-      --border: #e0e0e0;
-      --text: rgba(0, 0, 0, 0.85);
-      --text-muted: rgba(0, 0, 0, 0.6);
+      --stat-incoming: #2980b9;
+      --stat-return: #e74c3c;
+      --stat-net: #27ae60;
+      --bg-base: #F8FAFC;
     }
 
     body {
-      background: var(--bg);
-      color: var(--text);
-      font-family: 'Inter', sans-serif;
+      background-color: var(--bg-base);
+      color: var(--haru-navy);
+      /* 폰트는 common.css의 Noto Sans KR 사용 */
     }
 
     .dash-container {
-      max-width: 1100px;
-      margin: 0 auto;
-      padding: 20px;
+      max-width: 1200px;
+      margin: 60px auto;
+      padding: 0 24px;
+      animation: fadeIn 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    /* 타이틀 섹션 (No Icon) */
+    .page-header {
+      margin-bottom: 40px;
+      border-bottom: 1px solid #E2E8F0;
+      padding-bottom: 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
     }
 
     h2 {
-      margin-bottom: 16px;
-      color: var(--text);
-      font-weight: 700;
-      font-size: 24px;
-      display: flex;
-      align-items: center;
-      gap: 8px;
+      margin: 0;
+      color: var(--haru-navy);
+      font-weight: 900;
+      font-size: 32px;
+      letter-spacing: -0.03em;
+      /* 한글 타이틀이므로 기본 폰트 사용 */
     }
 
-    /* 📅 필터 영역 */
+    .sub-title {
+      font-size: 14px;
+      color: #94A3B8;
+      font-weight: 500;
+      letter-spacing: 0.05em;
+    }
+
+    /* 📅 필터 영역 (Clean White Panel) */
     .filters {
       display: flex;
       flex-wrap: wrap;
-      gap: 14px;
-      align-items: center;
-      background: var(--card-bg);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 16px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+      gap: 24px;
+      align-items: flex-end;
+      background: #FFFFFF;
+      border: 1px solid #E2E8F0;
+      border-radius: 0; /* 건축적 미니멀리즘 (각지게) */
+      padding: 32px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.03);
+      margin-bottom: 40px;
     }
 
     .filter-item {
       display: flex;
-      align-items: center;
-      gap: 8px;
+      flex-direction: column;
+      gap: 10px;
     }
 
     .filter-item label {
-      font-weight: 600;
-      color: var(--text-muted);
-      font-size: 14px;
-      white-space: nowrap;
+      font-weight: 700;
+      color: #64748B;
+      font-size: 12px;
+      letter-spacing: 0.05em;
     }
 
+    /* Input & Select (Minimal Line Style) */
     .filter-item select,
     .filter-item input[type="date"],
     .filter-item input[type="month"] {
-      height: 36px;
-      border-radius: 6px;
-      border: 1px solid var(--border);
-      background: #fff;
-      padding: 0 10px;
+      height: 40px;
+      border: 1px solid #CBD5E1;
+      background: #FFFFFF;
+      border-radius: 0;
+      padding: 0 12px;
       font-size: 14px;
-      color: var(--text);
+      color: var(--haru-navy);
+      min-width: 160px;
+      transition: all 0.2s;
     }
 
-    .month-inline {
+    .filter-item select:focus,
+    .filter-item input:focus {
+      outline: none;
+      border-color: var(--haru-navy);
+      background: #FFFFFF;
+    }
+
+    .month-inline, .date-range {
       display: flex;
       align-items: center;
-      gap: 6px;
+      gap: 8px;
+    }
+    
+    .month-inline input[type="checkbox"] {
+      width: 18px;
+      height: 18px;
+      accent-color: var(--haru-navy);
+      cursor: pointer;
     }
 
-    .date-range {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-
+    /* 버튼 그룹 */
     .filter-actions {
       display: flex;
       align-items: center;
       gap: 8px;
       margin-left: auto;
+      padding-bottom: 1px;
     }
 
     .btn {
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      padding: 0 14px;
-      border: 1px solid var(--border);
-      background: var(--card-bg);
-      color: var(--text);
+      padding: 0 24px;
+      height: 40px;
+      border-radius: 0;
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.02em;
       cursor: pointer;
-      font-size: 14px;
-      height: 36px;
-      border-radius: 8px;
-      transition: 0.2s;
-      white-space: nowrap;
-      gap: 6px;
+      transition: all 0.2s ease;
     }
 
+    /* Primary Button (Navy) */
     .btn.primary {
-      background: var(--incoming-color);
-      color: #fff;
-      font-weight: 600;
+      background: var(--haru-navy);
+      color: #FFFFFF;
+      border: 1px solid var(--haru-navy);
+    }
+    .btn.primary:hover {
+      background: #000000;
+      border-color: #000000;
     }
 
+    /* Ghost Button */
     .btn.ghost {
-      background: #fff;
+      background: transparent;
+      color: #64748B;
+      border: 1px solid #CBD5E1;
+    }
+    .btn.ghost:hover {
+      border-color: var(--haru-navy);
+      color: var(--haru-navy);
     }
 
-    .btn:hover {
-      opacity: 0.9;
+    /* Export Buttons */
+    .btn:not(.primary):not(.ghost) {
+      background: #FFFFFF;
+      border: 1px solid #CBD5E1;
+      color: var(--haru-navy);
+    }
+    .btn:not(.primary):not(.ghost):hover {
+      border-color: var(--haru-navy);
+      background: #F8FAFC;
     }
 
-    /* 📊 카드형 통계 */
+    /* 📊 Cards */
     .cards {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
-      gap: 12px;
-      margin-top: 16px;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 24px;
+      margin-top: 20px;
     }
 
     .card {
-      background: var(--card-bg);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.05);
-      padding: 16px;
+      background: #FFFFFF;
+      border: 1px solid #E2E8F0;
+      border-radius: 0;
+      padding: 32px;
       display: flex;
       flex-direction: column;
       justify-content: space-between;
-      transition: 0.2s ease;
+      transition: all 0.3s ease;
+      position: relative;
     }
 
     .card:hover {
-      transform: translateY(-3px);
-      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.12);
-      border-color: var(--incoming-color);
+      border-color: var(--haru-navy);
+      transform: translateY(-2px);
+      box-shadow: 0 10px 20px rgba(0,0,0,0.05);
     }
 
     .card h3 {
-      font-size: 16px;
+      font-size: 13px;
       font-weight: 700;
-      margin-bottom: 6px;
-      color: var(--text);
-      display: flex;
-      align-items: center;
-      gap: 6px;
+      color: #94A3B8;
+      margin-bottom: 16px;
+      letter-spacing: 0.05em;
     }
 
     .card p {
-      font-size: 14px;
-      color: var(--text-muted);
-      margin: 2px 0;
+      font-family: var(--font-en); /* 숫자는 영문 폰트가 예쁨 */
+      font-size: 36px;
+      font-weight: 300;
+      color: var(--haru-navy);
+      margin: 0;
+      line-height: 1;
     }
 
-    /* 📌 총합 영역 */
+    /* 📌 Total Summary (Floating Bar) */
     .total-summary {
       display: flex;
-      justify-content: space-around;
-      background: var(--card-bg);
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      margin-top: 24px;
-      padding: 14px 10px;
-      font-size: 16px;
+      justify-content: space-between;
+      align-items: center;
+      background: #FFFFFF;
+      border-top: 1px solid #E2E8F0;
+      border-bottom: 1px solid #E2E8F0;
+      margin-top: 40px;
+      padding: 24px 0;
+    }
+
+    .summary-item {
+      flex: 1;
+      text-align: center;
+      border-right: 1px solid #F1F5F9;
+    }
+    .summary-item:last-child { border-right: none; }
+
+    .summary-item .label {
+      font-size: 12px;
+      color: #64748B;
       font-weight: 700;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+      margin-bottom: 8px;
     }
 
-    .total-summary span {
-      font-size: 20px;
+    .summary-item .value {
+      font-family: var(--font-en);
+      font-size: 24px;
+      font-weight: 600;
+      color: var(--haru-navy);
     }
 
-    #totalIncoming { color: var(--incoming-color); }
-    #totalReturns { color: var(--return-color); }
-    #totalNet { color: var(--net-color); }
+    #totalIncoming { color: var(--haru-navy); }
+    #totalReturns { color: var(--stat-return); }
+    #totalNet { color: var(--stat-net); }
+
+    /* Info Labels */
+    .info-labels {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 10px;
+      padding: 0 2px;
+    }
 
     #rangeLabel, #updatedLabel {
-      font-size: 14px;
-      margin-top: 6px;
-      color: var(--text-muted);
+      font-size: 13px;
+      color: #94A3B8;
     }
 
-    /* 📊 테이블 */
+    /* 📊 Table */
     .table-wrap {
-      background: var(--card-bg);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.05);
-      overflow: hidden;
-      margin-top: 24px;
+      background: #FFFFFF;
+      border: 1px solid #E2E8F0;
+      border-radius: 0;
+      margin-top: 40px;
     }
 
     .table-scroll {
-      max-height: 500px;
+      max-height: 600px;
       overflow-y: auto;
     }
 
     table {
       width: 100%;
       border-collapse: collapse;
-      font-size: 14px;
-      color: var(--text);
     }
 
     thead th {
       position: sticky;
       top: 0;
-      background: #f2f4f7;
-      font-weight: 600;
-      color: var(--text);
+      background: #FFFFFF;
+      color: #64748B;
+      font-weight: 700;
+      font-size: 12px;
+      padding: 20px 24px;
+      text-align: left;
+      border-bottom: 1px solid #E2E8F0;
+      z-index: 10;
     }
 
-    th, td {
-      padding: 10px 12px;
-      border-bottom: 1px solid var(--border);
-      text-align: left;
+    tbody td {
+      padding: 16px 24px;
+      border-bottom: 1px solid #F1F5F9;
+      color: #334155;
+      font-size: 14px;
       vertical-align: middle;
     }
 
+    tbody tr:last-child td { border-bottom: none; }
+    tbody tr:hover td { background-color: #F8FAFC; }
+    
     .t-right { text-align: right; }
 
-    tr:hover td {
-      background: #f9f9f9;
+    /* Footer */
+    footer {
+      text-align: center;
+      color: #CBD5E1;
+      padding: 60px 0;
+      font-size: 12px;
+      letter-spacing: 0.05em;
     }
 
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Mobile */
     @media (max-width: 768px) {
-      .filters {
-        flex-direction: column;
-        align-items: stretch;
-      }
-
-      .filter-item, .filter-actions {
-        width: 100%;
-        justify-content: flex-start;
-        flex-wrap: wrap;
-      }
-
-      .filter-actions {
-        margin-left: 0;
-      }
-
-      .cards {
-        grid-template-columns: 1fr;
-      }
-
-      th, td {
-        font-size: 13px;
-        padding: 8px;
-      }
-
-      .total-summary {
-        flex-direction: column;
-        gap: 8px;
-        text-align: center;
-      }
+      .filters { padding: 20px; gap: 16px; }
+      .filter-actions .btn { flex: 1; min-width: 45%; }
+      .total-summary { flex-direction: column; gap: 20px; padding: 20px; border: 1px solid #E2E8F0; }
+      .summary-item { border-right: none; border-bottom: 1px solid #F1F5F9; padding-bottom: 16px; width: 100%; }
+      .summary-item:last-child { border-bottom: none; padding-bottom: 0; }
     }
   </style>
 </head>
 <body>
-  <!-- ✅ 헤더 -->
+  
   <div id="header-placeholder"></div>
 
   <main>
     <div class="dash-container">
-      <h2>🧺 린넨 통계 대시보드</h2>
+      <div class="page-header">
+        <h2>린넨 통계 현황</h2>
+        <span class="sub-title">Administrator Dashboard</span>
+      </div>
 
-      <!-- 📅 필터 -->
+      <!-- Filters (Korean) -->
       <div class="filters">
         <div class="filter-item">
-          <label for="dataType">📂 종류</label>
+          <label for="dataType">분류</label>
           <select id="dataType">
-            <option value="all">전체</option>
-            <option value="incoming">입고만</option>
-            <option value="returns">반품만</option>
+            <option value="all">전체 내역</option>
+            <option value="incoming">입고 내역만</option>
+            <option value="returns">반품 내역만</option>
           </select>
         </div>
 
         <div class="filter-item">
-          <label for="buildingFilter">🏢 건물</label>
+          <label for="buildingFilter">건물 선택</label>
           <select id="buildingFilter">
-            <option value="">전체</option>
+            <option value="">전체 건물</option>
             <option value="아라키초A">아라키초A</option>
             <option value="아라키초B">아라키초B</option>
             <option value="다이쿄초">다이쿄초</option>
@@ -308,7 +377,7 @@
         </div>
 
         <div class="filter-item">
-          <label for="autoMonth">📆 한 달 자동</label>
+          <label for="autoMonth">월별 자동 선택</label>
           <div class="month-inline">
             <input type="checkbox" id="autoMonth" checked />
             <input type="month" id="monthPicker" />
@@ -316,51 +385,71 @@
         </div>
 
         <div class="filter-item">
-          <label>🗓️ 직접 기간</label>
+          <label>기간 직접 설정</label>
           <div class="date-range">
             <input type="date" id="startDate" />
-            <span>~</span>
+            <span style="color:#CBD5E1">―</span>
             <input type="date" id="endDate" />
           </div>
         </div>
 
         <div class="filter-actions">
-          <button id="btnApply" class="btn primary">🔍 적용</button>
-          <button id="btnReset" class="btn ghost">♻️ 초기화</button>
-          <button id="btnExportCsv" class="btn">📄 CSV</button>
-          <button id="btnExportPdf" class="btn">📑 PDF</button>
+          <button id="btnApply" class="btn primary">조회</button>
+          <button id="btnReset" class="btn ghost">초기화</button>
+          <button id="btnExportCsv" class="btn">CSV</button>
+          <button id="btnExportPdf" class="btn">PDF</button>
         </div>
       </div>
 
-      <div id="rangeLabel"></div>
-      <div id="updatedLabel"></div>
+      <div class="info-labels">
+        <div id="rangeLabel">기간을 선택해주세요.</div>
+        <div id="updatedLabel"></div>
+      </div>
 
-      <!-- 📊 카드형 통계 -->
+      <!-- Cards -->
       <div class="cards" id="statCards">
-        <div class="card"><h3>⏳ 불러오는 중...</h3></div>
+        <div class="card">
+          <h3>상태</h3>
+          <p style="font-size: 16px; color: #94A3B8;">데이터를 불러오는 중...</p>
+        </div>
+        <div class="card"></div>
+        <div class="card"></div>
       </div>
 
-      <!-- 📈 총합 요약 -->
+      <!-- Summary -->
       <div class="total-summary">
-        <div>📥 입고: <span id="totalIncoming">0</span></div>
-        <div>📦 반품: <span id="totalReturns">0</span></div>
-        <div>🧾 순입고: <span id="totalNet">0</span></div>
+        <div class="summary-item">
+          <div class="label">총 입고 수량</div>
+          <div class="value" id="totalIncoming">0</div>
+        </div>
+        <div class="summary-item">
+          <div class="label">총 반품 수량</div>
+          <div class="value" id="totalReturns">0</div>
+        </div>
+        <div class="summary-item">
+          <div class="label">순입고 (실재고)</div>
+          <div class="value" id="totalNet">0</div>
+        </div>
       </div>
 
-      <!-- 📊 테이블 -->
+      <!-- Table -->
       <div class="table-wrap">
         <div class="table-scroll">
           <table>
             <thead>
               <tr>
-                <th>🪄 품목</th>
-                <th class="t-right">입고 수량</th>
-                <th class="t-right">반품 수량</th>
+                <th>품목명</th>
+                <th class="t-right">입고</th>
+                <th class="t-right">반품</th>
                 <th class="t-right">순입고</th>
               </tr>
             </thead>
             <tbody id="linenTableBody">
-              <tr><td colspan="4" style="text-align:center;">데이터를 불러오는 중...</td></tr>
+              <tr>
+                <td colspan="4" style="text-align:center; padding: 60px; color: #CBD5E1;">
+                  데이터 로딩 중...
+                </td>
+              </tr>
             </tbody>
           </table>
         </div>
@@ -368,22 +457,14 @@
     </div>
   </main>
 
-  <footer style="text-align:center;color:var(--text-muted);padding:16px 0;">
-    © 2025 HARU · by KIM HYUN JUN
+  <footer>
+    © 2025 HARU SYSTEM · TOKYO
   </footer>
 
-  <!-- ✅ 헤더 로드 -->
-  <script type="module">
-    import { initHeaderMenu } from "./header.js";
-    fetch("header.html").then(r => r.text()).then(h => {
-      document.getElementById("header-placeholder").innerHTML = h;
-      initHeaderMenu();
-    });
-  </script>
-
-  <!-- ✅ 통계 기능 -->
   <script type="module" src="admin_dashboard.js"></script>
   <script type="module" src="scrollTop.js"></script>
+  <script type="module" src="notice_popup.js"></script>
+
 
 </body>
 </html>

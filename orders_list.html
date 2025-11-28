@@ -5,20 +5,93 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>HARU 주문 목록</title>
   <link rel="stylesheet" href="common.css" />
+  
+  <!-- Fonts: Inter & Noto Sans KR -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+
   <style>
+    /* 🎨 TOKYO DAY BRIGHT Design System 
+       Core: Architectural Minimalism, No Emojis, Sharp Edges
+    */
+
+    :root {
+      /* Palette */
+      --color-bg-main: #F8FAFC;       /* Soft Gray */
+      --color-surface: #FFFFFF;       /* Clean White */
+      --color-text-primary: #2C3E50;  /* Haru Navy */
+      --color-text-secondary: #64748B;/* Muted Gray */
+      --color-text-tertiary: #94A3B8; /* Light Gray */
+      --color-accent: #D4AF37;        /* Champagne Gold */
+      --color-border: #CBD5E1;        /* Light Border */
+      --color-border-hover: #2C3E50;  /* Navy Border */
+
+      /* Spacing */
+      --space-2: 0.5rem;
+      --space-3: 0.75rem;
+      --space-4: 1rem;
+      --space-5: 1.5rem;
+      --space-6: 2rem;
+      --space-8: 4rem;
+    }
+
+    /* Reset & Base Typography */
+    * {
+      box-sizing: border-box;
+      border-radius: 0px !important; /* 📐 Sharp Edges Rule */
+    }
+
+    body {
+      background-color: var(--color-bg-main);
+      color: var(--color-text-primary);
+      font-family: 'Inter', 'Noto Sans KR', sans-serif;
+      margin: 0;
+      line-height: 1.5;
+    }
+
+    #bg-canvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: -1;
+      opacity: 0.3; /* Subtle background presence */
+      pointer-events: none;
+    }
+
+    /* Layout */
     .orders-container {
       max-width: 1200px;
       margin: 0 auto;
-      padding: var(--space-6);
+      padding: var(--space-6) var(--space-4);
+      padding-top: 80px; /* Header space */
     }
 
+    /* Typography */
+    h1 {
+      font-size: 1.75rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      color: var(--color-text-primary);
+      margin-bottom: var(--space-6);
+      text-transform: uppercase;
+      border-left: 4px solid var(--color-accent);
+      padding-left: var(--space-3);
+      line-height: 1;
+    }
+
+    /* Toolbar & Filters */
     .toolbar {
       display: flex;
       flex-wrap: wrap;
       justify-content: space-between;
-      align-items: center;
+      align-items: flex-end;
       gap: var(--space-4);
-      margin-bottom: var(--space-6);
+      margin-bottom: var(--space-4);
+      padding-bottom: var(--space-4);
+      border-bottom: 1px solid var(--color-border);
     }
 
     .filter-group {
@@ -27,54 +100,137 @@
       flex-wrap: wrap;
     }
 
-    /* 🔵 추가된 기간 검색 UI */
+    /* Inputs & Selects - Architectural Style */
+    .form-select, .form-input {
+      height: 44px;
+      padding: 0 var(--space-3);
+      border: 1px solid var(--color-border);
+      background-color: var(--color-bg-main);
+      color: var(--color-text-primary);
+      font-size: 0.9rem;
+      min-width: 140px;
+      transition: all 0.2s ease;
+      appearance: none; /* Remove default styling */
+    }
+
+    .form-select {
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%232C3E50' d='M6 8.825L1.175 4 2.238 2.938 6 6.7l3.763-3.762L10.825 4z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 1rem center;
+      padding-right: 2.5rem;
+    }
+
+    .form-select:focus, .form-input:focus {
+      outline: none;
+      border-color: var(--color-text-primary);
+      background-color: var(--color-surface);
+    }
+
+    /* Buttons */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      height: 44px;
+      padding: 0 var(--space-5);
+      font-weight: 600;
+      font-size: 0.9rem;
+      text-decoration: none;
+      transition: all 0.2s ease;
+      cursor: pointer;
+      border: 1px solid transparent;
+      letter-spacing: 0.02em;
+    }
+
+    .btn-primary {
+      background-color: var(--color-text-primary);
+      color: #FFFFFF;
+      border-color: var(--color-text-primary);
+    }
+
+    .btn-primary:hover {
+      background-color: #34495E;
+      color: #FFFFFF;
+    }
+
+    .btn-secondary {
+      background-color: #FFFFFF;
+      color: var(--color-text-primary);
+      border-color: var(--color-border);
+    }
+
+    .btn-secondary:hover {
+      border-color: var(--color-text-primary);
+      background-color: var(--color-bg-main);
+    }
+
+    /* Date Filter UI */
     .date-filter {
       display: flex;
       gap: var(--space-3);
       flex-wrap: wrap;
       align-items: center;
+      margin-bottom: var(--space-6);
+      padding: var(--space-4);
+      background-color: #FFFFFF;
+      border: 1px solid var(--color-border);
     }
 
+    /* Card Grid System */
+    #ordersList {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+      gap: var(--space-4);
+    }
+
+    /* Order Card - The Surface */
     .order-card {
-      background: hsla(var(--color-bg-glass), 0.4);
-      backdrop-filter: blur(var(--blur-md));
-      border: 1px solid hsl(var(--color-border-glass));
-      border-radius: var(--radius-lg);
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
       padding: var(--space-5);
-      margin-bottom: var(--space-4);
-      transition: all var(--transition-base);
+      transition: border-color 0.2s ease, transform 0.2s ease;
+      position: relative;
     }
 
     .order-card:hover {
+      border-color: var(--color-accent); /* Gold Highlight on Hover */
       transform: translateY(-2px);
-      box-shadow: var(--shadow-lg);
-      border-color: hsl(var(--color-primary) / 0.3);
+      box-shadow: 0 4px 20px rgba(0,0,0,0.05);
     }
 
     .order-header {
       display: flex;
       justify-content: space-between;
-      align-items: start;
+      align-items: flex-start;
       margin-bottom: var(--space-4);
+      border-bottom: 1px solid var(--color-bg-main);
+      padding-bottom: var(--space-3);
     }
 
     .order-meta {
-      font-size: var(--font-size-sm);
-      color: hsl(var(--color-text-secondary));
+      font-size: 0.85rem;
+      color: var(--color-text-secondary);
+      font-family: 'Inter', sans-serif;
     }
 
+    /* Items Area */
     .order-items {
       margin: var(--space-3) 0;
       padding: var(--space-3);
-      background: hsla(var(--color-bg-elevated), 0.3);
-      border-radius: var(--radius-md);
+      background-color: var(--color-bg-main);
+      border: 1px solid transparent;
+    }
+    
+    .order-card:hover .order-items {
+      border-color: #E2E8F0;
     }
 
     .item {
       display: flex;
       justify-content: space-between;
       padding: var(--space-2) 0;
-      font-size: var(--font-size-sm);
+      font-size: 0.9rem;
+      color: var(--color-text-primary);
     }
 
     .order-actions {
@@ -84,12 +240,52 @@
       flex-wrap: wrap;
     }
 
-    /* 🔵 기간 검색 결과 카운트 */
+    /* Count Display */
     #orderCount {
       margin-bottom: var(--space-4);
-      font-size: var(--font-size-md);
-      color: hsl(var(--color-primary));
-      font-weight: 600;
+      font-size: 0.9rem;
+      color: var(--color-text-primary);
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    /* Empty State - Minimalist */
+    .empty-state {
+      grid-column: 1 / -1;
+      text-align: center;
+      padding: 4rem 0;
+      color: var(--color-text-secondary);
+      border: 1px dashed var(--color-border);
+      background-color: #FFFFFF;
+    }
+
+    .empty-state-icon {
+      display: none; /* 🚫 No Emoji */
+    }
+    
+    .empty-state-text {
+      font-size: 1rem;
+      font-weight: 500;
+    }
+    
+    .empty-state::before {
+      content: "주문 내역 없음"; /* Korean Text */
+      display: block;
+      font-weight: 700;
+      color: var(--color-border);
+      font-size: 1.5rem;
+      margin-bottom: 1rem;
+    }
+
+    footer {
+      text-align: center;
+      padding: var(--space-6);
+      color: var(--color-text-secondary);
+      font-size: 0.8rem;
+      border-top: 1px solid var(--color-border);
+      margin-top: var(--space-6);
+      background: var(--color-surface);
     }
   </style>
 </head>
@@ -99,12 +295,11 @@
 
   <main>
     <div class="orders-container">
-      <h1>🛒 주문 목록</h1>
+      <h1>주문 목록</h1>
 
-      <!-- 🔵 기간 검색 + 상태/긴급도 검색 -->
+      <!-- 🔵 필터 툴바 -->
       <div class="toolbar">
         <div class="filter-group">
-
           <!-- 기존 상태/긴급도 -->
           <select id="filterStatus" class="form-select" data-testid="select-filter-status">
             <option value="">전체 상태</option>
@@ -122,14 +317,16 @@
           </select>
         </div>
 
-        <a href="orders.html" class="btn btn-primary" data-testid="button-new-order">+ 새 주문</a>
+        <a href="orders.html" class="btn btn-primary" data-testid="button-new-order">+ 새 주문 등록</a>
       </div>
 
-      <!-- 🔵 기간 검색 UI -->
-      <div class="date-filter" style="margin-bottom: var(--space-4);">
+      <!-- 🔵 기간 검색 UI (Architectural Block) -->
+      <div class="date-filter">
+        <span style="font-size: 0.85rem; font-weight: 700; color: var(--color-text-primary); margin-right: var(--space-2);">조회 기간</span>
         <input type="date" id="startDate" class="form-input" />
+        <span style="color: var(--color-border);">—</span>
         <input type="date" id="endDate" class="form-input" />
-        <button id="btnDateSearch" class="btn btn-secondary">기간 검색</button>
+        <button id="btnDateSearch" class="btn btn-secondary">조회</button>
       </div>
 
       <!-- 🔵 검색된 주문 개수 -->
@@ -138,26 +335,46 @@
       <!-- 리스트 -->
       <div id="ordersList" data-testid="container-orders-list"></div>
 
+      <!-- Empty State (Emoji Removed) -->
       <div id="emptyState" style="display:none;" class="empty-state">
-        <div class="empty-state-icon">📭</div>
-        <div class="empty-state-text">주문 내역이 없습니다</div>
+        <div class="empty-state-text">주문 내역이 존재하지 않습니다.</div>
       </div>
     </div>
   </main>
 
-  <footer>© 2025 <strong>HARU_KIM HYUN JUN</strong></footer>
+  <footer>
+    HARU SYSTEM &copy; 2025 <strong>HARU_KIM HYUN JUN</strong>. All rights reserved.
+  </footer>
 
   <script type="module" src="scripts/bg/scene.js"></script>
   <script type="module">
-    import { initHeaderMenu } from "./header.js";
-    fetch("header.html").then(r=>r.text()).then(h=>{
-      document.getElementById("header-placeholder").innerHTML=h;
-      initHeaderMenu();
-    });
+    // 헤더 로드 및 초기화 (동적 임포트 방식)
+    fetch("header.html")
+      .then(response => {
+        if (!response.ok) throw new Error("Header load failed");
+        return response.text();
+      })
+      .then(html => {
+        document.getElementById("header-placeholder").innerHTML = html;
+        
+        // header.js가 존재하면 로드, 없으면(미리보기 등) 무시하여 에러 방지
+        import("./header.js")
+          .then(module => {
+            if (module && typeof module.initHeaderMenu === 'function') {
+              module.initHeaderMenu();
+            }
+          })
+          .catch(err => {
+            console.warn("헤더 스크립트 로드 건너뜀 (미리보기 환경):", err.message);
+          });
+      })
+      .catch(err => console.log("헤더 HTML 로드 실패 (미리보기 환경):", err.message));
   </script>
 
   <script type="module" src="orders_list.js"></script>
   <script type="module" src="scrollTop.js"></script>
+  <script type="module" src="notice_popup.js"></script>
+
 
 </body>
 </html>

@@ -3,224 +3,342 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>HARU 로그인 / 회원가입</title>
-  <meta name="description" content="HARU 호텔 관리 시스템 로그인 및 회원가입" />
+  <title>HARU - Tokyo Winter Glass</title>
   
-  <!-- Styles -->
-  <link rel="stylesheet" href="common.css" />
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Inter:wght@300;400;600&family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
 
   <style>
-    /* -------------------------------
-       🔥 화면 전체 중앙 배치 핵심 설정
-       ------------------------------- */
+    :root {
+      --glass-bg: rgba(255, 255, 255, 0.15);
+      --glass-border: rgba(255, 255, 255, 0.2);
+      --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+      --input-bg: rgba(0, 0, 0, 0.2);
+      --text-white: #FFFFFF;
+      --accent-red: #D42E2E;
+      --accent-gold: #FFD700;
+    }
+
+    * { box-sizing: border-box; }
+
     body {
       margin: 0;
-      width: 100%;
       height: 100vh;
-      background: hsl(var(--color-bg-base));
+      overflow: hidden;
+      font-family: 'Inter', 'Noto Sans KR', sans-serif;
       display: flex;
       justify-content: center;
       align-items: center;
-      position: relative;
-      overflow: hidden;
+      /* 배경: 도쿄 타워가 중심에 있는 화려한 야경 */
+      background: url('https://images.unsplash.com/photo-1503899036084-c55cdd92da26?q=80&w=1974&auto=format&fit=crop') no-repeat center center/cover;
     }
 
-    /* 3D 배경 캔버스 */
-    #bg-canvas {
+    /* 배경 오버레이 (가독성을 위해 약간 어둡게) */
+    body::before {
+      content: '';
       position: absolute;
       inset: 0;
-      width: 100%;
-      height: 100%;
-      z-index: -1;
+      background: radial-gradient(circle at center, rgba(10, 10, 20, 0.3), rgba(0, 0, 0, 0.8));
+      z-index: 0;
     }
 
-    /* 로그인/회원가입 박스 */
-    .auth-container {
+    /* ❄️ 눈 내리는 배경 애니메이션 (전체 화면) */
+    .snow-container {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      z-index: 1;
+      overflow: hidden;
+    }
+    
+    .snow {
+      position: absolute;
+      top: -10px;
+      background: white;
+      border-radius: 50%;
+      opacity: 0.8;
+      animation: fall linear infinite;
+    }
+
+    @keyframes fall {
+      to { transform: translateY(110vh); }
+    }
+
+    /* 💎 메인 글래스 카드 */
+    .glass-card {
       position: relative;
-      background: hsla(var(--color-bg-glass), 0.6);
-      backdrop-filter: blur(var(--blur-lg));
-      -webkit-backdrop-filter: blur(var(--blur-lg));
-      border: 1px solid hsl(var(--color-border-glass));
-      border-radius: var(--radius-xl);
-      box-shadow: var(--shadow-xl), var(--shadow-glow);
-      padding: var(--space-8) var(--space-6);
-      width: 100%;
-      max-width: 420px;
+      z-index: 10;
+      width: 420px;
+      padding: 50px 40px;
+      border-radius: 20px !important; /* 여기서는 둥근 모서리가 어울림 */
+      
+      /* Glassmorphism Effect */
+      background: var(--glass-bg);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid var(--glass-border);
+      box-shadow: var(--glass-shadow);
+      
       text-align: center;
-      animation: scaleIn var(--transition-base);
+      color: var(--text-white);
+      
+      /* 둥둥 떠있는 효과 */
+      animation: float 6s ease-in-out infinite;
+    }
+
+    @keyframes float {
+      0% { transform: translateY(0px); }
+      50% { transform: translateY(-15px); }
+      100% { transform: translateY(0px); }
+    }
+
+    /* 장식 요소 (카드 상단 금색 띠) */
+    .glass-card::after {
+      content: '';
+      position: absolute;
+      top: 0; left: 50%;
+      transform: translateX(-50%);
+      width: 60px;
+      height: 4px;
+      background: var(--accent-gold);
+      border-radius: 0 0 4px 4px !important;
+      box-shadow: 0 0 15px var(--accent-gold);
+    }
+
+    .logo-area {
+      margin-bottom: 40px;
     }
 
     .logo {
-      font-family: var(--font-display);
-      font-weight: 900;
-      font-size: var(--font-size-4xl);
-      background: linear-gradient(135deg, hsl(var(--color-primary)), hsl(var(--color-secondary)));
+      font-family: 'Cinzel', serif;
+      font-size: 42px;
+      font-weight: 700;
+      background: linear-gradient(to right, #fff, #ffd700);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
-      background-clip: text;
-      margin-bottom: var(--space-6);
-      letter-spacing: 0.05em;
+      margin-bottom: 5px;
+      letter-spacing: 0.1em;
     }
 
+    .subtitle {
+      font-size: 12px;
+      color: rgba(255, 255, 255, 0.7);
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+    }
+
+    /* 폼 스타일 */
     h2 {
-      margin-bottom: var(--space-6);
-      font-size: var(--font-size-2xl);
-      font-weight: 700;
-      color: hsl(var(--color-text-primary));
+      font-size: 18px;
+      font-weight: 400;
+      margin-bottom: 25px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      border-bottom: 1px solid rgba(255,255,255,0.2);
+      display: inline-block;
+      padding-bottom: 5px;
     }
 
-    form {
-      display: flex;
-      flex-direction: column;
-      gap: var(--space-4);
-      margin-top: var(--space-4);
+    .input-group {
+      margin-bottom: 20px;
+      position: relative;
     }
 
     .form-input {
-      background: hsla(var(--color-bg-glass), 0.5);
-      backdrop-filter: blur(var(--blur-sm));
-      border: 1px solid hsl(var(--color-border-glass));
-      border-radius: var(--radius-md);
-      padding: var(--space-4) var(--space-4);
-      font-size: var(--font-size-base);
-      color: hsl(var(--color-text-primary));
-      transition: all var(--transition-base);
+      width: 100%;
+      padding: 15px 20px;
+      background: var(--input-bg);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 10px !important;
+      color: white;
+      font-size: 15px;
+      transition: all 0.3s;
     }
 
     .form-input::placeholder {
-      color: hsl(var(--color-text-tertiary));
+      color: rgba(255, 255, 255, 0.5);
     }
 
     .form-input:focus {
       outline: none;
-      border-color: hsl(var(--color-primary));
-      box-shadow: 0 0 0 3px hsla(var(--color-primary), 0.15);
-      background: hsla(var(--color-bg-glass), 0.7);
+      background: rgba(0, 0, 0, 0.4);
+      border-color: var(--accent-gold);
+      box-shadow: 0 0 15px rgba(255, 215, 0, 0.2);
     }
 
     .btn-submit {
       width: 100%;
-      margin-top: var(--space-2);
+      padding: 16px;
+      margin-top: 10px;
+      background: linear-gradient(135deg, var(--accent-red), #8e0e0e);
+      color: white;
+      border: none;
+      border-radius: 10px !important;
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: all 0.3s;
+      box-shadow: 0 4px 15px rgba(212, 46, 46, 0.4);
+    }
+
+    .btn-submit:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(212, 46, 46, 0.6);
+      background: linear-gradient(135deg, #ff4d4d, var(--accent-red));
     }
 
     .toggle-text {
-      margin-top: var(--space-4);
-      color: hsl(var(--color-text-secondary));
-      font-size: var(--font-size-sm);
+      margin-top: 30px;
+      font-size: 13px;
+      color: rgba(255, 255, 255, 0.6);
     }
 
     .toggle-link {
-      color: hsl(var(--color-primary));
+      color: var(--accent-gold);
       font-weight: 600;
       cursor: pointer;
-      transition: color var(--transition-fast);
-    }
-
-    .toggle-link:hover {
-      color: hsl(var(--color-primary-dark));
+      margin-left: 5px;
       text-decoration: underline;
+      text-underline-offset: 4px;
+      transition: color 0.3s;
+    }
+    .toggle-link:hover {
+      color: #fff;
+      text-shadow: 0 0 10px var(--accent-gold);
     }
 
-    footer {
-      position: absolute;
-      bottom: 10px;
-      text-align: center;
-      width: 100%;
-      color: #888;
-      font-size: 13px;
-      pointer-events: none;
-    }
-
-    @media (max-width: 768px) {
-      .auth-container {
-        padding: var(--space-6) var(--space-4);
+    /* 모바일 대응 */
+    @media (max-width: 500px) {
+      .glass-card {
+        width: 90%;
+        padding: 40px 20px;
       }
-
-      .logo {
-        font-size: var(--font-size-3xl);
-      }
+      .logo { font-size: 32px; }
     }
   </style>
 </head>
 <body>
 
-  <!-- 3D Background Canvas -->
-  <canvas id="bg-canvas"></canvas>
+  <!-- Firebase Config -->
+  <script>
+    window.__firebase_config = JSON.stringify({
+      apiKey: "AIzaSyAyD0Gn5-zqzPzdXjQzZhVlMQvqTzUmHKs",
+      authDomain: "return-linen-management.firebaseapp.com",
+      projectId: "return-linen-management",
+      storageBucket: "return-linen-management.firebasestorage.app",
+      messagingSenderId: "310421638033",
+      appId: "1:310421638033:web:280047bf93a8c780f8e830",
+      measurementId: "G-D6BDRRKD9Y"
+    });
+  </script>
 
-  <!-- Auth Container -->
-  <main style="display:flex;justify-content:center;align-items:center;width:100%;height:100%;">
-    <div class="auth-container">
+  <!-- ❄️ 눈 내리는 효과 생성 스크립트 -->
+  <div class="snow-container" id="snowContainer"></div>
+  <script>
+    const snowContainer = document.getElementById('snowContainer');
+    const snowCount = 50;
+    
+    for(let i=0; i<snowCount; i++) {
+      const snow = document.createElement('div');
+      snow.className = 'snow';
+      // 랜덤 위치 및 속도
+      const size = Math.random() * 5 + 2;
+      snow.style.width = `${size}px`;
+      snow.style.height = `${size}px`;
+      snow.style.left = `${Math.random() * 100}vw`;
+      snow.style.animationDuration = `${Math.random() * 5 + 5}s`; // 5~10초
+      snow.style.animationDelay = `${Math.random() * 5}s`;
+      snow.style.opacity = Math.random() * 0.5 + 0.3;
+      snowContainer.appendChild(snow);
+    }
+  </script>
+
+  <!-- 💎 메인 글래스 카드 -->
+  <div class="glass-card">
+    <div class="logo-area">
       <div class="logo">HARU</div>
-      <h2 id="formTitle">로그인</h2>
+      <div class="subtitle">Tokyo Christmas Edition</div>
+    </div>
 
-      <!-- 로그인 폼 -->
+    <!-- 로그인 폼 -->
+    <div id="loginSection">
+      <h2 id="formTitle">Welcome Back</h2>
       <form id="loginForm" autocomplete="on">
-        <input
-          type="email"
-          id="email"
-          class="form-input"
-          placeholder="이메일"
-          required
-          autocomplete="username"
-        />
-        <input
-          type="password"
-          id="password"
-          class="form-input"
-          placeholder="비밀번호"
-          required
-          autocomplete="current-password"
-        />
-        <button type="submit" class="btn btn-primary btn-submit">로그인</button>
+        <div class="input-group">
+          <input type="email" id="email" class="form-input" placeholder="Email Address" required autocomplete="username" />
+        </div>
+        <div class="input-group">
+          <input type="password" id="password" class="form-input" placeholder="Password" required autocomplete="current-password" />
+        </div>
+        <button type="submit" class="btn-submit">Sign In</button>
       </form>
-
-      <!-- 회원가입 폼 -->
-      <form id="signupForm" style="display:none;" autocomplete="on">
-        <input
-          type="text"
-          id="name"
-          class="form-input"
-          placeholder="이름"
-          required
-          autocomplete="name"
-        />
-        <input
-          type="email"
-          id="signupEmail"
-          class="form-input"
-          placeholder="이메일"
-          required
-          autocomplete="email"
-        />
-        <input
-          type="password"
-          id="signupPw"
-          class="form-input"
-          placeholder="비밀번호"
-          required
-          autocomplete="new-password"
-        />
-        <button type="submit" class="btn btn-primary btn-submit">회원가입</button>
-      </form>
-
-      <div id="toggleText" class="toggle-text">
-        계정이 없나요?
-        <span class="toggle-link" id="toSignup">회원가입</span>
+      <div class="toggle-text">
+        New to HARU? <span class="toggle-link" id="toSignup">Create Account</span>
       </div>
     </div>
-  </main>
 
-  <!-- Footer -->
-  <footer>
-    © 2025 <strong>HARU_KIM HYUN JUN</strong>
-  </footer>
+    <!-- 회원가입 폼 -->
+    <div id="signupSection" style="display:none;">
+      <h2 id="formTitle">Join Membership</h2>
+      <form id="signupForm" autocomplete="on">
+        <div class="input-group">
+          <input type="text" id="name" class="form-input" placeholder="Full Name" required autocomplete="name" />
+        </div>
+        <div class="input-group">
+          <input type="email" id="signupEmail" class="form-input" placeholder="Email Address" required autocomplete="email" />
+        </div>
+        <div class="input-group">
+          <input type="password" id="signupPw" class="form-input" placeholder="Password" required autocomplete="new-password" />
+        </div>
+        <button type="submit" class="btn-submit">Register</button>
+      </form>
+      <div class="toggle-text">
+        Already a member? <span class="toggle-link" id="toLogin">Login Here</span>
+      </div>
+    </div>
 
-  <!-- 3D Background -->
-  <script type="module" src="scripts/bg/scene.js"></script>
+  </div>
+
+  <!-- UI Logic Script -->
+  <script type="module">
+    const loginSec = document.getElementById('loginSection');
+    const signupSec = document.getElementById('signupSection');
+    const toSignup = document.getElementById('toSignup');
+    const toLogin = document.getElementById('toLogin');
+
+    // UI 전환 효과 (기존과 동일하지만, 카드 내부에서 동작)
+    if(toSignup) {
+      toSignup.addEventListener('click', () => {
+        loginSec.style.display = 'none';
+        signupSec.style.display = 'block';
+        signupSec.style.animation = 'fadeIn 0.5s';
+      });
+    }
+    if(toLogin) {
+      toLogin.addEventListener('click', () => {
+        signupSec.style.display = 'none';
+        loginSec.style.display = 'block';
+        loginSec.style.animation = 'fadeIn 0.5s';
+      });
+    }
+
+    // 간단한 페이드인 키프레임 추가
+    const style = document.createElement('style');
+    style.innerHTML = `
+      @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+    `;
+    document.head.appendChild(style);
+  </script>
 
   <!-- Auth Logic -->
   <script type="module" src="signup.js"></script>
-  <script type="module" src="scrollTop.js"></script>
 
 </body>
 </html>

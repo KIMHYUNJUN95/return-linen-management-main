@@ -21,7 +21,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const editIndicator = document.getElementById("editIndicator");
   const submitBtn = document.getElementById("submitBtn");
 
-  // ✅ 새로 추가된 요소
+  // ========== 건물 + 요청자 이름 요소 생성 ==========
   const buildingEl = document.createElement("select");
   buildingEl.id = "buildingSelect";
   buildingEl.className = "form-select";
@@ -43,7 +43,6 @@ document.addEventListener("DOMContentLoaded", () => {
   requesterEl.className = "form-input";
   requesterEl.placeholder = "요청자 이름 입력 (예: 김현준)";
 
-  // ✅ DOM에 주입 (긴급도 select 위로)
   const urgencyGroup = urgencyEl.closest(".form-group");
   if (urgencyGroup) {
     const buildingWrap = document.createElement("div");
@@ -74,11 +73,9 @@ document.addEventListener("DOMContentLoaded", () => {
       editMode = true;
       editOrderId = orderData.id;
 
-      // 상단 안내 표시
       editIndicator.style.display = "block";
       submitBtn.textContent = "주문 수정하기";
 
-      // 기존 데이터 반영
       items = orderData.items || [];
       urgencyEl.value = orderData.urgency || "일반";
       notesEl.value = orderData.notes || "";
@@ -116,7 +113,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
     renderItems();
     amazonSearchEl.value = "";
-    alert(`✅ "${searchTerm}" 항목이 추가되었습니다.`);
+    alert(`"${searchTerm}" 항목이 추가되었습니다.`);
   });
 
   amazonSearchEl.addEventListener("keydown", (e) => {
@@ -207,7 +204,13 @@ document.addEventListener("DOMContentLoaded", () => {
     const notes = notesEl.value.trim();
     const userEmail = auth?.currentUser?.email || null;
 
+    // ------------------------------
+    // 🔥 핵심 수정 (uid 추가)
+    // ------------------------------
+    const uid = auth?.currentUser?.uid || null;
+
     const orderData = {
+      uid,                   // 🔥 Firestore Rules 통과에 필수
       building,
       requesterName,
       items: [...items],
@@ -222,14 +225,18 @@ document.addEventListener("DOMContentLoaded", () => {
     try {
       if (editMode && editOrderId) {
         const orderRef = doc(db, "orders", editOrderId);
-        await updateDoc(orderRef, orderData);
+
+        await updateDoc(orderRef, {
+          ...orderData,
+          updatedAt: serverTimestamp(),
+        });
+
         localStorage.removeItem("editOrderData");
-        alert("✅ 주문이 성공적으로 수정되었습니다!");
+        alert("주문이 성공적으로 수정되었습니다!");
       } else {
         orderData.createdAt = serverTimestamp();
-        const docRef = await addDoc(collection(db, "orders"), orderData);
-        console.log("✅ 주문 요청 성공:", docRef.id);
-        alert("✅ 주문 요청이 완료되었습니다!");
+        await addDoc(collection(db, "orders"), orderData);
+        alert("주문 요청이 완료되었습니다!");
       }
 
       items = [];

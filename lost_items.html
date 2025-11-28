@@ -3,231 +3,243 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>HARU 분실물 등록 / 수정</title>
+  <title>HARU 분실물 등록</title>
   <link rel="stylesheet" href="common.css" />
   <style>
-    .lost-container {
+    /* -------------------------------
+       🎨 Page Specific Styles
+       Theme: Tokyo Day Bright (Minimal)
+       ------------------------------- */
+    body {
+      background-color: var(--bg-base, #F8FAFC);
+      color: var(--haru-navy, #2C3E50);
+    }
+
+    main {
+      display: flex;
+      justify-content: center;
+      padding: 60px 24px;
+    }
+
+    .form-container {
+      width: 100%;
       max-width: 800px;
-      margin: 0 auto;
-      background: hsl(var(--color-bg-elevated));
-      border: 1px solid hsl(var(--color-border-subtle));
-      border-radius: var(--radius-lg);
-      box-shadow: var(--shadow-md);
-      padding: 24px;
+      padding: 0;
+      animation: fadeIn 0.5s ease-out;
     }
-    .lost-container h2 {
-      margin: 0 0 16px;
-      font-size: var(--font-size-xl);
+
+    /* 헤더 영역 */
+    .page-header {
+      margin-bottom: 30px;
+      border-bottom: 1px solid #E2E8F0;
+      padding-bottom: 20px;
+    }
+
+    h2 {
+      margin: 0;
+      font-size: 28px;
+      font-weight: 800;
+      color: var(--haru-navy, #2C3E50);
+      letter-spacing: -0.02em;
+    }
+
+    /* 폼 섹션 (White Panel) */
+    .form-section {
+      background: #FFFFFF;
+      border: 1px solid #E2E8F0;
+      border-radius: 0; /* 각진 모서리 */
+      padding: 40px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.03);
+    }
+
+    /* 입력 필드 공통 스타일 */
+    .form-group {
+      margin-bottom: 24px;
+    }
+
+    label {
+      display: block;
+      font-size: 12px;
       font-weight: 700;
-      color: hsl(var(--color-text-primary));
+      color: #64748B; /* Muted Text */
+      margin-bottom: 8px;
+      text-transform: uppercase;
     }
+
+    input, select, textarea {
+      width: 100%;
+      height: 44px;
+      padding: 0 12px;
+      border: 1px solid #CBD5E1;
+      background: #F8FAFC;
+      border-radius: 0;
+      font-size: 14px;
+      color: var(--haru-navy, #2C3E50);
+      transition: all 0.2s;
+      box-sizing: border-box;
+    }
+
+    textarea {
+      height: auto;
+      min-height: 120px;
+      padding: 12px;
+      resize: vertical;
+    }
+
+    input:focus, select:focus, textarea:focus {
+      outline: none;
+      border-color: var(--haru-navy, #2C3E50); /* Navy Focus */
+      background: #FFFFFF;
+    }
+
+    /* 그리드 레이아웃 (2열) */
     .grid-2 {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 12px;
-      margin-bottom: 12px;
+      gap: 20px;
     }
-    .grid-2 > div { display: flex; flex-direction: column; gap: 6px; }
-    label { font-weight: 600; color: hsl(var(--color-text-secondary)); }
-    input, select, textarea {
-      width: 100%;
-      border: 1px solid hsl(var(--color-border-subtle));
-      border-radius: var(--radius-md);
-      padding: 10px 12px;
-      font-size: var(--font-size-base);
-      background: hsl(var(--color-bg-input));
-      color: hsl(var(--color-text-primary));
+
+    /* 사진 업로드 박스 커스텀 */
+    .photo-upload-box {
+      border: 1px dashed #CBD5E1;
+      background: #F8FAFC;
+      padding: 30px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s;
+      margin-bottom: 16px;
     }
-    textarea { resize: vertical; min-height: 80px; }
-    .photo-preview { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+    .photo-upload-box:hover {
+      border-color: var(--haru-navy, #2C3E50);
+      background: #FFFFFF;
+    }
+    
+    .upload-icon {
+      font-size: 24px;
+      color: #CBD5E1;
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 300;
+    }
+    
+    .photo-preview {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
     .photo-preview img {
-      width: 80px; height: 80px; object-fit: cover;
-      border-radius: 8px; border: 1px solid hsl(var(--color-border-subtle));
+      width: 80px;
+      height: 80px;
+      object-fit: cover;
+      border: 1px solid #E2E8F0;
     }
-    button.primary {
-      width: 100%; margin-top: 16px;
-      background-color: #16a34a; color: white;
-      font-weight: 600; font-size: 16px; padding: 12px 0;
-      border: none; border-radius: 8px; cursor: pointer;
-      transition: background 0.2s ease, transform 0.1s ease;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+
+    /* 버튼 스타일 */
+    .btn-submit {
+      width: 100%;
+      height: 50px;
+      background: var(--haru-navy, #2C3E50); /* Navy */
+      color: #FFFFFF;
+      font-weight: 700;
+      font-size: 15px;
+      border: none;
+      cursor: pointer;
+      transition: background 0.2s;
+      margin-top: 20px;
+      border-radius: 0;
     }
-    button.primary:hover { background-color: #15803d; transform: translateY(-1px); }
-    button.primary:disabled { background-color: #9ca3af; cursor: not-allowed; box-shadow: none; }
+    .btn-submit:hover {
+      background: #000000;
+    }
+    .btn-submit:disabled {
+      background: #CBD5E1;
+      cursor: not-allowed;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
     @media (max-width: 768px) {
-      .lost-container { padding: 16px; border-radius: 10px; }
       .grid-2 { grid-template-columns: 1fr; }
+      .form-section { padding: 24px; }
     }
   </style>
 </head>
 <body>
-
+  <!-- 헤더 로드용 위치 -->
   <div id="header-placeholder"></div>
 
   <main>
-    <div class="lost-container section">
-      <h2 id="formTitle">분실물 등록</h2>
+    <div class="form-container">
+      <div class="page-header">
+        <h2 id="formTitle">분실물 등록</h2>
+      </div>
 
-      <form id="lostForm">
-        <label for="building">건물 선택</label>
-        <select id="building" required>
-          <option value="">건물을 선택하세요</option>
-          <option>아라키초A</option>
-          <option>아라키초B</option>
-          <option>다이쿄초</option>
-          <option>가부키초</option>
-          <option>오쿠보1</option>
-          <option>오쿠보2</option>
-          <option>오쿠보4</option>
-          <option>다카다노바바</option>
-        </select>
-
-        <div class="grid-2">
-          <div>
-            <label for="room">객실 번호</label>
-            <input id="room" placeholder="예: 201" required />
-          </div>
-          <div>
-            <label for="status">상태</label>
-            <select id="status">
-              <option value="보관중">보관중</option>
-              <option value="회수">회수</option>
-              <option value="폐기">폐기</option>
+      <div class="form-section">
+        <form id="lostForm">
+          <div class="form-group">
+            <label for="building">발견 장소 (건물)</label>
+            <select id="building" name="building" required>
+              <option value="">선택하세요</option>
+              <option value="아라키초A">아라키초A</option>
+              <option value="아라키초B">아라키초B</option>
+              <option value="다이쿄초">다이쿄초</option>
+              <option value="가부키초">가부키초</option>
+              <option value="다카다노바바">다카다노바바</option>
+              <option value="오쿠보1">오쿠보1</option>
+              <option value="오쿠보2">오쿠보2</option>
+              <option value="오쿠보4">오쿠보4</option>
             </select>
           </div>
-        </div>
 
-        <label for="desc">설명</label>
-        <textarea id="desc" placeholder="분실물 설명을 입력하세요" required></textarea>
+          <div class="grid-2">
+            <div class="form-group">
+              <label for="room">객실 번호</label>
+              <input type="text" id="room" name="room" placeholder="예: 201" required />
+            </div>
+            
+            <div class="form-group">
+              <label for="status">처리 상태</label>
+              <select id="status" name="status">
+                <option value="보관중">보관중</option>
+                <option value="회수">회수</option>
+                <option value="폐기">폐기</option>
+              </select>
+            </div>
+          </div>
 
-        <label for="photo">사진 등록</label>
-        <input type="file" id="photo" accept="image/*" multiple />
-        <div class="photo-preview" id="photoPreview"></div>
+          <div class="form-group">
+            <label for="desc">상세 설명</label>
+            <textarea id="desc" name="desc" placeholder="분실물의 특징, 발견 위치 등을 상세히 기록해주세요." required></textarea>
+          </div>
 
-        <button type="submit" class="primary btn-green" id="submitBtn">등록하기</button>
-      </form>
+          <div class="form-group">
+            <label>사진 첨부</label>
+            <div class="photo-upload-box" onclick="document.getElementById('photo').click()">
+              <span class="upload-icon">＋</span>
+              <span style="font-size:13px; color:#64748B;">클릭하여 사진 업로드</span>
+            </div>
+            <!-- 파일 인풋은 숨김 처리 -->
+            <input type="file" id="photo" name="photo" accept="image/*" multiple style="display:none;" />
+            <div class="photo-preview" id="photoPreview"></div>
+          </div>
+
+          <button type="submit" class="btn-submit" id="submitBtn">등록 완료</button>
+        </form>
+      </div>
     </div>
   </main>
 
-  <footer style="text-align:center;color:#777;padding:16px 0;">
-    © 2025 HARU · by KIM HYUN JUN
+  <footer>
+    © 2025 HARU SYSTEM · TOKYO
   </footer>
 
-  <script>
-    (function() {
-      const input = document.getElementById("photo");
-      const preview = document.getElementById("photoPreview");
-      if (!input || !preview) return;
-      input.addEventListener("change", () => {
-        preview.innerHTML = "";
-        const files = Array.from(input.files || []);
-        files.forEach(file => {
-          if (!file || !file.type || !file.type.startsWith("image/")) return;
-          const img = document.createElement("img");
-          img.src = URL.createObjectURL(file);
-          img.onload = () => URL.revokeObjectURL(img.src);
-          preview.appendChild(img);
-        });
-      });
-    })();
-  </script>
-
-  <script type="module">
-    import { db, storage, auth } from "./storage.js";
-    import {
-      collection, addDoc, doc, getDoc, updateDoc, serverTimestamp
-    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-    import {
-      ref, uploadBytes, getDownloadURL
-    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
-    import { initHeaderMenu } from "./header.js";
-
-    fetch("header.html").then(res => res.text()).then(html => {
-      document.getElementById("header-placeholder").innerHTML = html;
-      initHeaderMenu();
-    });
-
-    const urlParams = new URLSearchParams(location.search);
-    const editId = urlParams.get("edit");
-
-    const form = document.getElementById("lostForm");
-    const title = document.getElementById("formTitle");
-    const submitBtn = document.getElementById("submitBtn");
-    const photoInput = document.getElementById("photo");
-    const preview = document.getElementById("photoPreview");
-
-    let existingPhotos = [];
-
-    // ✅ 수정 모드일 경우 기존 데이터 불러오기
-    if (editId) {
-      (async () => {
-        title.textContent = "분실물 수정";
-        submitBtn.textContent = "수정 완료";
-
-        const snap = await getDoc(doc(db, "lostItems", editId));
-        if (snap.exists()) {
-          const d = snap.data();
-          document.getElementById("building").value = d.building || "";
-          document.getElementById("room").value = d.room || "";
-          document.getElementById("desc").value = d.description || "";
-          document.getElementById("status").value = d.status || "보관중";
-
-          existingPhotos = d.imageUrls || [];
-          preview.innerHTML = existingPhotos.map(url => `<img src="${url}">`).join("");
-        }
-      })();
-    }
-
-    // ✅ 등록 / 수정
-    form.addEventListener("submit", async (e) => {
-      e.preventDefault();
-      submitBtn.disabled = true;
-
-      const building = document.getElementById("building").value.trim();
-      const room = document.getElementById("room").value.trim();
-      const desc = document.getElementById("desc").value.trim();
-      const status = document.getElementById("status").value.trim();
-      const photos = [...photoInput.files];
-
-      let photoUrls = [...existingPhotos];
-
-      try {
-        const user = auth.currentUser;
-        const createdBy = user ? (user.displayName || user.email) : "관리자";
-
-        for (const f of photos) {
-          const storageRef = ref(storage, `lost_items/${Date.now()}_${f.name}`);
-          await uploadBytes(storageRef, f);
-          const url = await getDownloadURL(storageRef);
-          photoUrls.push(url);
-        }
-
-        const data = {
-          building,
-          room,
-          description: desc,
-          status,
-          imageUrls: photoUrls,
-          createdAt: serverTimestamp(),
-          createdBy
-        };
-
-        if (editId) {
-          await updateDoc(doc(db, "lostItems", editId), data);
-          alert("✅ 수정이 완료되었습니다.");
-        } else {
-          await addDoc(collection(db, "lostItems"), data);
-          alert("✅ 등록이 완료되었습니다.");
-        }
-        location.href = "lost_items_list.html";
-      } catch (err) {
-        alert("오류 발생: " + err.message);
-      } finally {
-        submitBtn.disabled = false;
-      }
-    });
-  </script>
+  <!-- ✅ 기능 스크립트 -->
+  <script type="module" src="lost_items.js"></script>
   <script type="module" src="scrollTop.js"></script>
+  <script type="module" src="notice_popup.js"></script>
 
 </body>
 </html>

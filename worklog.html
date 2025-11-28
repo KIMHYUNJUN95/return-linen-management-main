@@ -5,369 +5,338 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>HARU 근무기록</title>
   <link rel="stylesheet" href="common.css" />
+  
+  <!-- Fonts: Inter & Noto Sans KR -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+
   <style>
-    .worklog-container {
-      max-width: 1000px;
-      margin: 0 auto;
-      padding: var(--space-6);
+    /* 🎨 TOKYO DAY BRIGHT Design System */
+    :root {
+      --color-bg-main: #F8FAFC;
+      --color-surface: #FFFFFF;
+      --color-text-primary: #2C3E50;
+      --color-text-secondary: #64748B;
+      --color-text-tertiary: #94A3B8;
+      --color-accent: #D4AF37;
+      --color-border: #CBD5E1;
+      
+      --space-2: 0.5rem;
+      --space-3: 0.75rem;
+      --space-4: 1rem;
+      --space-5: 1.5rem;
+      --space-6: 2rem;
     }
 
-    .worklog-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: var(--space-6);
-      margin-bottom: var(--space-6);
-    }
+    * { box-sizing: border-box; border-radius: 0px !important; }
+    body { background-color: var(--color-bg-main); color: var(--color-text-primary); font-family: 'Inter', 'Noto Sans KR', sans-serif; margin: 0; line-height: 1.5; }
 
+    #bg-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; opacity: 0.3; pointer-events: none; }
+
+    .worklog-container { max-width: 1000px; margin: 0 auto; padding: var(--space-6) var(--space-4); padding-top: 80px; }
+
+    h1 { font-size: 1.75rem; font-weight: 800; letter-spacing: -0.02em; color: var(--color-text-primary); margin-bottom: var(--space-2); text-transform: uppercase; border-left: 4px solid var(--color-accent); padding-left: var(--space-3); line-height: 1; }
+    .page-desc { color: var(--color-text-secondary); margin-bottom: var(--space-6); font-size: 0.95rem; padding-left: calc(var(--space-3) + 4px); }
+
+    h3 { font-size: 0.9rem; font-weight: 700; letter-spacing: 0.05em; color: var(--color-text-secondary); text-transform: uppercase; margin-bottom: var(--space-3); display: flex; align-items: center; gap: 8px; }
+    h3::after { content: ''; flex: 1; height: 1px; background: var(--color-border); opacity: 0.5; }
+
+    .worklog-grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4); margin-bottom: var(--space-4); }
+    @media (max-width: 768px) { .worklog-grid { grid-template-columns: 1fr; } }
+
+    .action-card { background: var(--color-surface); border: 1px solid var(--color-border); padding: var(--space-5); transition: border-color 0.2s; }
+    .action-card:hover { border-color: var(--color-text-primary); }
+
+    .btn { display: inline-flex; align-items: center; justify-content: center; height: 48px; padding: 0 var(--space-5); font-weight: 600; font-size: 0.95rem; transition: all 0.2s ease; cursor: pointer; border: 1px solid transparent; letter-spacing: 0.02em; width: 100%; }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; background-color: var(--color-bg-main) !important; color: var(--color-text-tertiary) !important; border-color: var(--color-border) !important; }
+
+    .btn-primary { background-color: var(--color-text-primary); color: #FFFFFF; border-color: var(--color-text-primary); }
+    .btn-primary:hover:not(:disabled) { background-color: #34495E; }
+
+    .btn-secondary { background-color: #FFFFFF; color: var(--color-text-primary); border-color: var(--color-border); }
+    .btn-secondary:hover:not(:disabled) { border-color: var(--color-text-primary); background-color: var(--color-bg-main); }
+
+    .btn-danger { background-color: #FFFFFF; color: #E74C3C; border-color: #E74C3C; }
+    .btn-danger:hover:not(:disabled) { background-color: #E74C3C; color: #FFFFFF; }
+
+    .btn-ghost { background: transparent; color: var(--color-text-secondary); border-color: transparent; height: 36px; font-size: 0.85rem; }
+    .btn-ghost:hover:not(:disabled) { text-decoration: underline; color: var(--color-text-primary); }
+
+    .btn-gradient { background: var(--color-text-primary); color: white; border: none; width: auto; }
+
+    .log-time { font-family: 'Inter', sans-serif; font-size: 1.5rem; font-weight: 700; color: var(--color-text-primary); letter-spacing: -0.03em; margin-top: var(--space-3); text-align: center; padding-top: var(--space-3); border-top: 1px solid var(--color-bg-main); }
+
+    #recentLogs { display: flex; gap: var(--space-4); overflow-x: auto; padding: var(--space-2) 0 var(--space-4) 0; scrollbar-width: thin; scrollbar-color: var(--color-border) transparent; }
+    #recentLogs::-webkit-scrollbar { height: 6px; }
+    #recentLogs::-webkit-scrollbar-thumb { background-color: var(--color-border); }
+
+    .log-card { flex: 0 0 auto; min-width: 260px; background: var(--color-surface); border: 1px solid var(--color-border); padding: var(--space-4); transition: all 0.2s; position: relative; }
+    .log-card:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.05); border-color: var(--color-accent); }
+    .log-card::before { content: ''; position: absolute; top: 0; left: 0; width: 4px; height: 100%; background-color: var(--color-bg-main); transition: background-color 0.2s; }
+    .log-card:hover::before { background-color: var(--color-accent); }
+
+    .log-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: var(--space-3); }
+    .log-user-name { font-weight: 700; color: var(--color-text-primary); font-size: 1rem; }
+
+    /* Modal */
+    .modal { display: none; position: fixed; inset: 0; background: rgba(44, 62, 80, 0.4); backdrop-filter: blur(2px); justify-content: center; align-items: center; z-index: 999; animation: fadeIn 0.2s ease; }
+    .modal-card { background: #fff; border: 1px solid var(--color-border); padding: 0; max-width: 380px; width: 90%; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1); position: relative; animation: slideUp 0.2s ease; }
+    .modal-header-area { padding: var(--space-5); border-bottom: 1px solid var(--color-border); background: var(--color-bg-main); }
+    .modal-user-info h3 { font-size: 1.25rem; font-weight: 800; margin: 0; color: var(--color-text-primary); text-transform: uppercase; }
+    .modal-date { font-size: 0.85rem; color: var(--color-text-secondary); margin-top: 4px; font-family: 'Inter', sans-serif; }
+    .modal-body { padding: var(--space-5); }
+    .modal-row { display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid var(--color-bg-main); font-size: 0.95rem; }
+    .modal-row:last-of-type { border-bottom: none; }
+    .modal-label { color: var(--color-text-secondary); font-weight: 500; }
+    .modal-value { font-weight: 700; color: var(--color-text-primary); font-family: 'Inter', sans-serif; }
+    .modal-highlight { background: var(--color-text-primary); color: white; padding: var(--space-4); margin-top: var(--space-4); text-align: center; }
+    .modal-highlight .modal-label { color: rgba(255,255,255,0.7); font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em; }
+    .modal-highlight .modal-value { color: white; font-size: 1.5rem; display: block; margin-top: 4px; }
+    .modal-close { width: 100%; background: white; color: var(--color-text-primary); border: none; border-top: 1px solid var(--color-border); padding: 16px; font-weight: 600; cursor: pointer; transition: background 0.2s; }
+    .modal-close:hover { background: var(--color-bg-main); }
+
+    /* 🔹 Header Styles Inlined to prevent Fetch Error */
+    .main-header { position: fixed; top: 0; left: 0; width: 100%; height: 60px; background: rgba(255, 255, 255, 0.95); border-bottom: 1px solid #e0e0e0; z-index: 1000; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(5px); }
+    .header-inner { width: 100%; max-width: 1400px; padding: 0 24px; display: flex; justify-content: space-between; align-items: center; }
+    .logo { font-family: 'Noto Sans KR', sans-serif; font-weight: 700; font-size: 18px; color: #111; letter-spacing: 0.15em; text-transform: uppercase; }
+    .menu-wrap { position: relative; display: flex; align-items: center; }
+    .menu-toggle { background: transparent; border: none; cursor: pointer; display: flex; align-items: center; gap: 10px; padding: 8px 0; }
+    .menu-label { font-size: 12px; font-weight: 500; color: #111; letter-spacing: 0.1em; }
+    .hamburger-lines { display: flex; flex-direction: column; gap: 4px; }
+    .line { width: 18px; height: 1.5px; background-color: #111; display: block; transition: transform 0.3s ease; }
+    .menu-toggle[aria-expanded="true"] .line1 { transform: rotate(45deg) translate(2px, 2px); }
+    .menu-toggle[aria-expanded="true"] .line2 { transform: rotate(-45deg) translate(2px, -2px); width: 18px; }
+    .menu-list { display: none; position: absolute; top: 50px; right: -20px; width: 220px; background: #fff; border: 1px solid #e0e0e0; padding: 12px 0; flex-direction: column; box-shadow: 0 10px 40px rgba(0, 0, 0, 0.05); list-style: none; z-index: 1001; }
+    .menu-list.open { display: flex; animation: fadeIn 0.2s ease-out; }
+    .menu-list li a { display: block; padding: 10px 24px; font-size: 13px; color: #888; text-decoration: none; transition: all 0.2s; border-left: 2px solid transparent; }
+    .menu-list li a:hover { background-color: #fafafa; color: #111; border-left-color: #111; padding-left: 30px; }
+    .logout-btn { background: transparent; border: none; color: #111; font-size: 11px; font-weight: 500; letter-spacing: 0.1em; cursor: pointer; text-transform: uppercase; border-bottom: 1px solid transparent; padding: 4px 0; margin-left: 40px; transition: border-color 0.3s; }
+    .logout-btn:hover { border-bottom-color: #111; }
     @media (max-width: 768px) {
-      .worklog-grid {
-        grid-template-columns: 1fr;
-      }
+        .main-header { height: 50px; }
+        .header-inner { padding: 0 16px; }
+        .logo { font-size: 16px; }
+        .logout-btn, .menu-toggle .menu-label { display: none; }
+        .menu-list { position: fixed; top: 50px; left: 0; right: 0; width: 100%; border: none; border-bottom: 1px solid #e0e0e0; box-shadow: 0 5px 10px rgba(0,0,0,0.05); }
+        .menu-list li a { padding: 14px 24px; font-size: 14px; }
     }
 
-    .log-card {
-      background: hsla(var(--color-bg-glass), 0.4);
-      backdrop-filter: blur(var(--blur-md));
-      border: 1px solid hsl(var(--color-border-glass));
-      border-radius: var(--radius-lg);
-      padding: var(--space-5);
-      margin-bottom: var(--space-4);
-      cursor: pointer;
-      transition: transform 0.2s, box-shadow 0.2s;
-    }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
 
-    .log-card:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-    }
-
-    .log-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: var(--space-3);
-      padding-bottom: var(--space-3);
-      border-bottom: 1px solid hsla(var(--color-border-subtle), 0.3);
-      flex-wrap: wrap;
-      gap: 8px;
-    }
-
-    .log-time {
-      font-family: var(--font-mono);
-      font-size: var(--font-size-xl);
-      font-weight: 700;
-      color: hsl(var(--color-primary));
-    }
-
-    .log-date {
-      font-size: var(--font-size-sm);
-      color: hsl(var(--color-text-secondary));
-    }
-
-    #recentLogs {
-      display: flex;
-      gap: var(--space-4);
-      overflow-x: auto;
-      overflow-y: hidden;
-      padding-bottom: var(--space-2);
-      -webkit-overflow-scrolling: touch;
-      scroll-snap-type: x proximity;
-    }
-
-    #recentLogs .log-card {
-      flex: 0 0 auto;
-      min-width: 280px;
-      max-width: 340px;
-      margin-bottom: 0;
-      scroll-snap-align: start;
-    }
-
-    #recentLogs .log-card.condensed {
-      display: flex;
-      align-items: center;
-      padding: var(--space-3) var(--space-4);
-      min-height: auto;
-    }
-
-    @media (max-width: 420px) {
-      #recentLogs .log-card { min-width: 240px; }
-    }
-
-    /* ================================
-       🪄 카드형 모달 (개선 UI)
-       ================================ */
-    .modal {
-      display: none;
-      position: fixed;
-      inset: 0;
-      background: rgba(0, 0, 0, 0.6);
-      backdrop-filter: blur(5px);
-      justify-content: center;
-      align-items: center;
-      z-index: 999;
-      animation: fadeIn 0.25s ease;
-    }
-
-    .modal-card {
-      background: #fff;
-      border-radius: 16px;
-      padding: 24px 20px 80px;
-      max-width: 400px;
-      width: 90%;
-      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
-      position: relative;
-      animation: slideUp 0.25s ease;
-      font-family: 'Inter', sans-serif;
-    }
-
-    /* 👤 유저 정보 헤더 */
-    .modal-header {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      margin-bottom: 16px;
-    }
-
-    .modal-user-avatar {
-      width: 50px;
-      height: 50px;
-      background: #e0f7ff;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 26px;
-      border-radius: 50%;
-    }
-
-    .modal-user-info h3 {
-      font-size: 20px;
-      font-weight: 700;
-      margin: 0;
-      color: #111;
-    }
-
-    .modal-date {
-      font-size: 14px;
-      color: #777;
-      margin-top: 2px;
-    }
-
-    /* 📊 정보 섹션 */
-    .modal-section {
-      background: #f8f9fa;
-      padding: 12px 14px;
-      border-radius: 10px;
-      margin-bottom: 10px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    .modal-section span {
-      font-weight: 600;
-      color: #444;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-
-    .modal-section strong {
-      font-size: 15px;
-      color: #111;
-    }
-
-    /* 🕒 총 근무시간 강조 */
-    .modal-section.highlight {
-      background: linear-gradient(135deg, #0077b6, #00b4d8);
-      color: #fff;
-      font-size: 18px;
-      font-weight: 700;
-      justify-content: center;
-    }
-
-    .modal-section.highlight strong {
-      color: #fff;
-      font-size: 18px;
-    }
-
-    /* 하단 닫기 버튼 */
-    .modal-close {
-      position: absolute;
-      bottom: 20px;
-      left: 20px;
-      right: 20px;
-      background: #0077b6;
-      color: #fff;
-      border: none;
-      padding: 14px 0;
-      border-radius: 8px;
-      font-size: 16px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: background 0.2s;
-    }
-
-    .modal-close:hover {
-      background: #005f8d;
-    }
-
-    @keyframes fadeIn {
-      from { opacity: 0; }
-      to { opacity: 1; }
-    }
-
-    @keyframes slideUp {
-      from { transform: translateY(40px); opacity: 0; }
-      to { transform: translateY(0); opacity: 1; }
-    }
-
-    @media (max-width: 420px) {
-      .modal-card { padding: 20px 16px 80px; }
-      .modal-user-info h3 { font-size: 18px; }
-      .modal-section { font-size: 14px; }
-      .modal-close { font-size: 15px; }
-    }
+    footer { text-align: center; padding: var(--space-6); color: var(--color-text-secondary); font-size: 0.8rem; border-top: 1px solid var(--color-border); margin-top: var(--space-6); background: var(--color-surface); }
   </style>
 </head>
 <body>
+  <!-- 🟢 FIREBASE CONFIGURATION -->
+  <script>
+    window.__firebase_config = JSON.stringify({
+      apiKey: "AIzaSyAyD0Gn5-zqzPzdXjQzZhVlMQvqTzUmHKs",
+      authDomain: "return-linen-management.firebaseapp.com",
+      projectId: "return-linen-management",
+      storageBucket: "return-linen-management.firebasestorage.app",
+      messagingSenderId: "310421638033",
+      appId: "1:310421638033:web:280047bf93a8c780f8e830",
+      measurementId: "G-D6BDRRKD9Y"
+    });
+  </script>
+
   <canvas id="bg-canvas"></canvas>
-  <div id="header-placeholder"></div>
+  
+  <!-- 🔹 Header Inlined Directly -->
+  <header class="main-header">
+    <div class="header-inner">
+      <div class="logo">HARU</div>
+      <div class="menu-wrap">
+        <button class="menu-toggle" aria-haspopup="true" aria-expanded="false">
+          <span class="menu-label">MENU</span>
+          <div class="hamburger-lines">
+            <span class="line line1"></span>
+            <span class="line line2"></span>
+          </div>
+        </button>
+        <ul class="menu-list" role="menu">
+          <li><a href="board.html">게시판</a></li>
+          <li><a href="chat.html" data-menu="chat">채팅</a></li>
+          <li><a href="incoming_form.html">입고등록</a></li>
+          <li><a href="return_form.html">반품등록</a></li>
+          <li><a href="history_dashboard.html">내역관리</a></li>
+          <li><a href="inventory.html">재고관리</a></li>
+          <li><a href="admin_dashboard.html">린넨 통계</a></li>
+          <li><a href="lost_items_list.html">분실물관리</a></li>
+          <li><a href="maintenance_list.html">객실유지보수</a></li>
+          <li><a href="orders_list.html">주문요청</a></li>
+          <li><a href="worklog.html">근무기록</a></li>
+          <li><a href="notices.html">공지사항</a></li>
+          <li><a href="profile.html">내 정보</a></li>
+          <li><a href="schedule_dashboard.html">작업 스케줄러</a></li>
+          <li class="super-admin-only" style="display:none;"><a href="admin.html" class="admin-link">관리자 설정</a></li>
+          <li class="super-admin-only" style="display:none;"><a href="admin_users.html" class="admin-link">사용자 관리</a></li>
+        </ul>
+      </div>
+      <button id="logoutBtn" class="logout-btn">SIGN OUT</button>
+    </div>
+  </header>
 
   <main>
     <div class="worklog-container">
-      <h1>⏰ 근무 기록</h1>
-      <p class="text-secondary" style="margin-bottom: var(--space-6);">
-        출퇴근 시간을 기록하고 근무 현황을 확인하세요
+      <h1>근무 기록</h1>
+      <p class="page-desc">
+        출퇴근 시간을 기록하고 근무 현황을 확인하세요.
       </p>
 
       <!-- 출근 / 퇴근 -->
       <div class="worklog-grid">
-        <div class="glass-card">
-          <h3 style="margin-bottom: var(--space-4);">출근</h3>
-          <button id="clockInBtn" class="btn btn-primary" style="width:100%;">출근하기</button>
-          <div id="clockInTime" class="log-time" style="margin-top: var(--space-4); text-align: center; display: none;"></div>
+        <div class="action-card">
+          <h3>출근 (IN)</h3>
+          <button id="clockInBtn" class="btn btn-primary">출근하기</button>
+          <div id="clockInTime" class="log-time" style="display: none;"></div>
         </div>
 
-        <div class="glass-card">
-          <h3 style="margin-bottom: var(--space-4);">퇴근</h3>
-          <button id="clockOutBtn" class="btn btn-danger" style="width:100%;" disabled>퇴근하기</button>
-          <div id="clockOutTime" class="log-time" style="margin-top: var(--space-4); text-align: center; display: none;"></div>
+        <div class="action-card">
+          <h3>퇴근 (OUT)</h3>
+          <button id="clockOutBtn" class="btn btn-danger" disabled>퇴근하기</button>
+          <div id="clockOutTime" class="log-time" style="display: none;"></div>
           <div style="margin-top: var(--space-4);">
-            <button id="resetWorkBtn" class="btn btn-ghost" style="width:100%;" disabled>상태 리셋</button>
+            <button id="resetWorkBtn" class="btn btn-ghost" disabled>상태 초기화 (RESET)</button>
           </div>
         </div>
       </div>
 
       <!-- 휴식 -->
-      <div class="glass-card" style="margin-top: var(--space-6);">
-        <h3 style="margin-bottom: var(--space-4);">☕ 휴식</h3>
+      <div class="action-card" style="margin-bottom: var(--space-4);">
+        <h3>휴식 (BREAK)</h3>
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-3);">
           <button id="breakStartBtn" class="btn btn-secondary" disabled>휴식 시작</button>
           <button id="breakEndBtn" class="btn btn-secondary" disabled>휴식 종료</button>
         </div>
-        <div id="breakStatus" style="margin-top: var(--space-3); text-align: center; font-size: var(--font-size-sm); color: hsl(var(--color-text-secondary));"></div>
-        <div id="totalBreakTime" class="log-time" style="margin-top: var(--space-2); text-align: center; display: none;"></div>
+        <div id="breakStatus" style="margin-top: var(--space-3); text-align: center; font-size: 0.85rem; color: var(--color-text-secondary); font-weight: 500;"></div>
+        <div id="totalBreakTime" class="log-time" style="display: none; font-size: 1.2rem; margin-top: var(--space-2);"></div>
       </div>
 
-      <!-- 청소 시작 / 완료 -->
-      <div class="glass-card" style="margin-top: var(--space-6);">
-        <h3 style="margin-bottom: var(--space-4);">🧹 청소</h3>
+      <!-- 청소 -->
+      <div class="action-card" style="margin-bottom: var(--space-6);">
+        <h3>청소 (CLEANING)</h3>
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-3);">
           <button id="cleanStartBtn" class="btn btn-secondary" disabled>청소 시작</button>
           <button id="cleanEndBtn" class="btn btn-secondary" disabled>청소 완료</button>
         </div>
       </div>
 
-      <!-- 출근자 현황 + (관리자 전용) 월간 대시보드 버튼 -->
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:var(--space-8);margin-bottom:var(--space-4);">
-        <h3>오늘 출근자 현황</h3>
-        <button id="btnGoWorklogOverview" class="btn btn-gradient admin-only" style="display:none;">
-          📊 월간 근무 현황 보기
+      <!-- 출근자 현황 -->
+      <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:var(--space-4); border-bottom: 1px solid var(--color-border); padding-bottom: var(--space-2);">
+        <h3 style="margin:0; border:none; color:var(--color-text-primary);">금일 근무자 현황</h3>
+        <button id="btnGoWorklogOverview" class="btn btn-gradient admin-only" style="display:none; width: auto; height: 36px; padding: 0 16px; font-size: 0.8rem;">
+          월간 근무 현황
         </button>
       </div>
-      <div id="recentLogs" data-testid="container-recent-logs"></div>
+      
+      <div id="recentLogs" data-testid="container-recent-logs">
+        <!-- JS로 카드가 여기에 생성됩니다 -->
+      </div>
     </div>
   </main>
 
-  <!-- 🪄 카드형 모달 (개선 UI 적용) -->
+  <!-- 🪄 카드형 모달 -->
   <div id="logModal" class="modal">
     <div class="modal-card">
-      <div class="modal-header">
-        <div class="modal-user-avatar">👤</div>
+      <div class="modal-header-area">
         <div class="modal-user-info">
-          <h3 id="modalUser"></h3>
-          <p class="modal-date" id="modalDate"></p>
+          <h3 id="modalUser">User Name</h3>
+          <div class="modal-date" id="modalDate">2025. 01. 01</div>
         </div>
       </div>
 
-      <div class="modal-section highlight">
-        <strong id="modalTotal"></strong>
+      <div class="modal-body">
+        <div class="modal-row">
+          <span class="modal-label">출근 시간</span>
+          <span class="modal-value" id="modalIn">-</span>
+        </div>
+        <div class="modal-row">
+          <span class="modal-label">휴식 시간</span>
+          <span class="modal-value" id="modalBreak">-</span>
+        </div>
+        <div class="modal-row">
+          <span class="modal-label">퇴근 시간</span>
+          <span class="modal-value" id="modalOut">-</span>
+        </div>
       </div>
 
-      <div class="modal-section">
-        <span>✅ 출근</span>
-        <strong id="modalIn"></strong>
+      <div class="modal-highlight">
+        <div class="modal-label">총 근무 시간</div>
+        <div class="modal-value" id="modalTotal">-</div>
       </div>
 
-      <div class="modal-section">
-        <span>☕ 휴식</span>
-        <strong id="modalBreak"></strong>
-      </div>
-
-      <div class="modal-section">
-        <span>🏁 퇴근</span>
-        <strong id="modalOut"></strong>
-      </div>
-
-      <button id="closeModalBtn" class="modal-close">닫기</button>
+      <button id="closeModalBtn" class="modal-close">닫기 (CLOSE)</button>
     </div>
   </div>
 
-  <footer>© 2025 <strong>HARU_KIM HYUN JUN</strong></footer>
+  <footer>
+    HARU SYSTEM &copy; 2025 <strong>HARU_KIM HYUN JUN</strong>. All rights reserved.
+  </footer>
 
   <script type="module" src="scripts/bg/scene.js"></script>
-  <script type="module">
-    import { initHeaderMenu } from "./header.js";
-    fetch("header.html").then(r=>r.text()).then(h=>{
-      document.getElementById("header-placeholder").innerHTML=h;
-      initHeaderMenu();
+  
+  <!-- 🔹 Header Script Inlined -->
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const menuToggle = document.querySelector(".menu-toggle");
+      const navMenu = document.querySelector(".menu-list");
+      
+      if (menuToggle && navMenu) {
+        menuToggle.addEventListener("click", () => {
+          const isOpen = navMenu.classList.toggle("open");
+          menuToggle.setAttribute("aria-expanded", isOpen);
+        });
+        document.addEventListener("click", (e) => {
+          if (!menuToggle.contains(e.target) && !navMenu.contains(e.target)) {
+            navMenu.classList.remove("open");
+            menuToggle.setAttribute("aria-expanded", "false");
+          }
+        });
+      }
     });
   </script>
 
-  <!-- ✅ 관리자 전용 버튼 제어 & 이동 -->
+  <!-- ✅ 관리자 전용 버튼 제어 -->
   <script type="module">
-    import { auth, db } from "./storage.js";
-    import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+    import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-    const btnOverview = document.getElementById("btnGoWorklogOverview");
-    if (btnOverview) {
-      // 클릭 시 월간 대시보드 이동
-      btnOverview.addEventListener("click", () => {
-        location.href = "worklog_overview.html";
-      });
+    if (window.__firebase_config) {
+      const app = initializeApp(JSON.parse(window.__firebase_config));
+      const auth = getAuth(app);
+      const db = getFirestore(app);
 
-      // 관리자/슈퍼관리자만 표시
-      auth.onAuthStateChanged(async (user) => {
-        if (!user) return;
-        const superAdmin = "rlaguswns95@haru-tokyo.com";
-        if (user.email === superAdmin) {
-          btnOverview.style.display = "inline-flex";
-          return;
-        }
-        try {
-          const roleSnap = await getDoc(doc(db, "roles", user.email));
-          if (roleSnap.exists() && roleSnap.data().role === "admin") {
+      const btnOverview = document.getElementById("btnGoWorklogOverview");
+      if (btnOverview) {
+        btnOverview.addEventListener("click", () => location.href = "worklog_overview.html");
+
+        onAuthStateChanged(auth, async (user) => {
+          if (!user) return;
+          const superAdmin = "rlaguswns95@haru-tokyo.com";
+          if (user.email === superAdmin) {
             btnOverview.style.display = "inline-flex";
+            const adminLinks = document.querySelectorAll('.super-admin-only');
+            adminLinks.forEach(el => el.style.display = 'block');
+            return;
           }
-        } catch (e) {
-          console.warn("권한 확인 실패:", e);
-        }
-      });
+          try {
+            const roleSnap = await getDoc(doc(db, "roles", user.email));
+            if (roleSnap.exists() && roleSnap.data().role === "admin") {
+              btnOverview.style.display = "inline-flex";
+            }
+          } catch (e) { console.warn(e); }
+        });
+      }
     }
   </script>
 
   <script type="module" src="worklog.js"></script>
   <script type="module" src="scrollTop.js"></script>
+  <script type="module" src="notice_popup.js"></script>
 
 </body>
 </html>

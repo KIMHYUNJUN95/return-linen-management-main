@@ -1,178 +1,188 @@
 // ========================================
-// 🔐 HARU Authentication (Login & Signup) - 최종 고정 버전
+// 🔐 HARU Authentication (Login & Signup)
+// Refined for: Tokyo Christmas Edition
 // ========================================
 
-import { auth, db } from "./storage.js";
-import {
-  signInWithEmailAndPassword,
-  createUserWithEmailAndPassword,
-  updateProfile,
-  onAuthStateChanged,
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { 
+  getAuth, 
+  signInWithEmailAndPassword, 
+  createUserWithEmailAndPassword, 
+  updateProfile, 
+  onAuthStateChanged, 
+  signOut 
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-import {
-  doc,
-  setDoc,
-  serverTimestamp,
+import { 
+  getFirestore, 
+  doc, 
+  setDoc, 
   getDoc,
+  serverTimestamp 
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-/* ========================================
-   ✅ 로그인 상태 확인 (자동 이동)
-   → Firestore 덮어쓰기 금지 처리 포함
-======================================== */
-onAuthStateChanged(auth, async (user) => {
-  if (!user) return;
+// 🔴 1. Firebase Initialization (Safe Handling)
+let firebaseConfig = {};
+if (window.__firebase_config) {
+  try { firebaseConfig = JSON.parse(window.__firebase_config); } catch (e) { console.error(e); }
+}
 
-  const userRef = doc(db, "users", user.email);
-  const userSnap = await getDoc(userRef);
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
 
-  // 🔥 Firestore에 기존 데이터가 있으면 덮어쓰기 금지
-  if (!userSnap.exists()) {
-    await setDoc(
-      userRef,
-      {
-        email: user.email,
-        name: user.displayName || "(이름 없음)",
-        role: "user",
-        createdAt: serverTimestamp(),
-      },
-      { merge: true }
-    );
-  }
+// 2. DOM Elements
+const loginForm = document.getElementById('loginForm');
+const signupForm = document.getElementById('signupForm');
 
-  // 🔥 displayName이 비어있으면 profile.html로 이동하도록 header.js가 체크함
-  location.href = "board.html";
-});
-
-/* 🔧 DOM 요소 연결 */
-const loginForm = document.getElementById("loginForm");
-const signupForm = document.getElementById("signupForm");
-const toSignup = document.getElementById("toSignup");
-const toggleText = document.getElementById("toggleText");
-const formTitle = document.getElementById("formTitle");
-
-/* ⚠️ 에러 메시지 추가 */
+/* ⚠️ 에러 메시지 스타일링 */
 const errorBox = document.createElement("div");
 errorBox.id = "authErrorBox";
-errorBox.style.color = "#ef4444";
-errorBox.style.fontWeight = "600";
-errorBox.style.marginTop = "10px";
-errorBox.style.fontSize = "14px";
-errorBox.style.display = "none";
-loginForm.parentNode.insertBefore(errorBox, toggleText);
+Object.assign(errorBox.style, {
+    color: "#E74C3C",
+    fontWeight: "600",
+    marginTop: "15px",
+    fontSize: "13px",
+    textAlign: "center",
+    letterSpacing: "0.05em",
+    fontFamily: "'Noto Sans KR', sans-serif",
+    display: "none"
+});
 
-function showError(msg) {
+function showError(msg, targetForm) {
   errorBox.textContent = msg;
   errorBox.style.display = "block";
+  if (targetForm) {
+    targetForm.parentNode.insertBefore(errorBox, targetForm.nextElementSibling);
+  }
 }
+
 function clearError() {
   errorBox.textContent = "";
   errorBox.style.display = "none";
 }
 
-/* 🔄 로그인 ↔ 회원가입 전환 */
-toSignup.onclick = () => {
-  clearError();
-  const isLoginMode = loginForm.style.display !== "none";
-  loginForm.style.display = isLoginMode ? "none" : "block";
-  signupForm.style.display = isLoginMode ? "block" : "none";
-  formTitle.textContent = isLoginMode ? "회원가입" : "로그인";
+/* ========================================
+   ✅ 로그인 상태 확인 및 자동 데이터 생성
+   (제안해주신 로직 적용)
+======================================== */
+onAuthStateChanged(auth, async (user) => {
+  if (!user) return;
 
-  toggleText.innerHTML = isLoginMode
-    ? `이미 계정이 있나요? <span class="toggle-link" id="toSignup">로그인</span>`
-    : `계정이 없나요? <span class="toggle-link" id="toSignup">회원가입</span>`;
-
-  document.getElementById("toSignup").onclick = toSignup.onclick;
-};
-
-/* 🔐 로그인 */
-loginForm.addEventListener("submit", async (e) => {
-  e.preventDefault();
-  clearError();
-
-  const email = document.getElementById("email").value.trim();
-  const pw = document.getElementById("password").value;
-
-  if (!email || !pw) return showError("이메일과 비밀번호를 입력해주세요.");
-
+  // 현재 페이지가 로그인 페이지라면 메인으로 이동
+  const isAuthPage = !!document.getElementById("loginForm"); 
+  
   try {
-    await signInWithEmailAndPassword(auth, email, pw);
-    alert("✅ 로그인 성공!");
+      // 🔥 users 문서를 "uid" 기준으로 조회
+      const userRef = doc(db, "users", user.uid);
+      const userSnap = await getDoc(userRef);
+
+      // 🔥 Firestore에 데이터가 없으면 자동 생성 (Self-healing)
+      if (!userSnap.exists()) {
+        console.log("User data missing, creating now...");
+        await setDoc(
+          userRef,
+          {
+            uid: user.uid,           // 🔥 필수: 보안 규칙 통과용
+            email: user.email,
+            name: user.displayName || "User",
+            role: "user",
+            createdAt: serverTimestamp(),
+          },
+          { merge: true }
+        );
+      }
+
+      if (isAuthPage) {
+          console.log("Login success! Redirecting...");
+          window.location.href = "worklog.html";
+      }
   } catch (err) {
-    console.error("❌ 로그인 오류:", err);
-    let message = "로그인에 실패했습니다.";
-    switch (err.code) {
-      case "auth/user-not-found":
-        message = "존재하지 않는 계정입니다.";
-        break;
-      case "auth/wrong-password":
-        message = "비밀번호가 올바르지 않습니다.";
-        break;
-      case "auth/invalid-email":
-        message = "이메일 형식이 올바르지 않습니다.";
-        break;
-      case "auth/too-many-requests":
-        message = "시도가 너무 많습니다. 잠시 후 다시 시도해주세요.";
-        break;
-    }
-    showError(message);
+      console.error("Auth State Error:", err);
+      // 권한 에러 시에도 로그인은 유지되도록 함
+      if (isAuthPage) window.location.href = "worklog.html";
   }
 });
 
-/* 📝 회원가입 */
-signupForm.addEventListener("submit", async (e) => {
-  e.preventDefault();
-  clearError();
+// ========================================
+// 🚀 Login Logic
+// ========================================
+if (loginForm) {
+  loginForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    clearError();
 
-  const name = document.getElementById("name").value.trim();
-  const email = document.getElementById("signupEmail").value.trim();
-  const pw = document.getElementById("signupPw").value;
+    const email = document.getElementById('email').value.trim();
+    const password = document.getElementById('password').value;
+    const btn = loginForm.querySelector('button');
 
-  if (!name || !email || !pw) return showError("모든 필드를 입력해주세요.");
-  if (pw.length < 6) return showError("비밀번호는 6자 이상이어야 합니다.");
+    if (!email || !password) return showError("이메일과 비밀번호를 입력해주세요.", loginForm);
 
-  try {
-    // 🔥 사용자 생성
-    const userCred = await createUserWithEmailAndPassword(auth, email, pw);
+    try {
+      btn.disabled = true;
+      btn.textContent = "LOGGING IN...";
+      
+      await signInWithEmailAndPassword(auth, email, password);
+      // onAuthStateChanged에서 이동 처리됨
+      
+    } catch (error) {
+      console.error("Login Error:", error);
+      let msg = "로그인에 실패했습니다.";
+      if(error.code === 'auth/invalid-credential') msg = "이메일 또는 비밀번호가 잘못되었습니다.";
+      showError(msg, loginForm);
+      
+      btn.disabled = false;
+      btn.textContent = "LOGIN";
+    }
+  });
+}
 
-    // 🔥 Auth displayName 저장
-    await updateProfile(userCred.user, { displayName: name });
+// ========================================
+// 📝 Signup Logic
+// ========================================
+if (signupForm) {
+  signupForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    clearError();
+    
+    const name = document.getElementById('name').value.trim();
+    const email = document.getElementById('signupEmail').value.trim();
+    const password = document.getElementById('signupPw').value;
+    const btn = signupForm.querySelector('button');
 
-    // 🔥 필수! 사용자 정보 최신화
-    await userCred.user.reload();
+    if (!name || !email || !password) return showError("모든 필드를 입력해주세요.", signupForm);
 
-    // 🔥 Firestore users 저장
-    await setDoc(
-      doc(db, "users", email),
-      {
-        email,
-        name,
+    try {
+      btn.disabled = true;
+      btn.textContent = "CREATING ACCOUNT...";
+
+      // 1. 계정 생성
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
+
+      // 2. Auth 프로필 업데이트
+      await updateProfile(user, { displayName: name });
+
+      // 3. Firestore 저장 (UID 기준)
+      await setDoc(doc(db, "users", user.uid), {
+        uid: user.uid,  // 🔥 필수
+        name: name,
+        email: email,
         role: "user",
-        createdAt: serverTimestamp(),
-      },
-      { merge: true }
-    );
+        createdAt: serverTimestamp()
+      });
 
-    alert("✅ 회원가입 완료!");
-    location.href = "board.html";
+      alert("회원가입이 완료되었습니다!");
+      // onAuthStateChanged에서 이동 처리됨
 
-  } catch (err) {
-    console.error("❌ 회원가입 오류:", err);
-    let message = "회원가입에 실패했습니다.";
-    switch (err.code) {
-      case "auth/email-already-in-use":
-        message = "이미 사용 중인 이메일입니다.";
-        break;
-      case "auth/weak-password":
-        message = "비밀번호가 너무 약합니다.";
-        break;
-      case "auth/invalid-email":
-        message = "이메일 형식이 올바르지 않습니다.";
-        break;
-      case "auth/network-request-failed":
-        message = "네트워크 오류입니다.";
-        break;
+    } catch (error) {
+      console.error("Signup Error:", error);
+      let msg = "가입 중 오류가 발생했습니다.";
+      if (error.code === 'auth/email-already-in-use') msg = "이미 사용 중인 이메일입니다.";
+      if (error.code === 'auth/weak-password') msg = "비밀번호는 6자 이상이어야 합니다.";
+      
+      showError(msg, signupForm);
+      btn.disabled = false;
+      btn.textContent = "Sign Up";
     }
-    showError(message);
-  }
-});
+  });
+}

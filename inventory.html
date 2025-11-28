@@ -5,21 +5,17 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>HARU · 재고 관리</title>
   <link rel="stylesheet" href="common.css"/>
-  <link rel="stylesheet" href="background.css"/>
   <link rel="stylesheet" href="inventory.css"/>
 </head>
 <body>
-  <!-- 🌌 3D 배경 -->
-  <canvas id="bg-canvas"></canvas>
-
-  <!-- 🧭 헤더 -->
+  <!-- ✅ 헤더 로드 -->
   <div id="header-placeholder"></div>
 
   <main class="inv-container">
     <h2>재고 관리</h2>
 
-    <!-- 🏢 건물 탭 -->
-    <div class="building-tabs glass">
+    <!-- 🏢 건물 탭 (Modern Tabs) -->
+    <div class="building-tabs">
       <button class="active" data-building="아라키초A">아라키초A</button>
       <button data-building="아라키초B">아라키초B</button>
       <button data-building="다이쿄초">다이쿄초</button>
@@ -27,79 +23,75 @@
       <button data-building="다카다노바바">다카다노바바</button>
       <button data-building="오쿠보1">오쿠보1</button>
 
-      <!-- 🔥 여기부터 변경됨: 오쿠보2 분리 -->
+      <!-- 오쿠보2 분리 유지 -->
       <button data-building="오쿠보2">오쿠보2(비품)</button>
       <button data-building="오쿠보2_린넨">오쿠보2(린넨)</button>
 
       <button data-building="오쿠보4">오쿠보4</button>
     </div>
 
-    <!-- 🔍 필터 & 내보내기 -->
-    <section class="inv-filters glass">
+    <!-- 🔍 필터 & 컨트롤 패널 -->
+    <section class="inv-filters">
       <div class="group">
-        <label for="invBuilding">건물</label>
+        <label for="invBuilding">건물 선택</label>
         <select id="invBuilding">
-          <option value="">전체</option>
+          <option value="">전체 건물</option>
           <option value="아라키초A">아라키초A</option>
           <option value="아라키초B">아라키초B</option>
           <option value="다이쿄초">다이쿄초</option>
           <option value="가부키초">가부키초</option>
           <option value="다카다노바바">다카다노바바</option>
           <option value="오쿠보1">오쿠보1</option>
-
-          <!-- 🔥 오쿠보2 선택 분리 -->
           <option value="오쿠보2">오쿠보2(비품)</option>
           <option value="오쿠보2_린넨">오쿠보2(린넨)</option>
-
           <option value="오쿠보4">오쿠보4</option>
         </select>
       </div>
 
       <div class="group search-wrap">
-        <label for="invSearch">검색</label>
-        <input id="invSearch" type="text" placeholder="품목명 검색"/>
-        <button id="btnResetSearch">초기화</button>
+        <label for="invSearch">품목 검색</label>
+        <input id="invSearch" type="text" placeholder="품목명을 입력하세요"/>
+        <button id="btnResetSearch" class="btn ghost">초기화</button>
       </div>
 
-<div class="group actions">
-  <button id="btnExportInv" class="btn">📄 CSV 내보내기</button>
-  <button id="openFormBtn" class="btn primary">📦 품목 추가</button>
-  <button id="btnDeleteAllInv" class="btn danger">🗑 전체 삭제</button>
-</div>
-
+      <div class="actions">
+        <button id="btnExportInv" class="btn">CSV 다운로드</button>
+        <button id="openFormBtn" class="btn primary">품목 등록</button>
+        <button id="btnDeleteAllInv" class="btn danger">전체 삭제</button>
+      </div>
     </section>
 
-    <!-- 📋 재고 목록 -->
-    <section class="table-wrap glass">
+    <!-- 📋 재고 목록 테이블 -->
+    <section class="table-wrap">
       <div class="table-scroll">
         <table>
           <thead>
             <tr>
               <th>품목명</th>
-              <th class="t-right">재고수량</th>
-              <th class="t-right">최소수량</th>
-              <th>상태</th>
+              <th class="t-right">현재고</th>
+              <th class="t-right">적정재고</th>
+              <th class="text-center">상태</th>
               <th>건물</th>
               <th>수정일</th>
-              <th class="t-center">관리</th>
+              <th class="text-center">관리</th>
             </tr>
           </thead>
           <tbody id="invTbody">
-            <tr><td colspan="7">불러오는 중...</td></tr>
+            <tr><td colspan="7" style="text-align:center; padding:40px; color:#94A3B8;">데이터를 불러오는 중입니다...</td></tr>
           </tbody>
         </table>
       </div>
     </section>
   </main>
 
-  <footer style="text-align:center;color:#9fb0c6;padding:16px 0;">
-    © 2025 HARU · by KIM HYUN JUN
+  <footer>
+    © 2025 HARU SYSTEM · TOKYO
   </footer>
 
-  <!-- 🪄 품목 등록 모달 -->
+  <!-- 🪄 품목 등록/수정 모달 -->
   <div id="inventoryModal" class="modal-overlay" style="display:none;">
-    <div class="modal glass">
-      <h3 id="formTitle">품목 등록 / 수정</h3>
+    <div class="modal">
+      <h3 id="formTitle">품목 관리</h3>
 
       <label>건물
         <select id="formBuilding">
@@ -109,19 +101,16 @@
           <option value="가부키초">가부키초</option>
           <option value="다카다노바바">다카다노바바</option>
           <option value="오쿠보1">오쿠보1</option>
-
-          <!-- 🔥 여기 또한 동일하게 분리 -->
           <option value="오쿠보2">오쿠보2(비품)</option>
           <option value="오쿠보2_린넨">오쿠보2(린넨)</option>
-
           <option value="오쿠보4">오쿠보4</option>
         </select>
       </label>
 
-      <label>공통 품목 선택
+      <label>공통 품목 (빠른 입력)
         <select id="commonItemSelect">
           <option value="">직접 입력</option>
-          <option value="all">🌐 공통 품목 전체 등록</option>
+          <!-- JS에서 목록 생성 -->
         </select>
       </label>
 
@@ -129,31 +118,32 @@
         <input id="formName" type="text" placeholder="예: 수건타월" required/>
       </label>
 
-      <label>현재 재고
-        <input id="formQty" type="number" min="0" value="0" required/>
-      </label>
+      <div style="display:flex; gap:10px;">
+        <label style="flex:1;">현재 재고
+          <input id="formQty" type="number" min="0" value="0" required/>
+        </label>
+        <label style="flex:1;">최소 수량 (알림)
+          <input id="formMin" type="number" min="0" value="0" required/>
+        </label>
+      </div>
 
-      <label>최소 수량
-        <input id="formMin" type="number" min="0" value="0" required/>
-      </label>
-
-      <label>비고(선택)
-        <input id="formNote" type="text" placeholder="메모"/>
+      <label>비고
+        <input id="formNote" type="text" placeholder="메모 사항"/>
       </label>
 
       <div class="modal-actions">
-        <button id="btnSaveItem" type="button" class="btn primary">➕ 계속 추가</button>
-        <button id="btnResetForm" type="button" class="btn ghost">🔄 초기화</button>
-        <button id="closeModalBtn" type="button" class="btn danger">닫기</button>
+        <button id="closeModalBtn" type="button" class="btn ghost">취소</button>
+        <button id="btnResetForm" type="button" class="btn ghost">초기화</button>
+        <button id="btnSaveItem" type="button" class="btn primary">저장하기</button>
       </div>
     </div>
   </div>
 
-  <!-- 📋 전체화면 재고리스트 -->
+  <!-- 📋 전체화면 재고리스트 (모바일용) -->
   <div class="inventory-fullscreen" id="inventoryFullModal">
     <header>
-      <h3>📋 전체 재고리스트</h3>
-      <button id="btnCloseInventoryFull">닫기</button>
+      <h2>전체 재고 리스트</h2>
+      <button id="btnCloseInventoryFull" class="btn danger">닫기</button>
     </header>
     <div class="content">
       <div id="fullscreenInventory"></div>
@@ -161,29 +151,12 @@
   </div>
 
   <!-- 📱 모바일용 플로팅 버튼 -->
-  <button id="btnOpenInventoryFull">📋 재고리스트 보기</button>
+  <button id="btnOpenInventoryFull">LIST VIEW</button>
 
-  <!-- 헤더 -->
-  <script type="module">
-    import { initHeaderMenu } from "./header.js";
-    fetch("header.html").then(r=>r.text()).then(h=>{
-      document.getElementById("header-placeholder").innerHTML = h;
-      initHeaderMenu();
-    });
-  </script>
-
-  <!-- 검색 초기화 -->
-  <script type="module">
-    const invSearch = document.getElementById("invSearch");
-    const btnResetSearch = document.getElementById("btnResetSearch");
-    btnResetSearch.addEventListener("click", () => {
-      invSearch.value = "";
-      invSearch.dispatchEvent(new Event("input"));
-    });
-  </script>
-
-  <!-- JS -->
+  <!-- ✅ 기능 스크립트 -->
   <script type="module" src="inventory.js"></script>
   <script type="module" src="scrollTop.js"></script>
+  <script type="module" src="notice_popup.js"></script>
+
 </body>
 </html>

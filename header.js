@@ -1,6 +1,7 @@
 ﻿// ========================================
-// 🧭 HARU Header Controller
-// Super Admin + Firestore Admin + 이름 미기입 제한 + 자동 이동
+// 🧭 HARU Header Controller (Tokyo Modern)
+// Super Admin + Firestore Admin + Name Check
+// + PWA Install Controller 추가됨
 // ========================================
 
 import { auth, db } from "./storage.js";
@@ -8,12 +9,12 @@ import { signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/
 import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 export function initHeaderMenu() {
-  console.log("✅ HARU Header initialized");
+  console.log("✅ HARU Header (Tokyo Modern) initialized");
 
   const menuToggle = document.querySelector(".menu-toggle");
   const navMenu = document.querySelector(".menu-list");
 
-  // 📌 메뉴 토글
+  // 📌 메뉴 토글 (CSS Hamburger Animation과 연동됨)
   if (menuToggle && navMenu) {
     menuToggle.addEventListener("click", () => {
       const isOpen = navMenu.classList.toggle("open");
@@ -64,30 +65,17 @@ export function initHeaderMenu() {
     const superAdminEmail = "rlaguswns95@haru-tokyo.com";
 
     try {
-      // ⭐⭐ 중요: 유저 정보 즉시 리로드하여 displayName 지연 버그 제거
       await user.reload();
 
-      // Firestore users 컬렉션 불러오기
-      const userRef = doc(db, "users", user.email);
+      // 🔥 users 문서는 uid 기반
+      const userRef = doc(db, "users", user.uid);
       const userSnap = await getDoc(userRef);
       const userData = userSnap.exists() ? userSnap.data() : {};
-
-      // 최신 displayName 반영됨
       const userName = userData.name || user.displayName || "";
 
-      // 현재 페이지가 내정보 페이지인지 체크
       const isProfilePage = location.href.includes("profile.html");
 
-      // 🔥 profile.html에서는 제한 OFF
-      if (isProfilePage) {
-        console.log("ℹ️ profile.html → 이름 없어도 제한 없음");
-        return;
-      }
-
-      // ========================================
-      // ⚠️ 이름 누락 → 강제 이동
-      // ========================================
-      if (!userName || userName === "(이름 없음)") {
+      if (!isProfilePage && (!userName || userName === "(이름 없음)")) {
         alert("⚠️ 이름이 등록되지 않아 메뉴 사용이 제한됩니다.\n지금 내 정보 페이지로 이동합니다.");
 
         menuItems.forEach((el) => {
@@ -101,18 +89,14 @@ export function initHeaderMenu() {
         return;
       }
 
-      // ========================================
-      // 👑 슈퍼관리자 권한
-      // ========================================
+      // 👑 슈퍼관리자
       if (user.email === superAdminEmail) {
         superAdminTabs.forEach((el) => (el.style.display = "block"));
         if (adminTab) adminTab.style.display = "block";
         return;
       }
 
-      // ========================================
-      // 👮 일반 관리자 Firestore roles 체크
-      // ========================================
+      // 👮 일반 관리자
       const roleRef = doc(db, "roles", user.email);
       const roleSnap = await getDoc(roleRef);
 
@@ -122,9 +106,43 @@ export function initHeaderMenu() {
           adminTab.style.display = "block";
         }
       }
-
     } catch (err) {
       console.error("❌ 관리자/이름 확인 오류:", err);
     }
   });
+
+  // ========================================
+  // 📲 PWA Install Button Logic 추가
+  // ========================================
+
+  let deferredPrompt = null;
+
+  // 헤더에 있는 설치 버튼 가져오기
+  const installBtn = document.getElementById("installHaruBtn");
+
+  if (installBtn) installBtn.style.display = "none"; // 기본 숨김
+
+  // PWA 설치 이벤트
+  window.addEventListener("beforeinstallprompt", (e) => {
+    console.log("📲 beforeinstallprompt fired");
+    e.preventDefault(); // 자동 배너 막기
+    deferredPrompt = e;
+
+    if (installBtn) installBtn.style.display = "block"; // 버튼 표시
+  });
+
+  // 버튼 클릭 → 설치 실행
+  if (installBtn) {
+    installBtn.addEventListener("click", async () => {
+      if (!deferredPrompt) return;
+
+      deferredPrompt.prompt();
+      const choice = await deferredPrompt.userChoice;
+
+      console.log("PWA install result:", choice.outcome);
+
+      deferredPrompt = null;
+      installBtn.style.display = "none";
+    });
+  }
 }

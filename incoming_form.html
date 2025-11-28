@@ -3,108 +3,323 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>HARU 입고등록</title>
+  <title>HARU 입고 등록</title>
+  
+  <!-- 공통 스타일 -->
   <link rel="stylesheet" href="common.css" />
-  <style>
-    .incoming-container {
-      max-width: 880px;
-      margin: 0 auto;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      box-shadow: var(--shadow);
-      padding: 24px;
-    }
-    .incoming-container h2 { margin-bottom: 20px; color: var(--text); }
-    form { display: flex; flex-direction: column; gap: 16px; }
-    label { font-weight: 600; color: var(--text); }
 
-    /* 🟦 테두리 강조 */
+  <style>
+    /* -------------------------------
+       🎨 Page Specific Styles
+       Theme: Tokyo Day Bright (Minimal)
+       ------------------------------- */
+    
+    body {
+      background-color: var(--bg-base); /* Soft Gray */
+      color: var(--haru-navy);
+    }
+
+    main {
+      display: flex;
+      justify-content: center;
+      padding-top: 60px;
+      padding-bottom: 80px;
+    }
+
+    .incoming-container {
+      width: 100%;
+      max-width: 900px;
+      padding: 0 24px;
+      animation: fadeIn 0.5s ease-out;
+    }
+
+    /* 헤더 */
+    .page-header {
+      margin-bottom: 40px;
+      border-bottom: 1px solid #E2E8F0;
+      padding-bottom: 20px;
+    }
+
+    h2 {
+      margin: 0;
+      color: var(--haru-navy);
+      font-weight: 800;
+      font-size: 28px;
+      letter-spacing: -0.02em;
+    }
+
+    /* 폼 섹션 카드 (White Panel) */
+    .form-section {
+      background: #FFFFFF;
+      border: 1px solid #E2E8F0;
+      border-radius: 0; /* 건축적 미니멀리즘 */
+      padding: 32px;
+      margin-bottom: 24px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.03);
+    }
+
+    .form-section h3 {
+      margin: 0 0 24px 0;
+      font-size: 14px;
+      font-weight: 700;
+      color: #64748B;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      border-bottom: 2px solid #F1F5F9;
+      padding-bottom: 12px;
+    }
+
+    /* 입력 필드 공통 */
+    label {
+      display: block;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--haru-navy);
+      margin-bottom: 8px;
+    }
+
     input, select, textarea {
       width: 100%;
-      border: 2px solid #cfd6e3;
-      border-radius: var(--radius);
-      padding: 10px 12px;
-      font-size: 15px;
-      background: #fff;
-      transition: border 0.2s ease;
+      height: 44px; /* 높이 통일 */
+      padding: 0 12px;
+      border: 1px solid #CBD5E1;
+      background: #F8FAFC;
+      border-radius: 0; /* 각지게 */
+      font-size: 14px;
+      color: var(--haru-navy);
+      transition: all 0.2s;
     }
+
+    textarea {
+      min-height: 100px;
+      padding: 12px;
+      resize: vertical;
+      height: auto;
+    }
+
     input:focus, select:focus, textarea:focus {
-      border: 2px solid var(--accent);
       outline: none;
-      box-shadow: 0 0 0 2px rgba(54, 141, 252, 0.15);
+      border-color: var(--haru-navy);
+      background: #FFFFFF;
     }
-    textarea { resize: vertical; min-height: 80px; }
-    button.primary { width: 100%; margin-top: 10px; }
 
-    /* 🧺 린넨 추가 */
-    .linen-section {
-      border: 1px dashed var(--border);
-      border-radius: 12px;
-      padding: 16px;
-      background: rgba(255,255,255,0.02);
+    /* 그리드 레이아웃 */
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 20px;
     }
-    .linen-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
-    .linen-row select { flex: 1 1 220px; }
-    .linen-row input[type="number"] { width: 120px; }
-    .linen-list { margin-top: 12px; border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
-    .linen-list table { width: 100%; border-collapse: collapse; background: var(--surface); }
-    .linen-list th, .linen-list td { padding: 10px 12px; border-bottom: 1px solid var(--border); text-align: left; }
-    .linen-list th {
-      background: linear-gradient(0deg, var(--surface), var(--elev));
-      color: #b7c4d6; font-size: 12px; letter-spacing: .04em; text-transform: uppercase;
+
+    /* 린넨 추가 섹션 */
+    .linen-control-row {
+      display: flex;
+      gap: 12px;
+      align-items: flex-end;
+      margin-bottom: 20px;
     }
-    .linen-empty { padding: 14px; color: var(--muted); text-align: center; }
-    .actions-cell { text-align: right; }
-    .btn-del { height: 32px; padding: 0 10px; border-radius: 10px; }
 
-    /* 📸 사진 미리보기 */
-    .photo-preview { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
-    .photo-preview img { width: 80px; height: 80px; object-fit: cover; border-radius: 8px; border: 1px solid var(--border); }
+    .linen-control-row select {
+      flex: 2;
+    }
+    .linen-control-row input[type="number"] {
+      flex: 1;
+      max-width: 120px;
+    }
 
+    /* 버튼 스타일 (Sharp) */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      height: 44px;
+      padding: 0 24px;
+      font-size: 13px;
+      font-weight: 700;
+      border: none;
+      cursor: pointer;
+      transition: all 0.2s;
+      border-radius: 0;
+      white-space: nowrap;
+    }
+
+    .btn-primary {
+      background: var(--haru-navy);
+      color: #FFFFFF;
+      border: 1px solid var(--haru-navy);
+    }
+    .btn-primary:hover {
+      background: #000000;
+      border-color: #000000;
+    }
+
+    .btn-secondary {
+      background: #FFFFFF;
+      color: var(--haru-navy);
+      border: 1px solid #CBD5E1;
+    }
+    .btn-secondary:hover {
+      border-color: var(--haru-navy);
+      background: #F8FAFC;
+    }
+
+    /* 테이블 (Linen List) */
+    .linen-list {
+      border: 1px solid #E2E8F0;
+      border-radius: 0;
+      overflow: hidden;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    th {
+      background: #F8FAFC;
+      color: #64748B;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      padding: 12px 16px;
+      text-align: left;
+      border-bottom: 1px solid #E2E8F0;
+    }
+
+    td {
+      padding: 12px 16px;
+      font-size: 14px;
+      color: var(--haru-navy);
+      border-bottom: 1px solid #F1F5F9;
+    }
+    
+    tr:last-child td { border-bottom: none; }
+
+    .linen-empty {
+      padding: 30px;
+      text-align: center;
+      color: #CBD5E1;
+      font-size: 13px;
+    }
+
+    .btn-del {
+      padding: 4px 12px;
+      height: 32px;
+      font-size: 11px;
+      background: #FFFFFF;
+      color: #E74C3C;
+      border: 1px solid #E2E8F0;
+    }
+    .btn-del:hover {
+      border-color: #E74C3C;
+      background: #FFF5F5;
+    }
+
+    /* 사진 미리보기 */
+    .photo-upload-box {
+      border: 1px dashed #CBD5E1;
+      padding: 20px;
+      text-align: center;
+      background: #F8FAFC;
+      margin-bottom: 16px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .photo-upload-box:hover {
+      border-color: var(--haru-navy);
+      background: #FFFFFF;
+    }
+
+    .photo-preview {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    .photo-preview img {
+      width: 100px;
+      height: 100px;
+      object-fit: cover;
+      border: 1px solid #E2E8F0;
+      display: block;
+    }
+
+    /* Footer */
+    footer {
+      text-align: center;
+      color: #CBD5E1;
+      padding: 20px 0;
+      font-size: 12px;
+      letter-spacing: 0.05em;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Mobile */
     @media (max-width: 768px) {
-      .incoming-container { padding: 16px; border-radius: 10px; }
-      input, select, textarea { font-size: 14px; }
-      .linen-row { gap: 6px; }
-      .linen-row input[type="number"] { flex: 0 0 110px; }
-      .linen-list th, .linen-list td { padding: 8px 10px; }
-      button.primary { font-size: 15px; }
+      .linen-control-row {
+        flex-direction: column;
+        align-items: stretch;
+      }
+      .linen-control-row input[type="number"] {
+        max-width: none;
+      }
+      .form-section {
+        padding: 20px;
+      }
     }
   </style>
 </head>
 <body>
-
-  <!-- ✅ 헤더 (로고/메뉴/로그아웃) -->
+  <!-- ✅ 헤더 로드 -->
   <div id="header-placeholder"></div>
 
   <main>
     <div class="incoming-container">
-      <h2>입고 등록</h2>
+      
+      <div class="page-header">
+        <h2>입고 등록</h2>
+      </div>
 
       <form id="incomingForm">
-        <label for="building">건물 선택</label>
-        <select id="building" required>
-          <option value="">건물을 선택하세요</option>
-          <option value="아라키초A">아라키초A</option>
-          <option value="아라키초B">아라키초B</option>
-          <option value="다이쿄초">다이쿄초</option>
-          <option value="가부키초">가부키초</option>
-          <option value="다카다노바바">다카다노바바</option>
-          <option value="오쿠보1">오쿠보1</option>
-          <option value="오쿠보2">오쿠보2</option>
-          <option value="오쿠보4">오쿠보4</option>
-        </select>
 
-        <label for="date">날짜</label>
-        <input type="date" id="date" required />
+        <!-- 1. 기본 정보 -->
+        <div class="form-section">
+          <h3>기본 정보</h3>
+          <div class="form-grid">
+            <div>
+              <label for="building">건물</label>
+              <select id="building" required>
+                <option value="">건물을 선택하세요</option>
+                <option value="아라키초A">아라키초A</option>
+                <option value="아라키초B">아라키초B</option>
+                <option value="다이쿄초">다이쿄초</option>
+                <option value="가부키초">가부키초</option>
+                <option value="다카다노바바">다카다노바바</option>
+                <option value="오쿠보1">오쿠보1</option>
+                <option value="오쿠보2">오쿠보2</option>
+                <option value="오쿠보4">오쿠보4</option>
+              </select>
+            </div>
 
-        <label for="staff">담당자 이름</label>
-        <input type="text" id="staff" placeholder="담당자 이름 입력" required />
+            <div>
+              <label for="date">입고 날짜</label>
+              <input type="date" id="date" required />
+            </div>
 
-        <!-- 🧺 린넨 추가 -->
-        <section class="linen-section">
-          <h3 style="margin:0 0 10px 0;">린넨 추가</h3>
-          <div class="linen-row">
+            <div>
+              <label for="staff">담당자</label>
+              <input type="text" id="staff" placeholder="이름을 입력하세요" required />
+            </div>
+          </div>
+        </div>
+
+        <!-- 2. 린넨 추가 -->
+        <div class="form-section">
+          <h3>린넨 목록</h3>
+          
+          <div class="linen-control-row">
             <select id="linenSelect">
               <option value="">린넨 종류 선택</option>
               <option value="싱글 이불 커버">싱글 이불 커버</option>
@@ -117,120 +332,48 @@
               <option value="발매트">발매트</option>
             </select>
             <input type="number" id="linenQty" min="1" step="1" value="1" placeholder="수량" />
-            <button type="button" id="btnAddLinen" class="primary btn-sm" style="height:38px;">+ 추가</button>
+            <button type="button" id="btnAddLinen" class="btn btn-secondary">추가</button>
           </div>
 
           <div class="linen-list" id="linenList">
-            <div class="linen-empty">추가된 린넨이 없습니다.</div>
+            <div class="linen-empty">목록이 비어있습니다.</div>
           </div>
-
-          <!-- incoming_form.js에서 읽어가는 페이로드 -->
+          <!-- 데이터 페이로드 -->
           <input type="hidden" id="linenPayload" name="linenPayload" />
-        </section>
+        </div>
 
-        <label for="desc">비고 / 특이사항</label>
-        <textarea id="desc" placeholder="특이사항을 입력하세요 (선택)"></textarea>
+        <!-- 3. 사진 및 비고 -->
+        <div class="form-section">
+          <h3>상세 정보</h3>
+          
+          <label>사진 첨부</label>
+          <div class="photo-upload-box" onclick="document.getElementById('photo').click()">
+            <span style="font-size:24px; color:#CBD5E1;">＋</span>
+            <div style="font-size:12px; color:#64748B; margin-top:8px;">클릭하여 사진 업로드</div>
+          </div>
+          <input type="file" id="photo" accept="image/*" multiple style="display:none;" />
+          <div class="photo-preview" id="photoPreview"></div>
 
-        <label for="photo">사진 등록</label>
-        <input type="file" id="photo" accept="image/*" multiple />
-        <div class="photo-preview" id="photoPreview"></div>
+          <label for="desc" style="margin-top:20px;">특이사항 (선택)</label>
+          <textarea id="desc" placeholder="특이사항이 있다면 기록해주세요."></textarea>
+        </div>
 
-        <button type="submit" class="primary">등록하기</button>
+        <!-- 등록 버튼 -->
+        <button type="submit" class="btn btn-primary" style="height: 50px; font-size: 15px; width: 100%;">등록 완료</button>
+
       </form>
     </div>
   </main>
 
-  <footer style="text-align:center;color:#777;padding:16px 0;">
-    © 2025 HARU · by KIM HYUN JUN
+  <footer>
+    © 2025 HARU SYSTEM · TOKYO
   </footer>
 
-  <!-- ✅ 헤더 로드 (복구 핵심) -->
-  <script type="module">
-    import { initHeaderMenu } from "./header.js";
-    fetch("header.html")
-      .then(res => res.text())
-      .then(html => {
-        document.getElementById("header-placeholder").innerHTML = html;
-        initHeaderMenu();
-      })
-      .catch(err => console.error("헤더 로드 실패:", err));
-  </script>
-
-  <!-- ✅ 사진 미리보기 + 린넨 목록/페이로드 (누락 복구) -->
-  <script type="module">
-    // 사진 미리보기
-    const photoInput = document.getElementById("photo");
-    const preview = document.getElementById("photoPreview");
-    photoInput.addEventListener("change", () => {
-      preview.innerHTML = "";
-      [...photoInput.files].forEach(file => {
-        const img = document.createElement("img");
-        img.src = URL.createObjectURL(file);
-        preview.appendChild(img);
-      });
-    });
-
-    // 린넨 추가/목록/페이로드
-    const linens = [];
-    const selectEl = document.getElementById("linenSelect");
-    const qtyEl = document.getElementById("linenQty");
-    const addBtn = document.getElementById("btnAddLinen");
-    const listWrap = document.getElementById("linenList");
-    const payloadInput = document.getElementById("linenPayload");
-
-    function renderLinens() {
-      if (linens.length === 0) {
-        listWrap.innerHTML = '<div class="linen-empty">추가된 린넨이 없습니다.</div>';
-        return;
-      }
-      const rows = linens.map((ln, idx) => `
-        <tr>
-          <td>${ln.type}</td>
-          <td>${ln.qty}</td>
-          <td class="actions-cell">
-            <button type="button" class="btn btn-sm ghost btn-del" data-index="${idx}">삭제</button>
-          </td>
-        </tr>
-      `).join("");
-      listWrap.innerHTML = `
-        <table>
-          <thead><tr><th>린넨</th><th>수량</th><th></th></tr></thead>
-          <tbody>${rows}</tbody>
-        </table>
-      `;
-      listWrap.querySelectorAll(".btn-del").forEach(btn => {
-        btn.addEventListener("click", () => {
-          const i = Number(btn.dataset.index);
-          linens.splice(i, 1);
-          renderLinens();
-        });
-      });
-    }
-
-    addBtn.addEventListener("click", () => {
-      const type = selectEl.value;
-      const qty = parseInt(qtyEl.value, 10);
-      if (!type) return alert("린넨 종류를 선택하세요.");
-      if (!qty || qty < 1) return alert("수량은 1 이상이어야 합니다.");
-      const exist = linens.find(l => l.type === type);
-      if (exist) exist.qty += qty;
-      else linens.push({ type, qty });
-      renderLinens();
-      qtyEl.value = "1";
-      selectEl.value = "";
-    });
-
-    // submit 시 페이로드 주입 (incoming_form.js에서 읽어감)
-    document.getElementById("incomingForm").addEventListener("submit", () => {
-      payloadInput.value = JSON.stringify(linens);
-    });
-
-    renderLinens();
-  </script>
-
-  <!-- ✅ 저장 로직 -->
+  <!-- ✅ 기능 스크립트 -->
   <script type="module" src="incoming_form.js"></script>
   <script type="module" src="scrollTop.js"></script>
+  <script type="module" src="notice_popup.js"></script>
+
 
 </body>
 </html>

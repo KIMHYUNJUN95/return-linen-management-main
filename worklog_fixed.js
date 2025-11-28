@@ -1,262 +1,248 @@
 // ========================================
-// ⏰ HARU Worklog (근무기록)
+// 📊 HARU Worklog Overview Controller (Admin Only)
+// Design System: Tokyo Day Bright (Architectural, No Emoji)
 // ========================================
 
-import { db, auth } from "./storage.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 import {
+  getFirestore,
   collection,
-  addDoc,
   getDocs,
-  orderBy,
   query,
-  serverTimestamp
+  where,
+  doc,
+  getDoc
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-document.addEventListener("DOMContentLoaded", () => {
-  const clockInBtn = document.getElementById("clockInBtn");
-  const clockOutBtn = document.getElementById("clockOutBtn");
-  const breakStartBtn = document.getElementById("breakStartBtn");
-  const breakEndBtn = document.getElementById("breakEndBtn");
-  const clockInTimeEl = document.getElementById("clockInTime");
-  const clockOutTimeEl = document.getElementById("clockOutTime");
-  const breakStatusEl = document.getElementById("breakStatus");
-  const totalBreakTimeEl = document.getElementById("totalBreakTime");
-  const recentLogs = document.getElementById("recentLogs");
+// 🔴 1. Firebase Initialization (Robust Pattern)
+// 기본 설정을 내장하여 HTML에서 설정 변수가 없어도 작동하도록 함
+let firebaseConfig = {
+  apiKey: "AIzaSyAyD0Gn5-zqzPzdXjQzZhVlMQvqTzUmHKs",
+  authDomain: "return-linen-management.firebaseapp.com",
+  projectId: "return-linen-management",
+  storageBucket: "return-linen-management.firebasestorage.app",
+  messagingSenderId: "310421638033",
+  appId: "1:310421638033:web:280047bf93a8c780f8e830",
+  measurementId: "G-D6BDRRKD9Y"
+};
 
-  let breakStart = null; // epoch ms when break started
-  let totalBreak = 0;    // minutes accumulated for today (local)
-
-  // 상태 복원 (localStorage)
-  function loadWorkState() {
-    const status = localStorage.getItem("workStatus");
-    const start = localStorage.getItem("clockInTime");
-    const breakData = localStorage.getItem("totalBreak");
-
-    if (status === "working" && start) {
-      clockInBtn.disabled = true;
-      clockOutBtn.disabled = false;
-      breakStartBtn.disabled = false;
-      clockInTimeEl.textContent = formatTime(new Date(start));
-      clockInTimeEl.style.display = "block";
-
-      if (breakData) {
-        totalBreak = parseInt(breakData, 10) || 0;
-        if (totalBreak > 0) {
-          totalBreakTimeEl.textContent = `휴식 ${formatMinutes(totalBreak)}`;
-          totalBreakTimeEl.style.display = "block";
-        }
-      }
+// 만약 HTML에서 주입된 설정이 있다면 덮어씌움 (환경 변수 우선)
+if (typeof window !== 'undefined' && window.__firebase_config) {
+  try {
+    const envConfig = JSON.parse(window.__firebase_config);
+    if (envConfig.apiKey) {
+      firebaseConfig = envConfig;
     }
+  } catch (e) {
+    console.warn("Failed to parse window.__firebase_config, using default config.");
   }
+}
 
-  function saveWorkState(status) {
-    localStorage.setItem("workStatus", status);
-    if (status === "working") {
-      localStorage.setItem("clockInTime", new Date().toISOString());
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+// 2. DOM Elements
+const monthPicker = document.getElementById("monthPicker");
+const loadBtn = document.getElementById("loadBtn");
+const backBtn = document.getElementById("backBtn");
+const tbody = document.getElementById("worklogBody");
+
+const totalWorkdaysEl = document.getElementById("totalWorkdays");
+const totalWorkHoursEl = document.getElementById("totalWorkHours");
+const avgWorkHoursEl = document.getElementById("avgWorkHours");
+
+// ========================================
+// 🔒 Admin Permission Check
+// ========================================
+if (auth) {
+  onAuthStateChanged(auth, async (user) => {
+    if (!user) {
+      alert("Please login first.");
+      location.href = "index.html"; // or signup.html
+      return;
+    }
+
+    const superAdmin = "rlaguswns95@haru-tokyo.com";
+    let isAdmin = false;
+
+    // 1. Super Admin Check
+    if (user.email === superAdmin) {
+      isAdmin = true;
     } else {
-      localStorage.removeItem("clockInTime");
-      localStorage.removeItem("workStatus");
-      localStorage.removeItem("totalBreak");
+      // 2. Firestore Role Check
+      try {
+        const roleRef = doc(db, "roles", user.email);
+        const roleSnap = await getDoc(roleRef);
+        if (roleSnap.exists() && roleSnap.data().role === "admin") {
+          isAdmin = true;
+        }
+      } catch (e) {
+        console.error("Role check error:", e);
+      }
     }
+
+    if (!isAdmin) {
+      alert("Access Denied: Admins Only.");
+      location.href = "worklog.html";
+      return;
+    }
+
+    // Load current month data initially
+    if (monthPicker && monthPicker.value) {
+      const [year, month] = monthPicker.value.split("-");
+      loadWorklogByMonth(year, month);
+    }
+  });
+}
+
+// ========================================
+// 🧮 Calculation Helpers
+// ========================================
+
+function diffMinutes(start, end) {
+  if (!start || !end || !start.toDate || !end.toDate) return 0;
+  const s = start.toDate().getTime();
+  const e = end.toDate().getTime();
+  return Math.floor((e - s) / 60000);
+}
+
+function formatHM(mins) {
+  if (!mins || mins <= 0) return "-";
+  const h = Math.floor(mins / 60);
+  const m = mins % 60;
+  // Architectural formatting
+  if(h > 0) return `${h}h ${m}m`;
+  return `${m}m`;
+}
+
+// Status text styler (Tokyo Day Bright Colors)
+function formatStatus(status) {
+  if (!status || status === "출근" || status === "퇴근") return `<span style="color:#94a3b8;">-</span>`;
+  
+  if (status === "청소완료") {
+    return `<span style="color:#27ae60; font-weight:700; font-size:0.8rem;">DONE</span>`;
   }
-
-  // 출근
-  clockInBtn.addEventListener("click", async () => {
-    const now = new Date();
-    clockInTimeEl.textContent = formatTime(now);
-    clockInTimeEl.style.display = "block";
-
-    clockInBtn.disabled = true;
-    clockOutBtn.disabled = false;
-    breakStartBtn.disabled = false;
-
-    saveWorkState("working");
-
-    await addDoc(collection(db, "worklog"), {
-      user: auth?.currentUser?.displayName || "-",
-      type: "출근",
-      time: serverTimestamp(),
-    });
-
-    loadRecentLogsGroupedDaily();
-  });
-
-  // 퇴근
-  clockOutBtn.addEventListener("click", async () => {
-    const now = new Date();
-    clockOutTimeEl.textContent = formatTime(now);
-    clockOutTimeEl.style.display = "block";
-
-    clockOutBtn.disabled = true;
-    breakStartBtn.disabled = true;
-    breakEndBtn.disabled = true;
-
-    saveWorkState("off");
-
-    await addDoc(collection(db, "worklog"), {
-      user: auth?.currentUser?.displayName || "-",
-      type: "퇴근",
-      time: serverTimestamp(),
-      breakMinutes: totalBreak
-    });
-
-    loadRecentLogsGroupedDaily();
-  });
-
-  // 휴식 시작
-  breakStartBtn.addEventListener("click", () => {
-    breakStart = Date.now();
-    breakStartBtn.disabled = true;
-    breakEndBtn.disabled = false;
-    breakStatusEl.textContent = "휴식 중...";
-  });
-
-  // 휴식 종료
-  breakEndBtn.addEventListener("click", () => {
-    if (breakStart) {
-      const duration = Math.floor((Date.now() - breakStart) / 60000);
-      totalBreak += duration;
-      localStorage.setItem("totalBreak", totalBreak.toString());
-
-      totalBreakTimeEl.textContent = `휴식 ${formatMinutes(totalBreak)}`;
-      totalBreakTimeEl.style.display = "block";
-
-      breakStart = null;
-      breakStartBtn.disabled = false;
-      breakEndBtn.disabled = true;
-      breakStatusEl.textContent = "";
-    }
-  });
-
-  // 최근 로그(원본 카드 스타일) — 호환 유지용
-  async function loadRecentLogs() {
-    const q = query(collection(db, "worklog"), orderBy("time", "desc"));
-    const snapshot = await getDocs(q);
-    const logs = snapshot.docs.map(doc => doc.data());
-
-    recentLogs.innerHTML = logs.slice(0, 20).map(log => {
-      const date = log.time?.toDate ? formatTime(log.time.toDate()) : "-";
-      const typeEmoji = log.type === "출근" ? "🟢" : log.type === "퇴근" ? "🔴" : "☁️";
-      return `
-        <div class="log-card">
-          <div class="log-header">
-            <strong>${typeEmoji} ${log.type}</strong>
-            <span class="log-date">${date}</span>
-          </div>
-          <div>${log.user || "-"}</div>
-          ${log.breakMinutes ? `<div style="margin-top:4px;color:gray;">휴식 ${formatMinutes(log.breakMinutes)}</div>` : ""}
-        </div>
-      `;
-    }).join('');
+  if (status === "청소중") {
+    return `<span style="color:#D4AF37; font-weight:700; font-size:0.8rem;">CLEANING</span>`;
   }
+  
+  return `<span style="color:#64748B;">${status}</span>`;
+}
 
-  // 사용자별 1줄 요약 (오늘만 표시, 휴식 제외 총 근무시간)
-  async function loadRecentLogsGroupedDaily() {
-    const TYPE_IN_SET = new Set(["출근", "�E�근"]);
-    const TYPE_OUT_SET = new Set(["퇴근", "����E�"]);
+// ========================================
+// 📅 Data Loading & Rendering
+// ========================================
 
-    const q = query(collection(db, "worklog"), orderBy("time", "desc"));
-    const snapshot = await getDocs(q);
-    const allLogs = snapshot.docs.map(doc => doc.data());
+async function loadWorklogByMonth(year, month) {
+  if (!tbody) return;
+  tbody.innerHTML = `<tr><td colspan="7" style="padding:40px; text-align:center; color:#64748B;">LOADING DATA...</td></tr>`;
 
-    const now = new Date();
-    const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
-    const endOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
+  const monthKey = `${year}-${String(month).padStart(2, "0")}`;
+  
+  try {
+    // Query: worklogState collection where dateKey matches the selected month
+    const q = query(
+      collection(db, "worklogState"), 
+      where("dateKey", ">=", `${monthKey}-01`), 
+      where("dateKey", "<=", `${monthKey}-31`)
+    );
+    
+    const snap = await getDocs(q);
 
-    const todaysLogs = allLogs.filter(l => {
-      if (!l.time || !l.time.toDate) return false;
-      const d = l.time.toDate();
-      return d >= startOfDay && d <= endOfDay;
-    });
-
-    const byUser = new Map();
-    for (const log of todaysLogs) {
-      const user = log.user || "-";
-      const d = log.time?.toDate ? log.time.toDate() : null;
-      if (!d) continue;
-      if (!byUser.has(user)) byUser.set(user, []);
-      byUser.get(user).push({ ...log, _date: d });
+    if (snap.empty) {
+      tbody.innerHTML = `<tr><td colspan="7" style="padding:40px; text-align:center; color:#94a3b8;">NO DATA FOUND FOR ${monthKey}</td></tr>`;
+      if(totalWorkdaysEl) totalWorkdaysEl.textContent = "0";
+      if(totalWorkHoursEl) totalWorkHoursEl.textContent = "0h";
+      if(avgWorkHoursEl) avgWorkHoursEl.textContent = "0h";
+      return;
     }
 
-    for (const [user, arr] of byUser.entries()) {
-      arr.sort((a, b) => a._date - b._date);
-    }
-
+    let totalWorkMinutes = 0;
+    let totalWorkdays = 0;
     const rows = [];
-    for (const [user, arr] of byUser.entries()) {
-      let firstIn = null;
-      let lastOut = null;
-      let lastInForPair = null;
-      let workedMs = 0;
-      let breakTotalMin = 0;
 
-      for (const item of arr) {
-        if (TYPE_IN_SET.has(item.type)) {
-          if (!firstIn) firstIn = item._date;
-          if (!lastInForPair) lastInForPair = item._date;
-        } else if (TYPE_OUT_SET.has(item.type)) {
-          lastOut = item._date;
-          if (typeof item.breakMinutes === 'number') breakTotalMin += item.breakMinutes;
-          if (lastInForPair) {
-            workedMs += (item._date - lastInForPair);
-            lastInForPair = null;
-          }
+    snap.forEach((doc) => {
+      const d = doc.data();
+      
+      // Calculate work minutes only if both clockIn and clockOut exist
+      let mins = 0;
+      if (d.clockIn && d.clockOut) {
+        mins = diffMinutes(d.clockIn, d.clockOut) - (d.breakMinutes || 0);
+        // Only count positive work time
+        if (mins > 0) {
+            totalWorkMinutes += mins;
+            totalWorkdays++;
         }
       }
 
-      const breakMs = breakTotalMin * 60000;
-      const netMs = (lastOut && workedMs ? Math.max(0, workedMs - breakMs) : null);
+      rows.push({
+        name: d.userName || "Unknown",
+        date: d.dateKey,
+        clockIn: d.clockIn?.toDate().toLocaleTimeString("ko-KR", { hour: "2-digit", minute: "2-digit", hour12: false }) || "-",
+        clockOut: d.clockOut?.toDate().toLocaleTimeString("ko-KR", { hour: "2-digit", minute: "2-digit", hour12: false }) || "-",
+        total: mins > 0 ? formatHM(mins) : "-",
+        break: formatHM(d.breakMinutes || 0),
+        status: d.status
+      });
+    });
 
-      rows.push({ user, firstIn, lastOut, breakTotalMin, netMs });
+    // Update Summary Cards
+    const avgWorkMins = totalWorkdays > 0 ? Math.floor(totalWorkMinutes / totalWorkdays) : 0;
+    
+    if(totalWorkdaysEl) totalWorkdaysEl.textContent = totalWorkdays;
+    if(totalWorkHoursEl) totalWorkHoursEl.textContent = formatHM(totalWorkMinutes);
+    if(avgWorkHoursEl) avgWorkHoursEl.textContent = formatHM(avgWorkMins);
+
+    // Render Table Rows
+    // Sort by date ascending
+    rows.sort((a, b) => a.date.localeCompare(b.date));
+
+    tbody.innerHTML = rows.map(r => `
+      <tr>
+        <td style="font-weight:600;">${r.name}</td>
+        <td style="font-family:'Inter'; color:#64748B;">${r.date}</td>
+        <td style="font-family:'Inter';">${r.clockIn}</td>
+        <td style="font-family:'Inter';">${r.clockOut}</td>
+        <td style="font-family:'Inter'; font-weight:700; color:#2C3E50;">${r.total}</td>
+        <td style="font-family:'Inter'; color:#64748B;">${r.break}</td>
+        <td>${formatStatus(r.status)}</td>
+      </tr>
+    `).join("");
+
+  } catch (err) {
+    console.error("Error loading worklog:", err);
+    if(tbody) tbody.innerHTML = `<tr><td colspan="7" style="padding:40px; text-align:center; color:#E74C3C;">ERROR LOADING DATA</td></tr>`;
+  }
+}
+
+// ========================================
+// 🖱 Event Listeners
+// ========================================
+
+if (loadBtn) {
+  loadBtn.addEventListener("click", () => {
+    const val = monthPicker.value;
+    if (!val) {
+      alert("Please select a month.");
+      return;
     }
+    const [year, month] = val.split("-");
+    loadWorklogByMonth(year, month);
+  });
+}
 
-    // 최신 활동 기준 정렬
-    rows.sort((a, b) => {
-      const at = (a.lastOut || a.firstIn || startOfDay).getTime();
-      const bt = (b.lastOut || b.firstIn || startOfDay).getTime();
-      return bt - at;
-    });
+if (backBtn) {
+  backBtn.addEventListener("click", () => {
+    location.href = "worklog.html";
+  });
+}
 
-    const container = recentLogs;
-    if (!container) return;
-
-    container.innerHTML = rows.map(row => {
-      const inStr = row.firstIn ? row.firstIn.toLocaleTimeString("ko-KR", { hour: '2-digit', minute: '2-digit' }) : '-';
-      const outStr = row.lastOut ? row.lastOut.toLocaleTimeString("ko-KR", { hour: '2-digit', minute: '2-digit' }) : '-';
-      const breakStr = row.breakTotalMin ? formatMinutes(row.breakTotalMin) : '-';
-      const netStr = row.netMs == null ? '-' : formatMinutes(Math.floor(row.netMs / 60000));
-      return `
-        <div class="log-card condensed">
-          <div class="log-header" style="border-bottom:none;margin:0;padding:0;width:100%;gap:12px;">
-            <strong style="white-space:nowrap;">${row.user}</strong>
-            <span class="log-date" style="white-space:nowrap;">출근 ${inStr}</span>
-            <span class="log-date" style="white-space:nowrap;">휴식 ${breakStr}</span>
-            <span class="log-date" style="white-space:nowrap;">퇴근 ${outStr}</span>
-            <span class="log-date" style="white-space:nowrap;">총 ${netStr}</span>
-          </div>
-        </div>`;
-    }).join("");
-  }
-
-  // 유틸
-  function formatTime(date) {
-    return date.toLocaleString("ko-KR", {
-      hour: "2-digit",
-      minute: "2-digit",
-      second: "2-digit",
-      year: "numeric",
-      month: "2-digit",
-      day: "2-digit",
-    });
-  }
-
-  function formatMinutes(mins) {
-    const h = Math.floor(mins / 60);
-    const m = mins % 60;
-    return `${h}h ${m}m`;
-  }
-
-  // 초기 로드
-  loadWorkState();
-  loadRecentLogsGroupedDaily();
-});
+// Default: Set Current Month
+const now = new Date();
+const currentY = now.getFullYear();
+const currentM = String(now.getMonth() + 1).padStart(2, "0");
+if (monthPicker) {
+  monthPicker.value = `${currentY}-${currentM}`;
+}

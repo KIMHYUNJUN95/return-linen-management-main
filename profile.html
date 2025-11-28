@@ -4,96 +4,266 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>HARU 내정보</title>
+  
+  <!-- 공통 스타일 -->
   <link rel="stylesheet" href="common.css" />
+
   <style>
-    .profile-container {
-      max-width: 700px;
-      margin: 0 auto;
-      padding: var(--space-6);
+    /* -------------------------------
+       🎨 Page Specific Styles
+       Theme: Tokyo Day Bright (Minimal)
+       ------------------------------- */
+    
+    body {
+      background-color: var(--bg-base); /* Soft Gray (#F8FAFC) */
+      color: var(--haru-navy);
     }
 
-    .profile-header {
+    main {
+      display: flex;
+      justify-content: center;
+      padding-top: 60px;
+      padding-bottom: 60px;
+    }
+
+    .profile-container {
+      width: 100%;
+      max-width: 700px;
+      padding: 0 24px;
+      animation: fadeIn 0.5s ease-out;
+    }
+
+    /* 📄 프로필 메인 카드 */
+    .profile-card {
+      background: #FFFFFF;
+      border: 1px solid #E2E8F0;
+      border-radius: 0; /* 건축적 미니멀리즘 */
+      padding: 40px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.03);
       text-align: center;
-      margin-bottom: var(--space-8);
+    }
+
+    /* 헤더 영역 */
+    .profile-header {
+      margin-bottom: 40px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
     }
 
     .profile-avatar {
-      width: 120px;
-      height: 120px;
+      width: 100px;
+      height: 100px;
       border-radius: 50%;
-      background: linear-gradient(135deg, hsl(var(--color-primary)), hsl(var(--color-secondary)));
+      background-color: var(--haru-navy); /* Navy Solid */
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: var(--font-size-4xl);
-      color: white;
-      margin: 0 auto var(--space-4);
-      box-shadow: var(--shadow-lg), var(--shadow-glow);
+      font-size: 40px;
+      color: #FFFFFF;
+      margin-bottom: 20px;
+      box-shadow: 0 10px 20px rgba(44, 62, 80, 0.15);
     }
 
     .profile-name {
-      font-size: var(--font-size-2xl);
-      font-weight: 700;
-      margin-bottom: var(--space-2);
+      font-size: 24px;
+      font-weight: 800;
+      color: var(--haru-navy);
+      margin: 0 0 8px 0;
+      letter-spacing: -0.02em;
     }
 
     .profile-email {
-      color: hsl(var(--color-text-secondary));
+      font-size: 14px;
+      color: #94A3B8;
+      font-family: var(--font-en); /* Inter Font */
+      letter-spacing: 0.02em;
     }
 
+    /* 📊 정보 그리드 (3 Columns) */
     .info-grid {
       display: grid;
-      gap: var(--space-4);
-      margin-bottom: var(--space-6);
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+      margin-bottom: 40px;
+      border-top: 1px solid #E2E8F0;
+      padding-top: 30px;
     }
 
     .info-item {
-      background: hsla(var(--color-bg-glass), 0.3);
-      border: 1px solid hsl(var(--color-border-glass));
-      border-radius: var(--radius-md);
-      padding: var(--space-4);
+      text-align: center;
     }
 
     .info-label {
-      font-size: var(--font-size-sm);
-      color: hsl(var(--color-text-tertiary));
-      margin-bottom: var(--space-1);
+      font-size: 11px;
+      color: #64748B;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 8px;
     }
 
     .info-value {
-      font-size: var(--font-size-lg);
+      font-size: 15px;
       font-weight: 600;
-      color: hsl(var(--color-text-primary));
+      color: var(--haru-navy);
+      font-family: var(--font-en);
+    }
+
+    /* 뱃지 스타일 */
+    .badge {
+      display: inline-block;
+      padding: 4px 10px;
+      font-size: 11px;
+      border-radius: 2px;
+      font-weight: 700;
+    }
+    .badge-glass {
+      background: #F1F5F9;
+      color: #64748B;
+    }
+    .badge-success {
+      background: rgba(39, 174, 96, 0.1);
+      color: #27ae60;
+    }
+
+    /* 📝 폼 섹션 */
+    .section-title {
+      text-align: left;
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--haru-navy);
+      margin-bottom: 16px;
+      padding-bottom: 8px;
+      border-bottom: 2px solid #F1F5F9;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .form-group {
+      text-align: left;
+      margin-bottom: 24px;
+    }
+
+    .form-label {
+      display: block;
+      font-size: 12px;
+      font-weight: 600;
+      color: #64748B;
+      margin-bottom: 8px;
+    }
+
+    .form-input {
+      width: 100%;
+      height: 44px;
+      padding: 0 12px;
+      border: 1px solid #CBD5E1;
+      background: #F8FAFC;
+      border-radius: 0;
+      font-size: 14px;
+      color: var(--haru-navy);
+      transition: all 0.2s;
+    }
+
+    .form-input:focus {
+      outline: none;
+      border-color: var(--haru-navy);
+      background: #FFFFFF;
+    }
+
+    /* 버튼 스타일 */
+    .btn {
+      width: 100%;
+      height: 44px;
+      font-size: 13px;
+      font-weight: 700;
+      border: none;
+      cursor: pointer;
+      transition: all 0.2s;
+      border-radius: 0;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .btn-primary {
+      background: var(--haru-navy);
+      color: #FFFFFF;
+      border: 1px solid var(--haru-navy);
+    }
+    .btn-primary:hover {
+      background: #000000;
+      border-color: #000000;
     }
 
     .action-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: var(--space-3);
+      gap: 12px;
+      margin-top: 40px;
     }
 
+    .btn-secondary {
+      background: #FFFFFF;
+      color: var(--haru-navy);
+      border: 1px solid #CBD5E1;
+    }
+    .btn-secondary:hover {
+      border-color: var(--haru-navy);
+      background: #F8FAFC;
+    }
+
+    .btn-danger {
+      background: #FFFFFF;
+      color: #E74C3C;
+      border: 1px solid #E74C3C;
+    }
+    .btn-danger:hover {
+      background: #E74C3C;
+      color: #FFFFFF;
+    }
+
+    /* Footer */
+    footer {
+      text-align: center;
+      color: #CBD5E1;
+      padding: 20px 0;
+      font-size: 12px;
+      letter-spacing: 0.05em;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Mobile */
     @media (max-width: 768px) {
-      .action-grid {
-        grid-template-columns: 1fr;
-      }
+      .profile-card { padding: 24px; }
+      .info-grid { grid-template-columns: 1fr; gap: 24px; border-top: none; padding-top: 0; }
+      .info-item { display: flex; justify-content: space-between; border-bottom: 1px solid #F1F5F9; padding-bottom: 12px; }
+      .info-label { margin-bottom: 0; }
+      .action-grid { grid-template-columns: 1fr; }
     }
   </style>
 </head>
 <body>
-  <canvas id="bg-canvas"></canvas>
+
+  <!-- ✅ 헤더 로드 -->
   <div id="header-placeholder"></div>
 
   <main>
     <div class="profile-container">
-      <div class="profile-header">
-        <div class="profile-avatar" id="avatarIcon" data-testid="avatar">👤</div>
-        <h1 class="profile-name" id="userName" data-testid="text-user-name">사용자</h1>
-        <div class="profile-email" id="userEmail" data-testid="text-user-email">email@example.com</div>
-      </div>
+      
+      <div class="profile-card">
+        <!-- 프로필 헤더 -->
+        <div class="profile-header">
+          <!-- 아바타: 이모지 대신 심플한 텍스트나 아이콘 -->
+          <div class="profile-avatar" id="avatarIcon" data-testid="avatar">U</div>
+          <h1 class="profile-name" id="userName" data-testid="text-user-name">User Name</h1>
+          <div class="profile-email" id="userEmail" data-testid="text-user-email">user@haru.com</div>
+        </div>
 
-      <div class="glass-card">
-        <h3 style="margin-bottom: var(--space-4);">내 정보</h3>
-
+        <!-- 정보 그리드 -->
         <div class="info-grid">
           <div class="info-item">
             <div class="info-label">가입일</div>
@@ -111,30 +281,22 @@
               <span class="badge badge-glass">-</span>
             </div>
           </div>
-
-          <div class="info-item">
-            <div class="info-label">계정 상태</div>
-            <div class="info-value">
-              <span class="badge badge-success">활성</span>
-            </div>
-          </div>
         </div>
 
-        <h4 style="margin: var(--space-6) 0 var(--space-4);">계정 관리</h4>
-
+        <!-- 프로필 수정 폼 -->
+        <h3 class="section-title">프로필 설정</h3>
         <form id="updateProfileForm">
           <div class="form-group">
-            <label class="form-label" for="displayName">이름</label>
-            <input type="text" id="displayName" class="form-input" data-testid="input-display-name" />
+            <label class="form-label" for="displayName">이름 변경</label>
+            <input type="text" id="displayName" class="form-input" placeholder="새로운 이름을 입력하세요" data-testid="input-display-name" />
           </div>
 
-          <button type="submit" class="btn btn-primary" style="width:100%;" data-testid="button-update-profile">
-            프로필 업데이트
+          <button type="submit" class="btn btn-primary" data-testid="button-update-profile">
+            저장하기
           </button>
         </form>
 
-        <h4 style="margin: var(--space-6) 0 var(--space-4);">비밀번호 변경</h4>
-
+        <!-- 계정 작업 -->
         <div class="action-grid">
           <button class="btn btn-secondary" onclick="changePassword()" data-testid="button-change-password">
             비밀번호 변경
@@ -143,22 +305,20 @@
             계정 삭제
           </button>
         </div>
+
       </div>
     </div>
   </main>
 
-  <footer>© 2025 <strong>HARU_KIM HYUN JUN</strong></footer>
+  <footer>
+    © 2025 HARU SYSTEM · TOKYO
+  </footer>
 
-  <script type="module" src="scripts/bg/scene.js"></script>
-  <script type="module">
-    import { initHeaderMenu } from "./header.js";
-    fetch("header.html").then(r=>r.text()).then(h=>{
-      document.getElementById("header-placeholder").innerHTML=h;
-      initHeaderMenu();
-    });
-  </script>
+  <!-- ✅ 기능 스크립트 -->
   <script type="module" src="profile.js"></script>
   <script type="module" src="scrollTop.js"></script>
+  <script type="module" src="notice_popup.js"></script>
+
 
 </body>
 </html>

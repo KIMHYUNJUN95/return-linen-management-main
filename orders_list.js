@@ -1,5 +1,6 @@
 // ========================================
-// 🛒 HARU Orders List (건물 + 이름 + 기간검색 + 검색건수 표시)
+// 🛒 HARU Orders List Controller
+// Design System: Tokyo Day Bright (No Emoji, Sharp Edges)
 // ========================================
 
 import { db, auth } from "./storage.js";
@@ -14,6 +15,7 @@ import {
   serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
+// DOM Elements
 const ordersList = document.getElementById("ordersList");
 const emptyState = document.getElementById("emptyState");
 const filterStatus = document.getElementById("filterStatus");
@@ -26,7 +28,11 @@ const orderCountEl = document.getElementById("orderCount");
 
 let allOrders = [];
 
-// 날짜 포맷
+// ========================================
+// 🛠 Helpers
+// ========================================
+
+// 날짜 포맷 (YYYY. MM. DD. HH:MM)
 function formatDate(ts) {
   if (!ts) return "-";
   try {
@@ -36,7 +42,8 @@ function formatDate(ts) {
       month: "2-digit",
       day: "2-digit",
       hour: "2-digit",
-      minute: "2-digit"
+      minute: "2-digit",
+      hour12: false
     });
   } catch {
     return "-";
@@ -45,93 +52,136 @@ function formatDate(ts) {
 
 // 상태 배지
 function getStatusBadge(status) {
-  const badges = {
-    pending: '<span class="badge badge-warning">대기중</span>',
-    approved: '<span class="badge badge-primary">승인됨</span>',
-    completed: '<span class="badge badge-success">완료</span>',
-    rejected: '<span class="badge badge-error">거부됨</span>',
+  const styles = {
+    pending:  "color: #F1C40F; border: 1px solid #F1C40F;",
+    approved: "color: #2980b9; border: 1px solid #2980b9;",
+    completed:"color: #27ae60; border: 1px solid #27ae60;",
+    rejected: "color: #E74C3C; border: 1px solid #E74C3C;"
   };
-  return badges[status] || '<span class="badge badge-glass">알수없음</span>';
+  
+  const label = {
+    pending: "PENDING",
+    approved: "APPROVED",
+    completed:"COMPLETED",
+    rejected: "REJECTED"
+  };
+
+  const style = styles[status] || "color: #64748B; border: 1px solid #64748B;";
+  const text = label[status] || "UNKNOWN";
+
+  return `<span style="${style} padding: 4px 8px; font-size: 0.75rem; font-weight: 700; letter-spacing: 0.05em;">${text}</span>`;
 }
 
 // 긴급도 배지
 function getUrgencyBadge(urgency) {
-  const badges = {
-    일반: '<span class="badge badge-glass">일반</span>',
-    긴급: '<span class="badge badge-warning">긴급</span>',
-    매우긴급: '<span class="badge badge-error">매우긴급</span>',
-  };
-  return badges[urgency] || '';
+  if (urgency === "일반") return `<span style="color: #64748B; font-size: 0.8rem; font-weight: 600;">NORMAL</span>`;
+  
+  let color = "#2C3E50";
+  let label = "URGENT";
+  
+  if (urgency === "긴급") color = "#E67E22";
+  if (urgency === "매우긴급") {
+    color = "#E74C3C";
+    label = "CRITICAL";
+  }
+
+  return `<span style="color: ${color}; font-weight: 800; font-size: 0.8rem; letter-spacing: 0.05em; text-transform:uppercase;">${label}</span>`;
 }
 
-// ✨ 단일 렌더링 함수
+// ========================================
+// 🎨 Rendering
+// ========================================
+
 function renderOrders(orders) {
   if (orders.length === 0) {
     ordersList.style.display = "none";
-    emptyState.style.display = "block";
-    orderCountEl.textContent = "";
+    if(emptyState) emptyState.style.display = "block";
+    if(orderCountEl) orderCountEl.textContent = "";
     return;
   }
 
-  ordersList.style.display = "block";
-  emptyState.style.display = "none";
+  ordersList.style.display = "grid";
+  if(emptyState) emptyState.style.display = "none";
 
-  // 🔵 검색된 건수 표시
-  orderCountEl.textContent = `검색된 주문: ${orders.length}건`;
+  if(orderCountEl) {
+    orderCountEl.innerHTML = `<span style="font-weight:400; color:var(--color-text-secondary);">TOTAL:</span> ${orders.length}`;
+  }
 
   ordersList.innerHTML = orders.map((order) => {
     const items = (order.items || []).map(item => {
       const linkHtml = item.link
-        ? `<a href="${item.link}" target="_blank" style="color:hsl(var(--color-primary));font-size:var(--font-size-xs);margin-left:var(--space-2);">🔗 링크</a>`
+        ? `<a href="${item.link}" target="_blank" style="color:var(--color-accent); font-weight:700; font-size:0.75rem; text-decoration:none; margin-left:8px;">[LINK]</a>`
         : '';
+      
       return `
-        <div class="item">
-          <span>${item.name} (${item.category})${linkHtml}</span>
-          <span>${item.quantity}개</span>
+        <div class="item" style="border-bottom: 1px solid #f1f5f9;">
+          <span style="font-weight:600;">${item.name} <span style="font-weight:400; color:#94a3b8; font-size:0.8rem;">/ ${item.category}</span>${linkHtml}</span>
+          <span style="font-weight:700;">${item.quantity}</span>
         </div>
       `;
     }).join('');
 
-    const buildingInfo = order.building ? `🏢 ${order.building}` : "";
-    const requesterInfo = order.requesterName ? `👤 ${order.requesterName}` : (order.createdBy || "익명");
+    const buildingInfo = order.building 
+      ? `<span style="color:#94a3b8; margin-right:4px;">BLDG:</span> ${order.building}` 
+      : "";
+    
+    const requesterName = order.requesterName || order.createdBy || "Anonymous";
+    const requesterInfo = `<span style="color:#94a3b8; margin-right:4px;">REQ:</span> ${requesterName}`;
+
+    let actionButtons = '';
+    
+    if (order.status === 'pending') {
+      actionButtons = `
+        <button class="btn btn-sm" style="border:1px solid #2980b9; color:#2980b9; background:white;" onclick="approveOrder('${order.id}')">APPROVE</button>
+        <button class="btn btn-sm" style="border:1px solid #E74C3C; color:#E74C3C; background:white;" onclick="rejectOrder('${order.id}')">REJECT</button>
+        <button class="btn btn-sm" style="border:1px solid #64748B; color:#64748B; background:white;" onclick="editOrder('${order.id}')">EDIT</button>
+      `;
+    } else if (order.status === 'approved') {
+      actionButtons = `
+        <button class="btn btn-sm" style="background:#27ae60; color:white; border:none;" onclick="completeOrder('${order.id}')">COMPLETE</button>
+      `;
+    }
+    
+    const deleteBtn = `<button class="btn btn-sm" style="color:#94a3b8; font-size:0.8rem; border:none; background:transparent; text-decoration:underline;" onclick="deleteOrder('${order.id}')">DELETE</button>`;
 
     return `
       <div class="order-card">
         <div class="order-header">
-          <div>
-            <h3 style="margin-bottom: var(--space-2);">주문 #${order.id.substring(0, 8)}</h3>
-            <div class="order-meta">
-              ${formatDate(order.createdAt)} · ${requesterInfo}
-              ${buildingInfo ? ` · ${buildingInfo}` : ""}
+          <div style="display:flex; flex-direction:column; gap:4px;">
+            <div style="font-family:'Inter'; font-weight:800; font-size:0.9rem; color:#cbd5e1;">#${order.id.substring(0, 8).toUpperCase()}</div>
+            <div class="order-meta" style="margin-top:4px;">
+              ${formatDate(order.createdAt)}<br>
+              ${requesterInfo}<br>
+              ${buildingInfo}
             </div>
           </div>
-          <div style="display:flex;gap:var(--space-2);align-items:center;">
-            ${getUrgencyBadge(order.urgency)}
+          <div style="display:flex; flex-direction:column; align-items:flex-end; gap:8px;">
             ${getStatusBadge(order.status)}
+            ${getUrgencyBadge(order.urgency)}
           </div>
         </div>
 
-        <div class="order-items">${items}</div>
+        <div class="order-items" style="background:#f8fafc; padding:12px; margin-bottom:12px;">
+          ${items}
+        </div>
 
-        ${order.notes ? `<p class="order-notes">비고: ${order.notes}</p>` : ''}
+        ${order.notes ? `<p style="font-size:0.85rem; color:#64748B; background:#fffbe6; padding:8px; border:1px solid #ffe58f; margin-bottom:12px;"><span style="font-weight:700;">NOTE:</span> ${order.notes}</p>` : ''}
 
-        <div class="order-actions">
-          ${order.status === 'pending' ? `
-            <button class="btn btn-sm btn-primary" onclick="approveOrder('${order.id}')">승인</button>
-            <button class="btn btn-sm btn-danger" onclick="rejectOrder('${order.id}')">거부</button>
-            <button class="btn btn-sm btn-secondary" onclick="editOrder('${order.id}')">수정</button>
-          ` : ''}
-          ${order.status === 'approved' ? `
-            <button class="btn btn-sm btn-success" onclick="completeOrder('${order.id}')">완료</button>
-          ` : ''}
-          <button class="btn btn-sm btn-ghost" onclick="deleteOrder('${order.id}')">삭제</button>
+        <div class="order-actions" style="display:flex; justify-content:space-between; align-items:center;">
+          <div style="display:flex; gap:8px;">
+            ${actionButtons}
+          </div>
+          ${deleteBtn}
         </div>
       </div>
     `;
   }).join('');
 }
 
-// 🔵 기간 필터 적용
+// ========================================
+// 🔍 Filtering Logic
+// ========================================
+
 function filterByDate(list) {
   const start = startDateEl.value ? new Date(startDateEl.value) : null;
   const end = endDateEl.value ? new Date(endDateEl.value + " 23:59:59") : null;
@@ -140,24 +190,19 @@ function filterByDate(list) {
 
   return list.filter(order => {
     if (!order.createdAt) return false;
-
     const created = order.createdAt.toDate ? order.createdAt.toDate() : new Date(order.createdAt);
-
     if (start && created < start) return false;
     if (end && created > end) return false;
-
     return true;
   });
 }
 
-// 전체 필터
 function applyFilters() {
   const status = filterStatus.value;
   const urgency = filterUrgency.value;
 
   let filtered = [...allOrders];
 
-  // 기간 필터
   filtered = filterByDate(filtered);
 
   if (status) filtered = filtered.filter(o => o.status === status);
@@ -166,55 +211,76 @@ function applyFilters() {
   renderOrders(filtered);
 }
 
-// 데이터 로드
+// ========================================
+// 📡 Data Loading
+// ========================================
+
 async function loadOrders() {
   try {
     const q = query(collection(db, "orders"), orderBy("createdAt", "desc"));
     const snapshot = await getDocs(q);
-    allOrders = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+    allOrders = snapshot.docs.map(doc => {
+      return { 
+        id: doc.id, 
+        uid: doc.data().uid || null,  // 🔥 uid 필드 누락 시 null로 안전하게 처리
+        ...doc.data() 
+      };
+    });
 
     applyFilters();
   } catch (err) {
     console.error("❌ 주문 로드 오류:", err);
-    alert("주문 데이터를 불러오는 중 오류 발생");
+    console.log("Error loading orders data");
   }
 }
 
-// 상태 변경
+// ========================================
+// 🖱 Event Listeners
+// ========================================
+
+if(filterStatus) filterStatus.addEventListener("change", applyFilters);
+if(filterUrgency) filterUrgency.addEventListener("change", applyFilters);
+if(btnDateSearch) btnDateSearch.addEventListener("click", applyFilters);
+
+// ========================================
+// 🌐 Window Actions
+// ========================================
+
 window.approveOrder = async (id) => {
-  await updateDoc(doc(db, "orders", id), { status: "approved", updatedAt: serverTimestamp() });
-  await loadOrders();
+  if (!confirm("Approve this order?")) return;
+  try {
+    await updateDoc(doc(db, "orders", id), { status: "approved", updatedAt: serverTimestamp() });
+    await loadOrders();
+  } catch(e) { console.error(e); alert("Failed to approve"); }
 };
 
 window.rejectOrder = async (id) => {
-  await updateDoc(doc(db, "orders", id), { status: "rejected", updatedAt: serverTimestamp() });
-  await loadOrders();
+  if (!confirm("Reject this order?")) return;
+  try {
+    await updateDoc(doc(db, "orders", id), { status: "rejected", updatedAt: serverTimestamp() });
+    await loadOrders();
+  } catch(e) { console.error(e); alert("Failed to reject"); }
 };
 
 window.completeOrder = async (id) => {
-  await updateDoc(doc(db, "orders", id), { status: "completed", updatedAt: serverTimestamp() });
-  await loadOrders();
+  if (!confirm("Mark as completed?")) return;
+  try {
+    await updateDoc(doc(db, "orders", id), { status: "completed", updatedAt: serverTimestamp() });
+    await loadOrders();
+  } catch(e) { console.error(e); alert("Failed to complete"); }
 };
 
 window.deleteOrder = async (id) => {
-  if (!confirm("정말 삭제하시겠습니까?")) return;
-  await deleteDoc(doc(db, "orders", id));
-  await loadOrders();
+  if (!confirm("Permanently delete this order?")) return;
+  try {
+    await deleteDoc(doc(db, "orders", id));
+    await loadOrders();
+  } catch(e) { console.error(e); alert("Failed to delete"); }
 };
 
-// 수정 기능
 window.editOrder = (id) => {
-  const order = allOrders.find(o => o.id === id);
-  if (!order) return alert("주문 데이터를 찾을 수 없습니다.");
-
-  localStorage.setItem("editOrderData", JSON.stringify(order));
-  location.href = "orders.html?edit=" + id;
+  location.href = `orders.html?id=${id}`;
 };
 
-// 이벤트
-filterStatus.addEventListener("change", applyFilters);
-filterUrgency.addEventListener("change", applyFilters);
-btnDateSearch.addEventListener("click", applyFilters);
-
-// 시작
 loadOrders();

@@ -1,252 +1,343 @@
 // ========================================
-// 📊 HARU 전체 작업 현황 (정렬개선 + 수정/삭제 + 사진 미리보기)
+// 📊 HARU Schedule List Controller
+// Design System: Tokyo Day Bright
+// Features: List, Edit, Delete, Photo Preview
 // ========================================
 
-import { db } from "./storage.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 import {
+  getFirestore,
   collection,
   getDocs,
   query,
   orderBy,
   doc,
   updateDoc,
-  deleteDoc,
+  deleteDoc
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-/* ========================================
-   📦 요소 참조
-======================================== */
+// 🔴 1. Firebase Initialization
+let firebaseConfig = {};
+if (window.__firebase_config) {
+  try { firebaseConfig = JSON.parse(window.__firebase_config); } catch (e) { console.error(e); }
+}
+
+let app, auth, db;
+if (firebaseConfig.apiKey) {
+    app = initializeApp(firebaseConfig);
+    auth = getAuth(app);
+    db = getFirestore(app);
+} else {
+    auth = { onAuthStateChanged: () => {} };
+}
+
+// 2. DOM Elements
 const buildingFilter = document.getElementById("buildingFilter");
 const statusFilter = document.getElementById("statusFilter");
 const tableBody = document.getElementById("taskTableBody");
 const mobileList = document.getElementById("mobileList");
 const btnRefresh = document.getElementById("btnRefresh");
+const btnBack = document.getElementById("btnBack");
+
+// Photo Modal Elements
+const photoModal = document.getElementById("photoModal");
+const photoImg = document.getElementById("photoImg");
+const btnPhotoClose = document.getElementById("btnPhotoClose");
 
 let allTasks = [];
-let editingTask = null;
+let currentUser = null;
 
-/* ========================================
-   🔄 데이터 불러오기
-======================================== */
-async function loadTasks() {
-  try {
-    const q = query(collection(db, "maintenance_schedule"), orderBy("timestamp", "desc"));
-    const snap = await getDocs(q);
-    allTasks = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
-    renderTable();
-  } catch (err) {
-    console.error("🚨 Firestore 로드 오류:", err);
-    tableBody.innerHTML = `<tr><td colspan="9">데이터를 불러오지 못했습니다.</td></tr>`;
-  }
-}
-
-/* ========================================
-   🎨 상태 라벨 / 색상
-======================================== */
-function statusBadge(status) {
-  switch (status) {
-    case "done":
-      return `<span class="badge b-done">완료</span>`;
-    case "overdue":
-    case "delayed":
-      return `<span class="badge b-overdue">지연</span>`;
-    case "progress":
-      return `<span class="badge b-progress">진행중</span>`;
-    default:
-      return `<span class="badge b-upcoming">예정</span>`;
-  }
-}
-
-/* ========================================
-   📋 테이블 + 모바일 렌더링
-======================================== */
-function renderTable() {
-  const bVal = buildingFilter.value;
-  const sVal = statusFilter.value;
-
-  let filtered = allTasks;
-  if (bVal) filtered = filtered.filter((t) => t.building === bVal);
-  if (sVal) filtered = filtered.filter((t) => t.status === sVal);
-
-  // 테이블 렌더링
-  tableBody.innerHTML = "";
-  if (!filtered.length) {
-    tableBody.innerHTML = `<tr><td colspan="9">해당 조건의 데이터가 없습니다.</td></tr>`;
-  } else {
-    filtered.forEach((t) => {
-      const tr = document.createElement("tr");
-      tr.style.textAlign = "center";
-      tr.innerHTML = `
-        <td>${t.building || "-"}</td>
-        <td>${t.room || "-"}</td>
-        <td>${t.taskName || "-"}</td>
-        <td>${statusBadge(t.status)}</td>
-        <td>${t.startDate || "-"}</td>
-        <td>${t.nextDue || "-"}</td>
-        <td>${t.note || "-"}</td>
-        <td>
-          ${
-            t.photoUrl
-              ? `<button class="btn-sm btn-photo" data-url="${t.photoUrl}">사진보기</button>`
-              : `<button class="btn-sm btn-photo" disabled style="opacity:0.5;">사진없음</button>`
-          }
-        </td>
-        <td>
-          <button class="btn-sm btn-edit" data-id="${t.id}">수정</button>
-          <button class="btn-sm btn-del" data-id="${t.id}">삭제</button>
-        </td>
-      `;
-      tableBody.appendChild(tr);
-    });
-  }
-
-  // 모바일 카드
-  mobileList.innerHTML = "";
-  filtered.forEach((t) => {
-    const div = document.createElement("div");
-    div.className = "ml-card";
-    div.innerHTML = `
-      <div class="ml-top">
-        <h3>${t.taskName || "작업"}</h3>
-        ${statusBadge(t.status)}
-      </div>
-      <div class="ml-meta">
-        <b>건물:</b> ${t.building || "-"}<br>
-        <b>객실:</b> ${t.room || "-"}<br>
-        <b>작업일:</b> ${t.startDate || "-"}<br>
-        <b>다음주기:</b> ${t.nextDue || "-"}<br>
-        <b>비고:</b> ${t.note || "-"}
-      </div>
-      <div class="ml-actions">
-        ${
-          t.photoUrl
-            ? `<button class="btn-sm btn-photo" data-url="${t.photoUrl}">사진보기</button>`
-            : `<button class="btn-sm btn-photo" disabled style="opacity:0.5;">사진없음</button>`
+// ========================================
+// 🔐 Auth Check & Init
+// ========================================
+if (auth && typeof auth.onAuthStateChanged === 'function') {
+    onAuthStateChanged(auth, (user) => {
+        if (!user) {
+            alert("Please login first.");
+            location.href = "index.html";
+        } else {
+            currentUser = user;
+            loadTasks();
         }
-        <button class="btn-sm btn-edit" data-id="${t.id}">수정</button>
-        <button class="btn-sm btn-del" data-id="${t.id}">삭제</button>
-      </div>
-    `;
-    mobileList.appendChild(div);
+    });
+}
+
+// ========================================
+// 📡 Load Data (Improved Robustness)
+// ========================================
+async function loadTasks() {
+  if (!db) return;
+
+  // Loading State
+  if(tableBody) tableBody.innerHTML = `<tr><td colspan="9" style="text-align:center; padding:40px; color:#64748B;">LOADING...</td></tr>`;
+  if(btnRefresh) {
+      btnRefresh.disabled = true;
+      btnRefresh.textContent = "LOADING...";
+  }
+
+  try {
+    // 🔴 중요: orderBy를 제거하고 클라이언트에서 정렬합니다.
+    // 필드가 없는 문서가 제외되는 문제를 방지하기 위함입니다.
+    const q = query(collection(db, "maintenance_schedule"));
+    const snap = await getDocs(q);
+    
+    allTasks = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+    
+    // 기본 정렬: 다음 예정일(Next Due) 오름차순 (임박한 순서)
+    allTasks.sort((a, b) => {
+        const dateA = a.nextDueDate || a.nextDue || "9999-99-99";
+        const dateB = b.nextDueDate || b.nextDue || "9999-99-99";
+        return dateA.localeCompare(dateB);
+    });
+
+    renderTableAndList();
+
+  } catch (err) {
+    console.error("🚨 Firestore Load Error:", err);
+    if(tableBody) tableBody.innerHTML = `<tr><td colspan="9" style="text-align:center; color:#E74C3C;">ERROR LOADING DATA</td></tr>`;
+  } finally {
+    if(btnRefresh) {
+        btnRefresh.disabled = false;
+        btnRefresh.textContent = "REFRESH";
+    }
+  }
+}
+
+// ========================================
+// 🎨 Status Helpers
+// ========================================
+function getStatusInfo(status, dueDate) {
+  const today = new Date().toISOString().slice(0, 10);
+  
+  if (status === 'done') {
+    return { label: "DONE", color: "#166534", bg: "#DCFCE7", border: "#166534" };
+  }
+  
+  if (dueDate && dueDate < today) {
+    return { label: "OVERDUE", color: "#991B1B", bg: "#FEE2E2", border: "#991B1B" };
+  }
+  
+  return { label: "UPCOMING", color: "#0369A1", bg: "#E0F2FE", border: "#0369A1" };
+}
+
+// ========================================
+// 📋 Render Logic
+// ========================================
+function renderTableAndList() {
+  const bVal = buildingFilter ? buildingFilter.value : "";
+  const sVal = statusFilter ? statusFilter.value : "";
+  const today = new Date().toISOString().slice(0, 10);
+
+  const filtered = allTasks.filter(t => {
+    // 🔹 호환성: nextDueDate 또는 nextDue 사용
+    const dueDate = t.nextDueDate || t.nextDue;
+
+    if (bVal && t.building !== bVal) return false;
+    
+    if (sVal) {
+        const isDone = t.status === 'done';
+        const isOverdue = dueDate && dueDate < today && !isDone;
+        const isUpcoming = dueDate && dueDate >= today && !isDone;
+
+        if (sVal === 'done' && !isDone) return false;
+        if (sFilter === 'overdue' && !isOverdue) return false;
+        if (sFilter === 'upcoming' && !isUpcoming) return false;
+    }
+    return true;
   });
 
-  // 이벤트 연결
-  document.querySelectorAll(".btn-edit").forEach((b) =>
-    b.addEventListener("click", (e) => openEditModal(e.target.dataset.id))
-  );
-  document.querySelectorAll(".btn-del").forEach((b) =>
-    b.addEventListener("click", (e) => deleteTask(e.target.dataset.id))
-  );
-  document.querySelectorAll(".btn-photo").forEach((b) =>
-    b.addEventListener("click", (e) => openPhotoModal(e.target.dataset.url))
-  );
+  if (filtered.length === 0) {
+    if(tableBody) tableBody.innerHTML = `<tr><td colspan="9" style="text-align:center; padding:40px; color:#64748B;">NO TASKS FOUND</td></tr>`;
+    if(mobileList) mobileList.innerHTML = `<div style="text-align:center; padding:40px; color:#64748B; border:1px dashed #CBD5E1;">NO TASKS FOUND</div>`;
+    return;
+  }
+
+  // 1. Desktop Table
+  if (tableBody) {
+      tableBody.innerHTML = filtered.map((t) => {
+        const dueDate = t.nextDueDate || t.nextDue;
+        const lastDate = t.lastDoneDate || t.lastDone;
+        const statusInfo = getStatusInfo(t.status, dueDate);
+        
+        return `
+            <tr>
+              <td style="font-weight:600;">${t.building || "-"}</td>
+              <td>${t.room || "-"}</td>
+              <td>${t.taskName || "-"}</td>
+              <td><span style="color:${statusInfo.color}; font-weight:700; font-size:0.8rem;">${statusInfo.label}</span></td>
+              <td>${dueDate || "-"}</td>
+              <td style="color:#64748B;">${lastDate || '-'}</td>
+              <td style="font-size:0.8rem; color:#64748B; max-width:150px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${t.note || "-"}</td>
+              <td>
+                ${
+                  t.photoUrl
+                    ? `<button class="btn-sm" style="background:#f1f5f9; color:#1e3a8a; border:1px solid #cbd5e1; padding:4px 8px; border-radius:4px; cursor:pointer;" onclick="openPhotoModal('${t.photoUrl}')">VIEW</button>`
+                    : `<span style="color:#cbd5e1; font-size:0.8rem;">-</span>`
+                }
+              </td>
+              <td style="display:flex; gap:4px; justify-content:center;">
+                <button class="btn-sm" style="background:#bfdbfe; color:#1e3a8a; border:none; padding:4px 8px; border-radius:4px; cursor:pointer;" onclick="openEditModal('${t.id}')">EDIT</button>
+                <button class="btn-sm" style="background:#fecaca; color:#7f1d1d; border:none; padding:4px 8px; border-radius:4px; cursor:pointer;" onclick="deleteTask('${t.id}')">DEL</button>
+              </td>
+            </tr>
+          `;
+      }).join('');
+  }
+
+  // 2. Mobile List
+  if (mobileList) {
+      mobileList.innerHTML = filtered.map((t) => {
+        const dueDate = t.nextDueDate || t.nextDue;
+        const lastDate = t.lastDoneDate || t.lastDone;
+        const statusInfo = getStatusInfo(t.status, dueDate);
+
+        return `
+            <div class="ml-card" style="background:#fff; border:1px solid #e0e0e0; padding:16px; margin-bottom:12px; box-shadow:0 2px 8px rgba(0,0,0,0.05);">
+                <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+                    <div>
+                        <h3 style="margin:0; font-size:1rem; font-weight:700; color:#2C3E50;">${t.taskName || "Task"}</h3>
+                        <div style="font-size:0.85rem; color:#64748B; margin-top:4px;">${t.building || "-"} ${t.room || ""}</div>
+                    </div>
+                    <span style="color:${statusInfo.color}; font-weight:700; font-size:0.75rem; border:1px solid ${statusInfo.border}; background:${statusInfo.bg}; padding:2px 6px;">
+                        ${statusInfo.label}
+                    </span>
+                </div>
+                <div class="ml-meta" style="margin-top:12px; font-size:0.85rem; color:#475569; line-height:1.5;">
+                    <div><b>DUE:</b> ${dueDate || "-"}</div>
+                    <div><b>LAST:</b> ${lastDate || "-"}</div>
+                </div>
+                <div class="ml-actions" style="margin-top:12px; display:flex; justify-content:flex-end; gap:8px;">
+                    ${
+                      t.photoUrl
+                        ? `<button style="background:#f1f5f9; color:#1e3a8a; border:1px solid #cbd5e1; padding:6px 12px; border-radius:4px; font-weight:600; cursor:pointer;" onclick="openPhotoModal('${t.photoUrl}')">PHOTO</button>`
+                        : ``
+                    }
+                    <button style="background:#bfdbfe; color:#1e3a8a; border:none; padding:6px 12px; border-radius:4px; font-weight:600; cursor:pointer;" onclick="openEditModal('${t.id}')">EDIT</button>
+                    <button style="background:#fecaca; color:#7f1d1d; border:none; padding:6px 12px; border-radius:4px; font-weight:600; cursor:pointer;" onclick="deleteTask('${t.id}')">DEL</button>
+                </div>
+            </div>
+        `;
+      }).join('');
+  }
 }
 
-/* ========================================
-   ✏️ 수정 모달
-======================================== */
-function openEditModal(id) {
+// ========================================
+// ✏️ Edit Modal (Dynamic Creation)
+// ========================================
+window.openEditModal = (id) => {
   const t = allTasks.find((x) => x.id === id);
   if (!t) return;
 
+  const existing = document.getElementById('editModalDynamic');
+  if (existing) existing.remove();
+
   const modal = document.createElement("div");
+  modal.id = 'editModalDynamic';
   modal.className = "modal-bg";
+  modal.style.cssText = "position:fixed; inset:0; background:rgba(0,0,0,0.6); display:flex; align-items:center; justify-content:center; z-index:9999;";
+  
   modal.innerHTML = `
-    <div class="modal-card" style="max-width:480px;background:#fff;color:#111;padding:20px;border-radius:12px;">
-      <h3 style="font-weight:800;font-size:18px;margin-bottom:10px;">작업 수정</h3>
-      <label>작업명</label>
-      <input id="editTaskName" class="form-input" value="${t.taskName || ""}" />
-      <label style="margin-top:10px;">주기 (개월)</label>
-      <input id="editCycle" type="number" class="form-input" value="${t.cycleMonths || 0}" />
-      <label style="margin-top:10px;">비고</label>
-      <textarea id="editNote" class="form-textarea">${t.note || ""}</textarea>
-      <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:16px;">
-        <button id="btnEditCancel" class="btn btn-ghost">취소</button>
-        <button id="btnEditSave" class="btn btn-primary">저장</button>
+    <div style="width:90%; max-width:480px; background:#fff; padding:24px; border-radius:0px; border:1px solid #CBD5E1; box-shadow:0 10px 40px rgba(0,0,0,0.2);">
+      <h3 style="font-weight:800; font-size:1.2rem; margin:0 0 16px 0; color:#2C3E50; border-bottom:2px solid #2C3E50; padding-bottom:8px;">EDIT TASK</h3>
+      
+      <label style="display:block; font-weight:700; font-size:0.85rem; margin-bottom:4px;">TASK NAME</label>
+      <input id="editTaskName" style="width:100%; padding:10px; border:1px solid #CBD5E1; margin-bottom:12px;" value="${t.taskName || ""}" />
+      
+      <label style="display:block; font-weight:700; font-size:0.85rem; margin-bottom:4px;">CYCLE (MONTHS)</label>
+      <input id="editCycle" type="number" style="width:100%; padding:10px; border:1px solid #CBD5E1; margin-bottom:12px;" value="${t.cycleMonths || 0}" />
+      
+      <label style="display:block; font-weight:700; font-size:0.85rem; margin-bottom:4px;">DUE DATE</label>
+      <input id="editNextDue" type="date" style="width:100%; padding:10px; border:1px solid #CBD5E1; margin-bottom:12px;" value="${t.nextDueDate || t.nextDue || ""}" />
+
+      <label style="display:block; font-weight:700; font-size:0.85rem; margin-bottom:4px;">NOTE</label>
+      <textarea id="editNote" style="width:100%; height:80px; padding:10px; border:1px solid #CBD5E1; resize:vertical;">${t.note || ""}</textarea>
+      
+      <div style="display:flex; gap:8px; justify-content:flex-end; margin-top:20px;">
+        <button id="btnEditCancel" style="background:transparent; border:1px solid #CBD5E1; padding:10px 20px; cursor:pointer; font-weight:600;">CANCEL</button>
+        <button id="btnEditSave" style="background:#2C3E50; color:#fff; border:none; padding:10px 20px; cursor:pointer; font-weight:600;">SAVE</button>
       </div>
     </div>
   `;
   document.body.appendChild(modal);
-  modal.style.display = "flex";
 
   document.getElementById("btnEditCancel").onclick = () => modal.remove();
+  
   document.getElementById("btnEditSave").onclick = async () => {
     const newTaskName = document.getElementById("editTaskName").value.trim();
     const newCycle = Number(document.getElementById("editCycle").value);
+    const newNextDue = document.getElementById("editNextDue").value;
     const newNote = document.getElementById("editNote").value.trim();
 
-    if (!newTaskName) return alert("작업명을 입력해주세요.");
+    if (!newTaskName) return alert("Task name is required.");
 
     try {
       const docRef = doc(db, "maintenance_schedule", id);
       await updateDoc(docRef, {
         taskName: newTaskName,
         cycleMonths: newCycle,
+        nextDueDate: newNextDue, // Ensure this field is updated
         note: newNote,
       });
-      alert("✅ 수정되었습니다.");
+      alert("✅ Task updated.");
       modal.remove();
       loadTasks();
     } catch (err) {
-      console.error("수정 오류:", err);
-      alert("수정 중 오류가 발생했습니다.");
+      console.error("Update error:", err);
+      alert("Error updating task.");
     }
   };
-}
+};
 
-/* ========================================
-   ❌ 삭제
-======================================== */
-async function deleteTask(id) {
-  if (!confirm("정말로 삭제하시겠습니까?")) return;
+// ========================================
+// ❌ Delete Task
+// ========================================
+window.deleteTask = async (id) => {
+  if (!confirm("Are you sure you want to delete this task? (삭제하시겠습니까?)")) return;
   try {
     await deleteDoc(doc(db, "maintenance_schedule", id));
-    alert("🗑️ 삭제되었습니다.");
+    alert("🗑️ Task deleted.");
     loadTasks();
   } catch (err) {
-    console.error("삭제 오류:", err);
-    alert("삭제 중 오류가 발생했습니다.");
+    console.error("Delete error:", err);
+    alert("Error deleting task.");
   }
-}
+};
 
-/* ========================================
-   🖼 사진 미리보기 모달
-======================================== */
-function openPhotoModal(url) {
+// ========================================
+// 🖼 Photo Modal
+// ========================================
+window.openPhotoModal = (url) => {
   if (!url) return;
-  const modal = document.createElement("div");
-  modal.className = "modal-bg";
-  modal.innerHTML = `
-    <div class="modal-card photo-card" style="max-width:600px;background:#fff;color:#111;padding:20px;border-radius:12px;">
-      <h3 style="font-weight:800;font-size:18px;margin-bottom:10px;">사진 미리보기</h3>
-      <img src="${url}" alt="작업 사진" style="width:100%;border-radius:12px;margin-bottom:12px;">
-      <div style="text-align:right;">
-        <a href="${url}" target="_blank" class="btn btn-primary">원본 열기</a>
-        <button class="btn btn-ghost" id="btnPhotoClose">닫기</button>
-      </div>
-    </div>
-  `;
-  document.body.appendChild(modal);
-  modal.style.display = "flex";
-  document.getElementById("btnPhotoClose").onclick = () => modal.remove();
+  if(photoImg) photoImg.src = url;
+  if(photoModal) photoModal.style.display = "flex";
+};
+
+if(btnPhotoClose) {
+    btnPhotoClose.addEventListener('click', () => {
+        if(photoModal) photoModal.style.display = "none";
+    });
 }
 
-/* ========================================
-   🔍 필터 / 새로고침
-======================================== */
-if (buildingFilter) buildingFilter.addEventListener("change", renderTable);
-if (statusFilter) statusFilter.addEventListener("change", renderTable);
+// Close photo modal on background click
+if(photoModal) {
+    photoModal.addEventListener('click', (e) => {
+        if(e.target === photoModal) photoModal.style.display = "none";
+    });
+}
+
+// ========================================
+// 🔍 Listeners
+// ========================================
+if (buildingFilter) buildingFilter.addEventListener("change", renderTableAndList);
+if (statusFilter) statusFilter.addEventListener("change", renderTableAndList);
 if (btnRefresh) {
-  btnRefresh.addEventListener("click", async () => {
-    btnRefresh.disabled = true;
-    btnRefresh.textContent = "불러오는 중...";
-    await loadTasks();
-    btnRefresh.textContent = "새로고침";
-    btnRefresh.disabled = false;
+  btnRefresh.addEventListener("click", () => {
+    loadTasks();
   });
 }
-
-/* ========================================
-   🚀 초기 실행
-======================================== */
-loadTasks();
+if (btnBack) {
+    btnBack.addEventListener("click", () => {
+        location.href = "schedule_dashboard.html";
+    });
+}

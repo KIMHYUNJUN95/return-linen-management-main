@@ -5,57 +5,109 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>HARU 공지사항</title>
   <link rel="stylesheet" href="common.css" />
+  
+  <!-- Fonts: Inter & Noto Sans KR -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+
   <style>
-    .notices-container {
-      max-width: 900px;
-      margin: 0 auto;
-      padding: var(--space-6);
+    /* 🎨 TOKYO DAY BRIGHT Design System */
+    :root {
+      --color-bg-main: #F8FAFC;
+      --color-surface: #FFFFFF;
+      --color-text-primary: #2C3E50;
+      --color-text-secondary: #64748B;
+      --color-text-tertiary: #94A3B8;
+      --color-accent: #D4AF37;
+      --color-border: #CBD5E1;
+      --color-important: #E74C3C;
+      
+      --space-2: 0.5rem;
+      --space-3: 0.75rem;
+      --space-4: 1rem;
+      --space-5: 1.5rem;
+      --space-6: 2rem;
     }
 
+    * { box-sizing: border-box; border-radius: 0px !important; }
+    body { background-color: var(--color-bg-main); color: var(--color-text-primary); font-family: 'Inter', 'Noto Sans KR', sans-serif; margin: 0; line-height: 1.5; }
+
+    #bg-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; opacity: 0.3; pointer-events: none; }
+
+    .notices-container { max-width: 900px; margin: 0 auto; padding: var(--space-6) var(--space-4); padding-top: 80px; }
+
+    /* Typography */
+    h1 { font-size: 1.75rem; font-weight: 800; letter-spacing: -0.02em; color: var(--color-text-primary); margin: 0; text-transform: uppercase; border-left: 4px solid var(--color-accent); padding-left: var(--space-3); line-height: 1; }
+
+    /* Buttons */
+    .btn { display: inline-flex; align-items: center; justify-content: center; height: 44px; padding: 0 var(--space-5); font-weight: 600; font-size: 0.9rem; transition: all 0.2s ease; cursor: pointer; border: 1px solid transparent; letter-spacing: 0.02em; text-decoration: none; }
+    .btn-secondary { background-color: #FFFFFF; color: var(--color-text-primary); border-color: var(--color-border); }
+    .btn-secondary:hover { border-color: var(--color-text-primary); background-color: var(--color-bg-main); }
+
+    /* Notice Card - Architectural Style */
     .notice-card {
-      background: hsla(var(--color-bg-glass), 0.4);
-      backdrop-filter: blur(var(--blur-md));
-      border: 1px solid hsl(var(--color-border-glass));
-      border-radius: var(--radius-lg);
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
       padding: var(--space-5);
       margin-bottom: var(--space-4);
       cursor: pointer;
-      transition: all var(--transition-base);
+      transition: all 0.2s ease;
+      position: relative;
     }
 
     .notice-card:hover {
       transform: translateY(-2px);
-      box-shadow: var(--shadow-lg);
-      border-color: hsl(var(--color-primary) / 0.4);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+      border-color: var(--color-text-primary);
     }
 
+    /* Important Notice Styling */
     .notice-card.important {
-      border-color: hsl(var(--color-error) / 0.6);
-      background: hsla(var(--color-error), 0.05);
+      border-left: 4px solid var(--color-important);
+      background-color: #FEF2F2; /* Very light red tint */
+    }
+    
+    .notice-card.important .notice-title::before {
+      content: "IMPORTANT";
+      display: inline-block;
+      font-size: 0.7rem;
+      background: var(--color-important);
+      color: white;
+      padding: 2px 6px;
+      margin-right: 8px;
+      vertical-align: middle;
+      font-weight: 700;
+      letter-spacing: 0.05em;
     }
 
     .notice-header {
       display: flex;
       justify-content: space-between;
-      align-items: start;
-      margin-bottom: var(--space-3);
-    }
-
-    .notice-title {
-      font-size: var(--font-size-lg);
-      font-weight: 700;
-      color: hsl(var(--color-text-primary));
+      align-items: flex-start;
       margin-bottom: var(--space-2);
     }
 
+    .notice-title {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--color-text-primary);
+      margin: 0;
+      line-height: 1.4;
+    }
+
     .notice-meta {
-      font-size: var(--font-size-sm);
-      color: hsl(var(--color-text-secondary));
+      font-size: 0.8rem;
+      color: var(--color-text-tertiary);
+      font-family: 'Inter', sans-serif;
+      margin-bottom: var(--space-3);
+      display: flex;
+      gap: 12px;
     }
 
     .notice-preview {
-      color: hsl(var(--color-text-secondary));
-      font-size: var(--font-size-sm);
+      color: var(--color-text-secondary);
+      font-size: 0.95rem;
       line-height: 1.6;
       overflow: hidden;
       text-overflow: ellipsis;
@@ -63,53 +115,279 @@
       -webkit-line-clamp: 2;
       -webkit-box-orient: vertical;
     }
+
+    /* Empty State */
+    .empty-state {
+      text-align: center;
+      padding: 4rem 0;
+      color: var(--color-text-secondary);
+      border: 1px dashed var(--color-border);
+      background-color: #FFFFFF;
+    }
+    .empty-state-icon { display: none; }
+    .empty-state-text { font-size: 1rem; font-weight: 500; }
+    .empty-state::before { content: "NO NOTICES"; display: block; font-weight: 700; color: var(--color-border); font-size: 1.5rem; margin-bottom: 1rem; }
+
+    /* Modal Overlay */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(44, 62, 80, 0.4);
+      backdrop-filter: blur(2px);
+      z-index: 2000;
+      display: none; /* hidden by default */
+      justify-content: center;
+      align-items: center;
+      animation: fadeIn 0.2s ease;
+    }
+
+    /* Modal Content */
+    .modal {
+      background: #FFFFFF;
+      width: 90%;
+      max-width: 700px;
+      max-height: 85vh;
+      overflow-y: auto;
+      padding: var(--space-6);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+      border: 1px solid var(--color-border);
+      position: relative;
+      animation: slideUp 0.2s ease;
+    }
+
+    .modal-header {
+      margin-bottom: var(--space-4);
+      padding-bottom: var(--space-4);
+      border-bottom: 1px solid var(--color-border);
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+    }
+
+    .modal-title {
+      font-size: 1.5rem;
+      font-weight: 800;
+      color: var(--color-text-primary);
+      margin: 0;
+      line-height: 1.3;
+    }
+
+    .modal-close {
+      background: transparent;
+      border: none;
+      font-size: 1.5rem;
+      line-height: 1;
+      color: var(--color-text-tertiary);
+      cursor: pointer;
+      padding: 0 0 0 var(--space-4);
+    }
+    .modal-close:hover { color: var(--color-text-primary); }
+
+    #modalContent {
+      font-size: 1rem;
+      line-height: 1.7;
+      color: var(--color-text-primary);
+      white-space: pre-wrap; /* Preserve line breaks */
+    }
+
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+    /* 🔹 Header Styles Inlined */
+    .main-header { position: fixed; top: 0; left: 0; width: 100%; height: 60px; background: rgba(255, 255, 255, 0.95); border-bottom: 1px solid #e0e0e0; z-index: 1000; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(5px); }
+    .header-inner { width: 100%; max-width: 1400px; padding: 0 24px; display: flex; justify-content: space-between; align-items: center; }
+    .logo { font-family: 'Noto Sans KR', sans-serif; font-weight: 700; font-size: 18px; color: #111; letter-spacing: 0.15em; text-transform: uppercase; }
+    .menu-wrap { position: relative; display: flex; align-items: center; }
+    .menu-toggle { background: transparent; border: none; cursor: pointer; display: flex; align-items: center; gap: 10px; padding: 8px 0; }
+    .menu-label { font-size: 12px; font-weight: 500; color: #111; letter-spacing: 0.1em; }
+    .hamburger-lines { display: flex; flex-direction: column; gap: 4px; }
+    .line { width: 18px; height: 1.5px; background-color: #111; display: block; transition: transform 0.3s ease; }
+    .menu-toggle[aria-expanded="true"] .line1 { transform: rotate(45deg) translate(2px, 2px); }
+    .menu-toggle[aria-expanded="true"] .line2 { transform: rotate(-45deg) translate(2px, -2px); width: 18px; }
+    .menu-list { display: none; position: absolute; top: 50px; right: -20px; width: 220px; background: #fff; border: 1px solid #e0e0e0; padding: 12px 0; flex-direction: column; box-shadow: 0 10px 40px rgba(0, 0, 0, 0.05); list-style: none; z-index: 1001; }
+    .menu-list.open { display: flex; animation: fadeIn 0.2s ease-out; }
+    .menu-list li a { display: block; padding: 10px 24px; font-size: 13px; color: #888; text-decoration: none; transition: all 0.2s; border-left: 2px solid transparent; }
+    .menu-list li a:hover { background-color: #fafafa; color: #111; border-left-color: #111; padding-left: 30px; }
+    .logout-btn { background: transparent; border: none; color: #111; font-size: 11px; font-weight: 500; letter-spacing: 0.1em; cursor: pointer; text-transform: uppercase; border-bottom: 1px solid transparent; padding: 4px 0; margin-left: 40px; transition: border-color 0.3s; }
+    .logout-btn:hover { border-bottom-color: #111; }
+    @media (max-width: 768px) {
+        .main-header { height: 50px; }
+        .header-inner { padding: 0 16px; }
+        .logo { font-size: 16px; }
+        .logout-btn, .menu-toggle .menu-label { display: none; }
+        .menu-list { position: fixed; top: 50px; left: 0; right: 0; width: 100%; border: none; border-bottom: 1px solid #e0e0e0; box-shadow: 0 5px 10px rgba(0,0,0,0.05); }
+        .menu-list li a { padding: 14px 24px; font-size: 14px; }
+    }
+
+    footer { text-align: center; padding: var(--space-6); color: var(--color-text-secondary); font-size: 0.8rem; border-top: 1px solid var(--color-border); margin-top: var(--space-6); background: var(--color-surface); }
   </style>
 </head>
 <body>
+  <!-- 🟢 FIREBASE CONFIGURATION -->
+  <script>
+    window.__firebase_config = JSON.stringify({
+      apiKey: "AIzaSyAyD0Gn5-zqzPzdXjQzZhVlMQvqTzUmHKs",
+      authDomain: "return-linen-management.firebaseapp.com",
+      projectId: "return-linen-management",
+      storageBucket: "return-linen-management.firebasestorage.app",
+      messagingSenderId: "310421638033",
+      appId: "1:310421638033:web:280047bf93a8c780f8e830",
+      measurementId: "G-D6BDRRKD9Y"
+    });
+  </script>
+
   <canvas id="bg-canvas"></canvas>
-  <div id="header-placeholder"></div>
+  
+  <!-- 🔹 Header Inlined Directly -->
+  <header class="main-header">
+    <div class="header-inner">
+      <div class="logo">HARU</div>
+      <div class="menu-wrap">
+        <button class="menu-toggle" aria-haspopup="true" aria-expanded="false">
+          <span class="menu-label">MENU</span>
+          <div class="hamburger-lines">
+            <span class="line line1"></span>
+            <span class="line line2"></span>
+          </div>
+        </button>
+        <ul class="menu-list" role="menu">
+          <li><a href="board.html">게시판</a></li>
+          <li><a href="chat.html" data-menu="chat">채팅</a></li>
+          <li><a href="incoming_form.html">입고등록</a></li>
+          <li><a href="return_form.html">반품등록</a></li>
+          <li><a href="history_dashboard.html">내역관리</a></li>
+          <li><a href="inventory.html">재고관리</a></li>
+          <li><a href="admin_dashboard.html">린넨 통계</a></li>
+          <li><a href="lost_items_list.html">분실물관리</a></li>
+          <li><a href="maintenance_list.html">객실유지보수</a></li>
+          <li><a href="orders_list.html">주문요청</a></li>
+          <li><a href="worklog.html">근무기록</a></li>
+          <li><a href="notices.html">공지사항</a></li>
+          <li><a href="profile.html">내 정보</a></li>
+          <li><a href="schedule_dashboard.html">작업 스케줄러</a></li>
+          <li class="super-admin-only" style="display:none;"><a href="admin.html" class="admin-link">관리자 설정</a></li>
+          <li class="super-admin-only" style="display:none;"><a href="admin_users.html" class="admin-link">사용자 관리</a></li>
+        </ul>
+      </div>
+      <button id="logoutBtn" class="logout-btn">SIGN OUT</button>
+    </div>
+  </header>
 
   <main>
     <div class="notices-container">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:var(--space-6);">
-        <h1>📢 공지사항</h1>
-        <a href="notices_admin.html" class="btn btn-secondary" data-testid="button-manage-notices">
-          공지 관리
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:var(--space-6); padding-bottom:var(--space-4); border-bottom:1px solid var(--color-border);">
+        <h1>NOTICES (공지사항)</h1>
+        <a href="notices_admin.html" class="btn btn-secondary admin-only" style="display:none;" data-testid="button-manage-notices">
+          MANAGE (공지 관리)
         </a>
       </div>
 
       <div id="noticesList" data-testid="container-notices-list"></div>
+      
       <div id="emptyState" style="display:none;" class="empty-state">
-        <div class="empty-state-icon">📭</div>
-        <div class="empty-state-text">공지사항이 없습니다</div>
+        <div class="empty-state-text">등록된 공지사항이 없습니다.</div>
       </div>
     </div>
   </main>
 
   <!-- 상세보기 모달 -->
-  <div id="noticeModal" class="modal-overlay" style="display:none;">
+  <div id="noticeModal" class="modal-overlay">
     <div class="modal">
       <div class="modal-header">
         <h2 class="modal-title" id="modalTitle"></h2>
         <button class="modal-close" onclick="closeModal()" data-testid="button-close-modal">&times;</button>
       </div>
-      <div id="modalContent" style="color: hsl(var(--color-text-secondary)); line-height: 1.8;"></div>
-      <div id="modalMeta" style="margin-top: var(--space-6); padding-top: var(--space-4); border-top: 1px solid hsl(var(--color-border-subtle)); font-size: var(--font-size-sm); color: hsl(var(--color-text-tertiary));"></div>
+      <div id="modalContent"></div>
+      <div id="modalMeta" style="margin-top: var(--space-6); padding-top: var(--space-4); border-top: 1px solid var(--color-border); font-size: 0.85rem; color: var(--color-text-secondary); display:flex; justify-content:space-between;"></div>
     </div>
   </div>
 
-  <footer>© 2025 <strong>HARU_KIM HYUN JUN</strong></footer>
+  <footer>
+    HARU SYSTEM &copy; 2025 <strong>HARU_KIM HYUN JUN</strong>. All rights reserved.
+  </footer>
 
   <script type="module" src="scripts/bg/scene.js"></script>
-  <script type="module">
-    import { initHeaderMenu } from "./header.js";
-    fetch("header.html").then(r=>r.text()).then(h=>{
-      document.getElementById("header-placeholder").innerHTML=h;
-      initHeaderMenu();
+  
+  <!-- 🔹 Header Script Inlined -->
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const menuToggle = document.querySelector(".menu-toggle");
+      const navMenu = document.querySelector(".menu-list");
+      if (menuToggle && navMenu) {
+        menuToggle.addEventListener("click", () => {
+          const isOpen = navMenu.classList.toggle("open");
+          menuToggle.setAttribute("aria-expanded", isOpen);
+        });
+        document.addEventListener("click", (e) => {
+          if (!menuToggle.contains(e.target) && !navMenu.contains(e.target)) {
+            navMenu.classList.remove("open");
+            menuToggle.setAttribute("aria-expanded", "false");
+          }
+        });
+      }
+    });
+
+    // Global Modal Functions
+    window.closeModal = function() {
+      document.getElementById('noticeModal').style.display = 'none';
+    };
+    
+    // Close on outside click
+    document.getElementById('noticeModal').addEventListener('click', function(e) {
+      if(e.target === this) closeModal();
     });
   </script>
+
+  <!-- ✅ 권한 체크 및 로그아웃 로직 -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getAuth, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+    import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+    if (window.__firebase_config) {
+      const app = initializeApp(JSON.parse(window.__firebase_config));
+      const auth = getAuth(app);
+      const db = getFirestore(app);
+
+      // Logout
+      const logoutBtn = document.getElementById("logoutBtn");
+      if(logoutBtn) {
+        logoutBtn.addEventListener("click", async () => {
+          if(!confirm("로그아웃 하시겠습니까?")) return;
+          try { await signOut(auth); location.href = "index.html"; } 
+          catch(e) { console.error(e); }
+        });
+      }
+
+      // Admin Check for "Manage" Button
+      onAuthStateChanged(auth, async (user) => {
+        if (!user) return;
+        const superAdmin = "rlaguswns95@haru-tokyo.com";
+        const adminBtn = document.querySelector('.admin-only');
+        const superAdminLinks = document.querySelectorAll('.super-admin-only');
+
+        if (user.email === superAdmin) {
+           if(adminBtn) adminBtn.style.display = 'inline-flex';
+           superAdminLinks.forEach(el => el.style.display = 'block');
+        } else {
+           try {
+             const roleSnap = await getDoc(doc(db, "roles", user.email));
+             if (roleSnap.exists() && roleSnap.data().role === "admin") {
+               if(adminBtn) adminBtn.style.display = 'inline-flex';
+             }
+           } catch(e) { console.warn(e); }
+        }
+      });
+    }
+  </script>
+
   <script type="module" src="notices.js"></script>
   <script type="module" src="scrollTop.js"></script>
+  <script type="module" src="notice_popup.js"></script>
+
 
 </body>
 </html>

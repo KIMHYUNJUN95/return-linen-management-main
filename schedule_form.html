@@ -3,240 +3,302 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>HARU · 작업 등록</title>
+  <title>HARU 작업 등록</title>
   <link rel="stylesheet" href="common.css"/>
-  <link rel="stylesheet" href="background.css"/>
+  
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+
   <style>
-    /* ===============================
-       🧰 HARU 작업 등록 폼 (Glass + 고가독)
-       =============================== */
-    body {
-      color: #222;
-      font-family: "Inter", sans-serif;
-    }
-    main {
-      max-width: 720px;
-      margin: 0 auto;
-      padding: 20px;
-    }
-    h1 {
-      font-size: 26px;
-      font-weight: 800;
-      margin-bottom: 20px;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      color: #222;
-    }
-    h1::before {
-      content: "🧰";
-      font-size: 22px;
+    /* 🎨 TOKYO DAY BRIGHT Design System */
+    :root {
+      --color-bg-main: #F8FAFC;
+      --color-surface: #FFFFFF;
+      --color-text-primary: #2C3E50;
+      --color-text-secondary: #64748B;
+      --color-accent: #D4AF37;
+      --color-border: #CBD5E1;
+      --color-primary: #2C3E50;
+      
+      --space-4: 1rem;
+      --space-5: 1.5rem;
+      --space-6: 2rem;
     }
 
-    /* 🔳 카드 영역 */
+    * { box-sizing: border-box; border-radius: 0px !important; }
+    body { background-color: var(--color-bg-main); color: var(--color-text-primary); font-family: 'Inter', 'Noto Sans KR', sans-serif; margin: 0; line-height: 1.5; }
+
+    #bg-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; opacity: 0.3; pointer-events: none; }
+
+    .form-container { max-width: 680px; margin: 0 auto; padding: var(--space-6) var(--space-4); padding-top: 80px; }
+
+    /* Typography */
+    h1 { font-size: 1.75rem; font-weight: 800; letter-spacing: -0.02em; color: var(--color-text-primary); margin-bottom: var(--space-6); text-transform: uppercase; border-left: 4px solid var(--color-accent); padding-left: 1rem; line-height: 1; }
+
+    /* Form Card */
     .form-card {
-      background: rgba(255, 255, 255, 0.8);
-      border-radius: 16px;
-      border: 1px solid rgba(0, 0, 0, 0.1);
-      backdrop-filter: blur(10px);
-      padding: 28px;
-      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      padding: 2rem;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.05);
     }
 
-    label {
-      display: block;
-      font-weight: 700;
-      font-size: 15px;
-      color: #111;
-      margin-top: 18px;
+    .form-group { margin-bottom: 1.5rem; }
+    
+    label { 
+      display: block; 
+      font-weight: 700; 
+      font-size: 0.85rem; 
+      color: var(--color-text-primary); 
+      margin-bottom: 0.5rem; 
+      text-transform: uppercase; 
+      letter-spacing: 0.05em;
     }
 
-    select,
-    input,
-    textarea {
+    input, select, textarea {
       width: 100%;
-      margin-top: 8px;
-      padding: 12px 14px;
-      border-radius: 10px;
-      border: 1px solid #ccc;
-      background: rgba(255, 255, 255, 0.9);
-      color: #111;
-      font-size: 15px;
-      transition: 0.25s ease;
+      height: 48px;
+      padding: 0 1rem;
+      border: 1px solid var(--color-border);
+      background: var(--color-bg-main);
+      color: var(--color-text-primary);
+      font-size: 0.95rem;
+      font-family: 'Inter', 'Noto Sans KR', sans-serif;
+      transition: all 0.2s ease;
+      appearance: none;
+    }
+
+    textarea { height: auto; min-height: 120px; padding: 1rem; resize: vertical; }
+
+    input:focus, select:focus, textarea:focus {
       outline: none;
+      border-color: var(--color-text-primary);
+      background: var(--color-surface);
     }
 
-    select:focus,
-    input:focus,
-    textarea:focus {
-      border-color: #00b4d8;
-      box-shadow: 0 0 8px rgba(0, 180, 216, 0.3);
+    /* Custom Select Arrow */
+    select {
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%232C3E50' d='M6 8.825L1.175 4 2.238 2.938 6 6.7l3.763-3.762L10.825 4z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 1rem center;
     }
 
-    textarea {
-      resize: vertical;
-      min-height: 90px;
-    }
+    .hint { font-size: 0.8rem; color: var(--color-text-secondary); margin-top: 0.4rem; }
 
-    ::placeholder {
-      color: #888;
-    }
+    .row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+    @media (max-width: 600px) { .row-2 { grid-template-columns: 1fr; } }
 
-    .hint {
-      font-size: 12px;
-      color: #666;
-      margin-top: 4px;
-    }
+    /* Actions */
+    .actions { margin-top: 2rem; display: flex; gap: 1rem; }
+    
+    .btn { display: inline-flex; align-items: center; justify-content: center; height: 50px; padding: 0 2rem; font-weight: 600; font-size: 0.95rem; cursor: pointer; border: 1px solid transparent; width: 100%; transition: all 0.2s; letter-spacing: 0.02em; }
+    
+    .btn-primary { background: var(--color-text-primary); color: #fff; }
+    .btn-primary:hover { background: #34495E; }
+    
+    .btn-ghost { background: transparent; color: var(--color-text-secondary); border-color: var(--color-border); }
+    .btn-ghost:hover { border-color: var(--color-text-primary); color: var(--color-text-primary); }
 
-    .row-2 {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 12px;
-    }
+    hr { border: none; border-top: 1px solid var(--color-border); margin: 2rem 0; opacity: 0.5; }
 
-    /* 🧭 버튼 */
-    .actions {
-      margin-top: 26px;
-      display: flex;
-      justify-content: flex-end;
-      gap: 10px;
-    }
-
-    .btn {
-      border: none;
-      border-radius: 10px;
-      font-weight: 700;
-      padding: 10px 20px;
-      cursor: pointer;
-      font-size: 15px;
-      transition: 0.25s ease;
-    }
-
-    .btn-primary {
-      background: linear-gradient(135deg, #00b4d8, #0077b6);
-      color: #fff;
-      box-shadow: 0 3px 10px rgba(0, 180, 216, 0.4);
-    }
-    .btn-primary:hover {
-      opacity: 0.9;
-      transform: translateY(-1px);
-    }
-
-    .btn-ghost {
-      background: #f3f4f6;
-      color: #333;
-      border: 1px solid #ddd;
-    }
-    .btn-ghost:hover {
-      background: #e5e7eb;
-    }
-
-    hr {
-      border: none;
-      border-top: 1px solid rgba(0, 0, 0, 0.1);
-      margin: 20px 0;
-    }
-
+    /* 🔹 Header Styles Inlined */
+    .main-header { position: fixed; top: 0; left: 0; width: 100%; height: 60px; background: rgba(255, 255, 255, 0.95); border-bottom: 1px solid #e0e0e0; z-index: 1000; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(5px); }
+    .header-inner { width: 100%; max-width: 1400px; padding: 0 24px; display: flex; justify-content: space-between; align-items: center; }
+    .logo { font-family: 'Noto Sans KR', sans-serif; font-weight: 700; font-size: 18px; color: #111; letter-spacing: 0.15em; text-transform: uppercase; }
+    .menu-wrap { position: relative; display: flex; align-items: center; }
+    .menu-toggle { background: transparent; border: none; cursor: pointer; display: flex; align-items: center; gap: 10px; padding: 8px 0; }
+    .menu-label { font-size: 12px; font-weight: 500; color: #111; letter-spacing: 0.1em; }
+    .hamburger-lines { display: flex; flex-direction: column; gap: 4px; }
+    .line { width: 18px; height: 1.5px; background-color: #111; display: block; transition: transform 0.3s ease; }
+    .menu-toggle[aria-expanded="true"] .line1 { transform: rotate(45deg) translate(2px, 2px); }
+    .menu-toggle[aria-expanded="true"] .line2 { transform: rotate(-45deg) translate(2px, -2px); width: 18px; }
+    .menu-list { display: none; position: absolute; top: 50px; right: -20px; width: 220px; background: #fff; border: 1px solid #e0e0e0; padding: 12px 0; flex-direction: column; box-shadow: 0 10px 40px rgba(0, 0, 0, 0.05); list-style: none; z-index: 1001; }
+    .menu-list.open { display: flex; animation: fadeIn 0.2s ease-out; }
+    .menu-list li a { display: block; padding: 10px 24px; font-size: 13px; color: #888; text-decoration: none; transition: all 0.2s; border-left: 2px solid transparent; }
+    .menu-list li a:hover { background-color: #fafafa; color: #111; border-left-color: #111; padding-left: 30px; }
+    .logout-btn { background: transparent; border: none; color: #111; font-size: 11px; font-weight: 500; letter-spacing: 0.1em; cursor: pointer; text-transform: uppercase; border-bottom: 1px solid transparent; padding: 4px 0; margin-left: 40px; transition: border-color 0.3s; }
+    .logout-btn:hover { border-bottom-color: #111; }
     @media (max-width: 768px) {
-      main {
-        padding: 14px;
-      }
-      .form-card {
-        padding: 18px;
-      }
-      h1 {
-        font-size: 22px;
-      }
-      .row-2 {
-        grid-template-columns: 1fr;
-      }
+        .main-header { height: 50px; }
+        .header-inner { padding: 0 16px; }
+        .logo { font-size: 16px; }
+        .logout-btn, .menu-toggle .menu-label { display: none; }
+        .menu-list { position: fixed; top: 50px; left: 0; right: 0; width: 100%; border: none; border-bottom: 1px solid #e0e0e0; box-shadow: 0 5px 10px rgba(0,0,0,0.05); }
+        .menu-list li a { padding: 14px 24px; font-size: 14px; }
     }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+    footer { text-align: center; padding: var(--space-6); color: var(--color-text-secondary); font-size: 0.8rem; border-top: 1px solid var(--color-border); margin-top: var(--space-6); background: var(--color-surface); }
   </style>
 </head>
 <body>
-  <!-- 🌌 배경 -->
-  <canvas id="bg-canvas"></canvas>
+  <!-- 🟢 FIREBASE CONFIGURATION -->
+  <script>
+    window.__firebase_config = JSON.stringify({
+      apiKey: "AIzaSyAyD0Gn5-zqzPzdXjQzZhVlMQvqTzUmHKs",
+      authDomain: "return-linen-management.firebaseapp.com",
+      projectId: "return-linen-management",
+      storageBucket: "return-linen-management.firebasestorage.app",
+      messagingSenderId: "310421638033",
+      appId: "1:310421638033:web:280047bf93a8c780f8e830",
+      measurementId: "G-D6BDRRKD9Y"
+    });
+  </script>
 
-  <!-- 🧭 헤더 -->
-  <div id="header-placeholder"></div>
+  <canvas id="bg-canvas"></canvas>
+  
+  <!-- 🔹 Header Inlined -->
+  <header class="main-header">
+    <div class="header-inner">
+      <div class="logo">HARU</div>
+      <div class="menu-wrap">
+        <button class="menu-toggle" aria-haspopup="true" aria-expanded="false">
+          <span class="menu-label">MENU</span>
+          <div class="hamburger-lines"><span class="line line1"></span><span class="line line2"></span></div>
+        </button>
+        <ul class="menu-list" role="menu">
+          <li><a href="board.html">게시판</a></li>
+          <li><a href="chat.html" data-menu="chat">채팅</a></li>
+          <li><a href="incoming_form.html">입고등록</a></li>
+          <li><a href="return_form.html">반품등록</a></li>
+          <li><a href="history_dashboard.html">내역관리</a></li>
+          <li><a href="inventory.html">재고관리</a></li>
+          <li><a href="admin_dashboard.html">린넨 통계</a></li>
+          <li><a href="lost_items_list.html">분실물관리</a></li>
+          <li><a href="maintenance_list.html">객실유지보수</a></li>
+          <li><a href="orders_list.html">주문요청</a></li>
+          <li><a href="worklog.html">근무기록</a></li>
+          <li><a href="notices.html">공지사항</a></li>
+          <li><a href="profile.html">내 정보</a></li>
+          <li><a href="schedule_dashboard.html">작업 스케줄러</a></li>
+          <li class="super-admin-only" style="display:none;"><a href="admin.html" class="admin-link">관리자 설정</a></li>
+          <li class="super-admin-only" style="display:none;"><a href="admin_users.html" class="admin-link">사용자 관리</a></li>
+        </ul>
+      </div>
+      <button id="logoutBtn" class="logout-btn">SIGN OUT</button>
+    </div>
+  </header>
 
   <main>
-    <h1>작업 등록</h1>
+    <div class="form-container">
+      <h1>NEW TASK (작업 등록)</h1>
 
-    <section class="form-card">
-      <label for="buildingSelect">건물 선택</label>
-      <select id="buildingSelect">
-        <option value="" selected disabled>건물 선택</option>
-        <option value="아라키초A">아라키초A</option>
-        <option value="아라키초B">아라키초B</option>
-        <option value="가부키초">가부키초</option>
-        <option value="다카다노바바">다카다노바바</option>
-        <option value="다이쿄초">다이쿄초</option>
-        <option value="오쿠보1">오쿠보1</option>
-        <option value="오쿠보2">오쿠보2</option>
-        <option value="오쿠보4">오쿠보4</option>
-      </select>
-
-      <label for="roomSelect">객실 선택</label>
-      <select id="roomSelect" disabled>
-        <option value="" selected disabled>객실 선택</option>
-      </select>
-
-      <div class="row-2">
-        <div>
-          <label for="taskSelect">작업 종류</label>
-          <select id="taskSelect">
-            <option value="" selected disabled>작업 선택</option>
-            <option>에어컨필터</option>
-            <option>환기구 청소</option>
-            <option>바퀴치약/바퀴캡슐</option>
-            <option>제습제 교체</option>
-            <option>탈취제</option>
-            <option>정수기 필터 교체</option>
-            <option>선반 보수</option>
-            <option>왁스작업</option>
-            <option>제초작업</option>
-            <option>오염된 매트리스/카페트/이불</option>
-            <option>기타(직접입력)</option>
+      <form id="scheduleForm" class="form-card">
+        <div class="form-group">
+          <label for="building">BUILDING (건물 선택)</label>
+          <select id="building" required>
+            <option value="" selected disabled>Select Building</option>
+            <option value="아라키초A">아라키초A</option>
+            <option value="아라키초B">아라키초B</option>
+            <option value="가부키초">가부키초</option>
+            <option value="다카다노바바">다카다노바바</option>
+            <option value="다이쿄초">다이쿄초</option>
+            <option value="오쿠보1">오쿠보1</option>
+            <option value="오쿠보2">오쿠보2</option>
+            <option value="오쿠보4">오쿠보4</option>
           </select>
         </div>
-        <div>
-          <label for="intervalMonths">주기 (개월 단위)</label>
-          <input id="intervalMonths" type="number" min="0" placeholder="예: 1 (1개월마다)" />
-          <div class="hint">0 또는 빈 값이면 반복 없음</div>
+
+        <div class="form-group">
+          <label for="room">ROOM (객실)</label>
+          <input type="text" id="room" placeholder="Enter Room No. (e.g. 101)" required />
         </div>
-      </div>
 
-      <!-- ✅ 추가: 작업일자 입력 -->
-      <label for="startDate">작업일자</label>
-      <input id="startDate" type="date" required />
+        <div class="row-2">
+          <div class="form-group">
+            <label for="taskName">TASK TYPE (작업 종류)</label>
+            <select id="taskName" required>
+              <option value="" selected disabled>Select Task</option>
+              <option>에어컨필터</option>
+              <option>환기구 청소</option>
+              <option>바퀴치약/바퀴캡슐</option>
+              <option>제습제 교체</option>
+              <option>탈취제</option>
+              <option>정수기 필터 교체</option>
+              <option>선반 보수</option>
+              <option>왁스작업</option>
+              <option>제초작업</option>
+              <option>오염된 매트리스/카페트/이불</option>
+              <option>기타(직접입력)</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="cycleDays">CYCLE (주기: 일 단위)</label>
+            <input id="cycleDays" type="number" min="0" placeholder="e.g. 30 (30 Days)" required />
+            <div class="hint">0 for One-time task (0 입력 시 일회성)</div>
+          </div>
+        </div>
 
-      <label for="notes">비고 (선택)</label>
-      <textarea id="notes" placeholder="특이사항 입력"></textarea>
+        <div class="form-group">
+          <label for="firstDate">START DATE (시작 예정일)</label>
+          <input id="firstDate" type="date" required />
+        </div>
 
-      <hr />
+        <hr />
 
-      <div class="actions">
-        <button id="cancelBtn" type="button" class="btn btn-ghost">취소</button>
-        <button id="saveBtn" type="button" class="btn btn-primary">저장</button>
-      </div>
-    </section>
+        <div class="actions">
+          <button type="button" class="btn btn-ghost" onclick="location.href='schedule_dashboard.html'">CANCEL (취소)</button>
+          <button type="submit" class="btn btn-primary" id="saveBtn">REGISTER (등록)</button>
+        </div>
+      </form>
+    </div>
   </main>
 
   <footer style="text-align:center;color:#9fb0c6;padding:16px 0;">
     © 2025 HARU · by KIM HYUN JUN
   </footer>
 
-  <script type="module">
-    import { initHeaderMenu } from "./header.js";
-    fetch("header.html").then(r => r.text()).then(h => {
-      document.getElementById("header-placeholder").innerHTML = h;
-      initHeaderMenu();
+  <script type="module" src="scripts/bg/scene.js"></script>
+  
+  <!-- Header Script -->
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const menuToggle = document.querySelector(".menu-toggle");
+      const navMenu = document.querySelector(".menu-list");
+      if(menuToggle && navMenu) {
+        menuToggle.addEventListener("click", () => {
+          const isOpen = navMenu.classList.toggle("open");
+          menuToggle.setAttribute("aria-expanded", isOpen);
+        });
+      }
     });
   </script>
 
-  <script type="module" src="scripts/bg/scene.js"></script>
-  <script type="module" src="scrollTop.js"></script>
+  <!-- Auth & Logout -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getAuth, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+    import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+    if (window.__firebase_config) {
+      const app = initializeApp(JSON.parse(window.__firebase_config));
+      const auth = getAuth(app);
+      const db = getFirestore(app);
+
+      const logoutBtn = document.getElementById("logoutBtn");
+      if(logoutBtn) {
+        logoutBtn.addEventListener("click", async () => {
+          if(!confirm("로그아웃 하시겠습니까?")) return;
+          try { await signOut(auth); window.location.reload(); } catch(e) { console.error(e); }
+        });
+      }
+
+      onAuthStateChanged(auth, async (user) => {
+        if(user) {
+           const superAdmin = "rlaguswns95@haru-tokyo.com";
+           if(user.email === superAdmin) {
+             document.querySelectorAll('.super-admin-only').forEach(el => el.style.display = 'block');
+           }
+        }
+      });
+    }
+  </script>
+
   <script type="module" src="schedule_form.js"></script>
+  <script type="module" src="scrollTop.js"></script>
+  <script type="module" src="notice_popup.js"></script>
+
 </body>
 </html>

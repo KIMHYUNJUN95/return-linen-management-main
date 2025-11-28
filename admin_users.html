@@ -3,178 +3,277 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>HARU · 사용자 관리</title>
+  <title>HARU 관리자 · 사용자 관리</title>
+  
+  <!-- 공통 스타일 -->
   <link rel="stylesheet" href="common.css" />
-  <link rel="stylesheet" href="background.css" />
+
   <style>
-    /* ===============================
-       👑 관리자 페이지 스타일 (HARU 디자인톤 유지)
-       =============================== */
+    /* -------------------------------
+       🎨 Page Specific Styles
+       Theme: Tokyo Day Bright (Minimal)
+       ------------------------------- */
+    
+    body {
+      background-color: var(--bg-base); /* Soft Gray (#F8FAFC) */
+      color: var(--haru-navy);
+    }
+
     main {
-      max-width: 900px;
-      margin: 0 auto;
-      padding: 20px;
+      max-width: 1000px;
+      margin: 60px auto;
+      padding: 0 24px;
+      animation: fadeIn 0.5s ease-out;
+    }
+
+    /* 타이틀 섹션 */
+    .page-header {
+      margin-bottom: 30px;
+      border-bottom: 1px solid #E2E8F0;
+      padding-bottom: 20px;
     }
 
     h2 {
-      color: var(--text);
-      font-weight: 700;
-      margin-bottom: 20px;
+      margin: 0;
+      color: var(--haru-navy);
+      font-weight: 800;
+      font-size: 28px;
+      letter-spacing: -0.02em;
     }
 
-    .admin-card {
-      background: var(--elev);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 20px;
-      box-shadow: var(--shadow);
+    .sub-title {
+      display: block;
+      margin-top: 8px;
+      font-size: 14px;
+      color: #94A3B8;
+      font-family: var(--font-en);
+      letter-spacing: 0.05em;
+    }
+
+    /* 🔐 관리자 액션 패널 (White Card) */
+    .admin-panel {
+      background: #FFFFFF;
+      border: 1px solid #E2E8F0;
+      border-radius: 0; /* 건축적 미니멀리즘 */
+      padding: 32px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.03);
+      margin-bottom: 40px;
       display: flex;
       flex-direction: column;
       gap: 16px;
     }
 
-    .admin-card label {
-      font-weight: 600;
-      color: var(--text);
+    .admin-panel label {
+      font-weight: 700;
+      color: #64748B;
+      font-size: 12px;
+      letter-spacing: 0.05em;
     }
 
-    .admin-card input {
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 8px 10px;
-      width: 100%;
-      background: #fff;
-    }
-
-    .btn-wrap {
+    .input-group {
       display: flex;
+      gap: 12px;
       flex-wrap: wrap;
-      gap: 10px;
-      margin-top: 10px;
     }
 
-    .btn {
-      border-radius: 8px;
-      height: 38px;
+    /* 입력창 스타일 */
+    .admin-panel input[type="email"] {
+      flex: 1;
+      height: 44px;
+      border: 1px solid #CBD5E1;
+      background: #F8FAFC;
+      border-radius: 0;
       padding: 0 16px;
       font-size: 14px;
+      color: var(--haru-navy);
+      min-width: 250px;
+      transition: all 0.2s;
+    }
+
+    .admin-panel input:focus {
+      outline: none;
+      background: #FFFFFF;
+      border-color: var(--haru-navy);
+    }
+
+    /* 버튼 스타일 */
+    .btn {
+      height: 44px;
+      padding: 0 24px;
+      font-size: 13px;
+      font-weight: 700;
       cursor: pointer;
-      transition: 0.2s;
-      font-weight: 600;
+      border-radius: 0;
+      transition: all 0.2s;
+      white-space: nowrap;
     }
 
+    /* 권한 부여 (Navy) */
     .btn.primary {
-      background: linear-gradient(135deg, #00b4d8, #0077b6);
-      color: #fff;
-      border: none;
+      background: var(--haru-navy);
+      color: #FFFFFF;
+      border: 1px solid var(--haru-navy);
+    }
+    .btn.primary:hover {
+      background: #000000;
+      border-color: #000000;
     }
 
+    /* 권한 회수 (Red outline) */
     .btn.danger {
-      background: #d33;
-      color: #fff;
-      border: none;
+      background: #FFFFFF;
+      color: #E74C3C;
+      border: 1px solid #E74C3C;
+    }
+    .btn.danger:hover {
+      background: #E74C3C;
+      color: #FFFFFF;
     }
 
-    .btn:hover {
-      opacity: 0.85;
-      transform: translateY(-1px);
+    /* 새로고침 (Gray outline) */
+    .btn.ghost {
+      background: #FFFFFF;
+      color: var(--haru-navy);
+      border: 1px solid #CBD5E1;
+    }
+    .btn.ghost:hover {
+      background: #F8FAFC;
+      border-color: var(--haru-navy);
     }
 
+    /* 👥 사용자 목록 테이블 */
     .user-list {
-      margin-top: 24px;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 12px;
+      background: #FFFFFF;
+      border: 1px solid #E2E8F0;
+      border-radius: 0;
       overflow: hidden;
-      box-shadow: var(--shadow);
+      box-shadow: 0 4px 6px rgba(0,0,0,0.02);
     }
 
     table {
       width: 100%;
       border-collapse: collapse;
-      font-size: 14px;
-      color: var(--text);
     }
 
-    thead {
-      background: rgba(255, 255, 255, 0.1);
-      font-weight: 600;
-    }
-
-    th, td {
-      padding: 10px 12px;
+    thead th {
+      background: #F8FAFC;
+      color: #64748B;
+      font-weight: 700;
+      font-size: 12px;
+      padding: 18px 24px;
       text-align: left;
-      border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+      border-bottom: 2px solid #E2E8F0;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
     }
 
-    .t-center {
+    tbody td {
+      padding: 16px 24px;
+      border-bottom: 1px solid #F1F5F9;
+      color: #334155;
+      font-size: 14px;
+      vertical-align: middle;
+    }
+
+    tbody tr:last-child td { border-bottom: none; }
+    tbody tr:hover td { background-color: #FAFAFA; }
+
+    .t-center { text-align: center; }
+    
+    /* 뱃지 스타일 (Admin Tag) */
+    .badge-admin {
+      display: inline-block;
+      padding: 4px 8px;
+      background: var(--haru-navy);
+      color: #fff;
+      font-size: 11px;
+      font-weight: 600;
+      border-radius: 2px;
+    }
+    .badge-user {
+      display: inline-block;
+      padding: 4px 8px;
+      background: #F1F5F9;
+      color: #64748B;
+      font-size: 11px;
+      font-weight: 500;
+      border-radius: 2px;
+    }
+
+    /* Footer */
+    footer {
       text-align: center;
+      color: #CBD5E1;
+      padding: 40px 0;
+      font-size: 12px;
+      letter-spacing: 0.05em;
     }
 
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Mobile */
     @media (max-width: 768px) {
-      .btn-wrap {
+      .input-group {
         flex-direction: column;
+      }
+      .btn {
+        width: 100%;
       }
     }
   </style>
 </head>
 <body>
-  <!-- 🌌 3D 배경 -->
-  <canvas id="bg-canvas"></canvas>
 
-  <!-- 🧭 헤더 -->
+  <!-- ✅ 헤더 로드 -->
   <div id="header-placeholder"></div>
 
-  <main class="glass">
-    <h2>👑 사용자 관리</h2>
+  <main>
+    <div class="page-header">
+      <h2>사용자 관리</h2>
+      <span class="sub-title">Administrator Access Control</span>
+    </div>
 
-    <!-- 🔐 관리자 전용 기능 카드 -->
-    <section class="admin-card">
-      <label for="emailInput">사용자 이메일</label>
-      <input id="emailInput" type="email" placeholder="rlaguswns95@haru-tokyo.com" />
-
-      <div class="btn-wrap">
+    <!-- 🔐 관리자 액션 패널 -->
+    <section class="admin-panel">
+      <label for="emailInput">이메일 주소 입력</label>
+      <div class="input-group">
+        <input id="emailInput" type="email" placeholder="user@haru-tokyo.com" />
+        
         <button id="btnGrantAdmin" class="btn primary">관리자 권한 부여</button>
         <button id="btnRevokeAdmin" class="btn danger">관리자 권한 회수</button>
-        <button id="btnRefreshUsers" class="btn">🔄 목록 새로고침</button>
+        <button id="btnRefreshUsers" class="btn ghost">목록 새로고침</button>
       </div>
     </section>
 
-    <!-- 👥 사용자 목록 -->
-    <section class="user-list glass">
+    <!-- 👥 사용자 목록 테이블 -->
+    <section class="user-list">
       <table>
         <thead>
           <tr>
             <th>이름</th>
             <th>이메일</th>
-            <th class="t-center">권한</th>
+            <th class="t-center">권한 등급</th>
           </tr>
         </thead>
         <tbody id="userTbody">
-          <tr><td colspan="3" class="t-center">불러오는 중...</td></tr>
+          <tr><td colspan="3" class="t-center" style="padding:40px; color:#94A3B8;">데이터를 불러오는 중입니다...</td></tr>
         </tbody>
       </table>
     </section>
   </main>
 
-  <footer style="text-align:center;color:#9fb0c6;padding:16px 0;">
-    © 2025 HARU · by KIM HYUN JUN
+  <footer>
+    © 2025 HARU SYSTEM · TOKYO
   </footer>
 
-  <!-- ✅ 헤더 로드 -->
-  <script type="module">
-    import { initHeaderMenu } from "./header.js";
-    fetch("header.html")
-      .then(r => r.text())
-      .then(h => {
-        document.getElementById("header-placeholder").innerHTML = h;
-        initHeaderMenu();
-      });
-  </script>
-
-  <!-- ✅ 관리자 스크립트 -->
+  <!-- ✅ 기능 스크립트 -->
   <script type="module" src="admin_users.js"></script>
   <script type="module" src="scrollTop.js"></script>
+  <script type="module" src="notice_popup.js"></script>
+
 
 </body>
 </html>

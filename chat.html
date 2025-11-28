@@ -3,211 +3,304 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>HARU 채팅</title>
+  <title>HARU TEAM CHAT</title>
+  
+  <!-- 공통 스타일 -->
   <link rel="stylesheet" href="common.css" />
+
   <style>
-    /* ===============================
-       🧭 채팅 레이아웃
-    =============================== */
+    /* -------------------------------
+       🎨 Chat Specific Styles
+       Theme: Tokyo Day Bright (Minimal)
+       ------------------------------- */
+    
+    :root {
+      --bg-base: #F8FAFC;
+    }
+
+    body {
+      background-color: var(--bg-base);
+      color: var(--haru-navy);
+      /* 폰트는 common.css 상속 */
+    }
+
+    main {
+      display: flex;
+      justify-content: center;
+      padding-top: 40px; /* 헤더 공간 + 여백 */
+    }
+
+    /* 🧭 채팅 레이아웃 (White Panel) */
     .chat-container {
-      max-width: 800px;
-      margin: 0 auto;
+      width: 100%;
+      max-width: 900px;
+      height: 80vh; /* 화면 꽉 차지 않게 적당한 높이 */
+      background: #FFFFFF;
+      border: 1px solid #E2E8F0;
+      border-radius: 0; /* 건축적 미니멀리즘 */
+      box-shadow: 0 10px 30px rgba(0,0,0,0.03);
       display: flex;
       flex-direction: column;
-      height: calc(100vh - 140px);
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      box-shadow: var(--shadow);
       overflow: hidden;
+      animation: fadeIn 0.5s ease-out;
     }
 
     /* ===============================
-       👤 상단바
-    =============================== */
+       👤 상단바 (Header)
+       =============================== */
     .chat-topbar {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 10px 14px;
-      border-bottom: 1px solid var(--border);
-      background: rgba(255, 255, 255, 0.02);
+      padding: 20px 24px;
+      background: #FFFFFF;
+      border-bottom: 1px solid #E2E8F0;
     }
-    .chat-topbar .me {
+
+    .chat-topbar .title {
+      font-family: var(--font-en);
+      font-weight: 800;
+      font-size: 16px;
+      letter-spacing: 0.05em;
+      color: var(--haru-navy);
+      text-transform: uppercase;
+    }
+
+    .chat-topbar .user-info {
+      font-size: 13px;
+      color: #94A3B8;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .chat-topbar .user-info strong {
+      color: var(--haru-navy);
       font-weight: 700;
-      color: var(--text);
-      font-size: 14px;
     }
 
     /* ===============================
        💬 메시지 영역
-    =============================== */
+       =============================== */
     .chat-messages {
       flex: 1;
       overflow-y: auto;
-      padding: 16px;
+      padding: 24px;
       display: flex;
       flex-direction: column;
-      gap: 10px;
-      background: linear-gradient(180deg, rgba(255, 255, 255, 0.01), transparent);
+      gap: 16px;
+      background-color: #FFFFFF;
+      /* 스크롤바 커스텀 */
+      scrollbar-width: thin;
+      scrollbar-color: #CBD5E1 transparent;
     }
 
     .message {
-      max-width: 75%;
-      padding: 10px 14px;
-      border-radius: 14px;
-      word-break: break-word;
-      line-height: 1.4;
-      font-size: 15px;
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+      max-width: 70%;
+      padding: 12px 18px;
+      border-radius: 2px; /* 아주 살짝만 둥글게 */
+      font-size: 14px;
+      line-height: 1.5;
+      position: relative;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.02);
     }
 
-    /* 🟢 내 메시지 (카톡 스타일) */
+    /* 🟢 내 메시지 (Navy Block) */
     .message.self {
-      background: #DCF8C6;
-      color: #000;
       align-self: flex-end;
-      border-bottom-right-radius: 4px;
+      background-color: var(--haru-navy);
+      color: #FFFFFF;
+      border-radius: 12px 12px 0 12px; /* 모던한 말풍선 형태 */
     }
 
-    /* ⚪ 상대 메시지 (카톡 스타일) */
+    /* ⚪ 상대 메시지 (Light Gray Block) */
     .message.other {
-      background: #FFFFFF;
-      color: #000;
       align-self: flex-start;
-      border-bottom-left-radius: 4px;
-      border: 1px solid #ddd;
+      background-color: #F1F5F9;
+      color: #334155;
+      border: 1px solid #E2E8F0;
+      border-radius: 12px 12px 12px 0;
+    }
+
+    .message .sender-name {
+      font-size: 11px;
+      font-weight: 700;
+      margin-bottom: 4px;
+      display: block;
+      color: #64748B;
+    }
+    .message.self .sender-name {
+      color: rgba(255,255,255,0.7);
+      text-align: right;
     }
 
     .message .meta {
+      font-size: 10px;
+      margin-top: 6px;
+      opacity: 0.6;
+      text-align: right;
+      font-family: var(--font-en);
+      letter-spacing: 0.05em;
+    }
+
+    /* 이미지 메시지 스타일 */
+    .message img {
+      max-width: 100%;
+      border-radius: 4px;
       margin-top: 4px;
-      font-size: 12px;
-      opacity: 0.8;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
     }
 
     /* ===============================
-       📝 입력창
-    =============================== */
+       📝 입력창 (Footer)
+       =============================== */
     .chat-input {
       display: flex;
-      padding: 10px;
-      border-top: 1px solid var(--border);
-      background: #fff;
       align-items: center;
-      gap: 6px;
+      gap: 12px;
+      padding: 20px 24px;
+      background: #FFFFFF;
+      border-top: 1px solid #E2E8F0;
     }
-    .chat-input input[type="text"] {
-      flex: 1;
-      border: 1px solid var(--border);
-      border-radius: 20px;
-      padding: 10px 14px;
-      font-size: 15px;
-      outline: none;
-    }
-    .chat-input input[type="file"] {
-      display: none;
-    }
+
+    /* 파일 첨부 버튼 (Clean Icon style) */
     .chat-input label {
       display: flex;
       align-items: center;
       justify-content: center;
       width: 40px;
       height: 40px;
-      border-radius: 50%;
-      background: #f1f3f5;
+      border: 1px solid #CBD5E1;
+      background: #FFFFFF;
       cursor: pointer;
-      transition: background 0.2s;
+      transition: all 0.2s;
+      color: var(--haru-navy);
+      font-size: 20px;
+      border-radius: 0; /* 각지게 */
     }
     .chat-input label:hover {
-      background: #e2e6ea;
+      border-color: var(--haru-navy);
+      background: #F8FAFC;
     }
+
+    .chat-input input[type="file"] {
+      display: none;
+    }
+
+    /* 텍스트 입력 필드 */
+    .chat-input input[type="text"] {
+      flex: 1;
+      height: 40px;
+      border: 1px solid #CBD5E1;
+      border-radius: 0;
+      padding: 0 16px;
+      font-size: 14px;
+      color: var(--haru-navy);
+      background: #F8FAFC;
+      transition: all 0.2s;
+    }
+    .chat-input input[type="text"]:focus {
+      outline: none;
+      border-color: var(--haru-navy);
+      background: #FFFFFF;
+    }
+
+    /* 전송 버튼 (Text Button) */
     .chat-input button {
-      background: var(--accent);
-      color: #fff;
-      border: none;
-      border-radius: 20px;
-      padding: 8px 16px;
-      font-weight: 600;
+      height: 40px;
+      padding: 0 24px;
+      background: var(--haru-navy);
+      color: #FFFFFF;
+      border: 1px solid var(--haru-navy);
+      font-weight: 700;
+      font-size: 12px;
+      letter-spacing: 0.05em;
       cursor: pointer;
-      transition: background 0.2s ease;
+      transition: all 0.2s;
+      border-radius: 0;
+      text-transform: uppercase;
+      font-family: var(--font-en);
     }
     .chat-input button:hover {
-      background: #368dfc;
+      background: #000000;
+      border-color: #000000;
     }
 
-    /* ===============================
-       🗑 삭제 버튼
-    =============================== */
+    /* 🗑 삭제 버튼 */
     .delete-btn {
       cursor: pointer;
-      font-size: 12px;
-      color: #f55;
+      font-size: 10px;
+      color: #E74C3C;
       margin-left: 8px;
       opacity: 0.8;
+      text-transform: uppercase;
+      font-weight: 600;
+      border: none;
+      background: transparent;
+    }
+    .delete-btn:hover { text-decoration: underline; opacity: 1; }
+
+    /* 애니메이션 */
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
     }
 
-    /* ===============================
-       📱 반응형
-    =============================== */
+    /* 📱 모바일 반응형 */
     @media (max-width: 768px) {
+      main { padding-top: 20px; }
       .chat-container {
-        height: calc(100vh - 120px);
-        border-radius: 0;
+        height: calc(100vh - 100px);
+        border: none;
+        border-top: 1px solid #E2E8F0;
+        border-bottom: 1px solid #E2E8F0;
       }
-      .chat-input input[type="text"] {
-        font-size: 14px;
-      }
-      .chat-input button {
-        font-size: 14px;
-        padding: 8px 12px;
-      }
+      .chat-messages { padding: 16px; }
+      .message { max-width: 85%; }
+      .chat-input { padding: 12px 16px; }
     }
   </style>
 </head>
 <body>
-  <!-- ✅ 공통 헤더 -->
+  
+  <!-- ✅ 헤더 (JS 로드) -->
   <div id="header-placeholder"></div>
 
   <main>
     <div class="chat-container">
       <!-- 상단바 -->
       <div class="chat-topbar">
-        <div class="me">내 이름: <span id="meName">로그인 필요</span></div>
-        <div class="muted" style="font-size:12px">팀 채팅</div>
+        <div class="title">Team Chat</div>
+        <div class="user-info">
+          USER: <span id="meName">GUEST</span>
+        </div>
       </div>
 
       <!-- 메시지 목록 -->
-      <div id="chatMessages" class="chat-messages" aria-live="polite"></div>
+      <div id="chatMessages" class="chat-messages" aria-live="polite">
+        <!-- JS에서 메시지가 로드됩니다 -->
+      </div>
 
       <!-- 입력창 -->
       <form id="chatForm" class="chat-input" autocomplete="off">
-        <label for="imageInput" title="사진 첨부">📎</label>
+        <!-- 파일 첨부 (아이콘 대신 + 기호 사용) -->
+        <label for="imageInput" title="이미지 첨부">＋</label>
         <input type="file" id="imageInput" accept="image/*" />
-        <input type="text" id="chatInput" placeholder="메시지를 입력하세요…" required />
-        <button type="submit">전송</button>
+        
+        <input type="text" id="chatInput" placeholder="메시지를 입력하세요..." required />
+        <button type="submit">Send</button>
       </form>
     </div>
   </main>
 
-  <footer style="text-align:center;color:#777;padding:16px 0;">
-    © 2025 HARU · by KIM HYUN JUN
+  <footer>
+    © 2025 HARU SYSTEM · TOKYO
   </footer>
 
   <!-- ✅ 기능 스크립트 -->
   <script type="module" src="chat.js"></script>
-  <script type="module">
-    import { initHeaderMenu } from "./header.js";
-    fetch("header.html")
-      .then(r => r.text())
-      .then(html => {
-        document.getElementById("header-placeholder").innerHTML = html;
-        initHeaderMenu();
-      });
-  </script>
   <script type="module" src="scrollTop.js"></script>
+  <script type="module" src="notice_popup.js"></script>
+
 
 </body>
 </html>

@@ -1,11 +1,13 @@
-// 📄 maintenance_form.js (유지보수 등록/수정 + 보수방법 필드 저장 안정화 버전)
-
 // ========================================
-// 🛠️ HARU 유지보수 등록/수정 (작성자 이메일 저장 + 보수방법 포함)
+// 🛠️ HARU Maintenance Form Controller
+// Design System: Tokyo Day Bright
 // ========================================
 
-import { db, storage, auth } from "./storage.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
 import {
+  getFirestore,
   collection,
   addDoc,
   serverTimestamp,
@@ -13,13 +15,24 @@ import {
   getDoc,
   updateDoc,
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-import {
-  ref,
-  uploadBytes,
-  getDownloadURL,
-} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
 
-/* ========== DOM 요소 ========== */
+// 🔴 1. Firebase Initialization
+let firebaseConfig = {};
+if (window.__firebase_config) {
+  try { firebaseConfig = JSON.parse(window.__firebase_config); } catch (e) { console.error(e); }
+}
+
+let app, auth, db, storage;
+if (firebaseConfig.apiKey) {
+    app = initializeApp(firebaseConfig);
+    auth = getAuth(app);
+    db = getFirestore(app);
+    storage = getStorage(app);
+} else {
+    auth = { onAuthStateChanged: () => {} };
+}
+
+/* ========== DOM Elements ========== */
 const form = document.getElementById("maintenanceForm");
 const photoInput = document.getElementById("photo");
 const preview = document.getElementById("photoPreview");
@@ -27,148 +40,163 @@ const buildingEl = document.getElementById("building");
 const roomEl = document.getElementById("room");
 const statusEl = document.getElementById("status");
 const descEl = document.getElementById("description");
-const repairEl = document.getElementById("repairMethod"); // 🔧 보수방법
+const repairEl = document.getElementById("repairMethod"); // 🔧 보수방법 필드
 const submitBtn = document.getElementById("submitBtn");
 const titleEl = document.getElementById("formTitle");
 
-/* ========== 수정 모드 확인 ========== */
+/* ========== Edit Mode Check ========== */
 const urlParams = new URLSearchParams(location.search);
 const editId = urlParams.get("edit");
 let existingPhotos = [];
 
-/* ========== 수정 모드 데이터 로드 ========== */
-(async function maybeLoadForEdit() {
-  if (!editId) return;
+/* ========== Load Data for Edit ========== */
+if (editId && db) {
+    (async function loadForEdit() {
+        if (titleEl) titleEl.textContent = "EDIT MAINTENANCE (유지보수 수정)";
+        if (submitBtn) submitBtn.textContent = "UPDATE (수정 저장)";
 
-  if (titleEl) titleEl.textContent = "객실 유지보수 수정";
-  if (submitBtn) submitBtn.textContent = "수정 완료";
+        try {
+            const snap = await getDoc(doc(db, "maintenance", editId));
+            if (!snap.exists()) {
+                alert("Data not found.");
+                location.href = "maintenance_list.html";
+                return;
+            }
 
-  const snap = await getDoc(doc(db, "maintenance", editId));
-  if (!snap.exists()) return;
+            const d = snap.data();
+            if (buildingEl) buildingEl.value = d.building || "";
+            if (roomEl) roomEl.value = d.room || "";
+            if (statusEl) statusEl.value = d.status || "접수됨";
+            
+            // DB field compatibility
+            if (descEl) descEl.value = d.issue || d.description || d.desc || "";
+            
+            // 🔧 Load Repair Method
+            if (repairEl) repairEl.value = d.repairMethod || ""; 
 
-  const d = snap.data();
-  buildingEl.value = d.building || "";
-  roomEl.value = d.room || "";
-  statusEl.value = d.status || "접수됨";
-  descEl.value = d.issue || d.description || d.desc || "";
-  repairEl.value = d.repairMethod || ""; // 🔧 보수방법 로드
+            // Image handling
+            existingPhotos = Array.isArray(d.imageUrls) && d.imageUrls.length
+                ? d.imageUrls
+                : d.photoURL ? [d.photoURL] : d.photos || [];
 
-  // 📸 단일·다중 이미지 병합 처리
-  existingPhotos =
-    Array.isArray(d.imageUrls) && d.imageUrls.length
-      ? d.imageUrls
-      : d.photoURL
-      ? [d.photoURL]
-      : d.photos || [];
+            // Preview existing photos
+            preview.innerHTML = existingPhotos.map(url => 
+                `<img src="${url}" style="width:80px;height:80px;object-fit:cover;border:1px solid #E2E8F0;margin-right:8px;">`
+            ).join("");
 
-  preview.innerHTML = existingPhotos
-    .map(
-      (url) =>
-        `<img src="${url}" style="width:80px;height:80px;object-fit:cover;border-radius:8px;margin-right:8px;">`
-    )
-    .join("");
-})();
+        } catch (e) {
+            console.error("Load error:", e);
+        }
+    })();
+}
 
-/* ========== 사진 업로드 ========== */
+/* ========== Upload Helper ========== */
 async function uploadPhotos(files) {
   const urls = [];
   for (const file of files) {
-    const storageRef = ref(
-      storage,
-      `maintenance/${Date.now()}_${file.name}`
-    );
+    const storageRef = ref(storage, `maintenance/${Date.now()}_${file.name}`);
     await uploadBytes(storageRef, file);
     urls.push(await getDownloadURL(storageRef));
   }
   return urls;
 }
 
-/* ========== 등록/수정 이벤트 ========== */
-form.addEventListener("submit", async (e) => {
-  e.preventDefault();
-  submitBtn.disabled = true;
-
-  const building = buildingEl.value.trim();
-  const room = roomEl.value.trim();
-  const status = statusEl.value.trim();
-  const desc = descEl.value.trim();
-  const repairMethod = repairEl.value.trim(); // 🔧 보수방법 저장
-
-  if (!building || !room || !desc) {
-    alert("건물, 객실, 내용을 입력하세요.");
-    submitBtn.disabled = false;
-    return;
-  }
-
-  try {
-    const user = auth.currentUser;
-    const staff = user ? user.displayName || user.email : "관리자";
-    const createdByEmail = user ? user.email : "관리자";
-
-    // 신규 이미지 업로드
-    const newFiles = Array.from(photoInput.files || []);
-    const newUrls = newFiles.length ? await uploadPhotos(newFiles) : [];
-
-    // 기존 이미지 + 신규 이미지 병합
-    const imageUrls = [...existingPhotos, ...newUrls];
-    const photoURL = imageUrls[0] || "";
-
-    const data = {
-      building,
-      room,
-      issue: desc,
-      staff,
-      createdByEmail,
-      status,
-      repairMethod, // 🔧 보수방법 확실히 저장
-      imageUrls,
-      photoURL,
-      updatedAt: serverTimestamp(),
-    };
-
-    // ============================
-    // 🔥 수정 모드 — 기존 필드 삭제 안 되고 merge 유지됨
-    // ============================
-    if (editId) {
-      await updateDoc(doc(db, "maintenance", editId), {
-        ...data,
-      });
-
-      alert("✅ 수정 완료");
-    } else {
-      // ============================
-      // 🔥 신규 등록
-      // ============================
-      await addDoc(collection(db, "maintenance"), {
-        ...data,
-        createdAt: serverTimestamp(),
-      });
-
-      alert("✅ 등록 완료");
+/* ========== Submit Handler ========== */
+if (form) {
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    
+    if (!db) {
+        alert("Database not connected.");
+        return;
     }
 
-    location.href = "maintenance_list.html";
-  } catch (err) {
-    console.error("🚨 저장 오류:", err);
-    alert("저장 중 오류가 발생했습니다.");
-  } finally {
-    submitBtn.disabled = false;
-  }
-});
+    submitBtn.disabled = true;
+    submitBtn.textContent = "PROCESSING...";
 
-/* ========== 사진 미리보기 ========== */
-photoInput.addEventListener("change", () => {
-  preview.innerHTML = "";
-  [...photoInput.files].forEach((file) => {
-    const img = document.createElement("img");
-    img.src = URL.createObjectURL(file);
-    img.style.width = "80px";
-    img.style.height = "80px";
-    img.style.objectFit = "cover";
-    img.style.borderRadius = "8px";
-    img.style.marginRight = "8px";
-    preview.appendChild(img);
+    const building = buildingEl.value.trim();
+    const room = roomEl.value.trim();
+    const status = statusEl.value.trim();
+    const desc = descEl.value.trim();
+    const repairMethod = repairEl ? repairEl.value.trim() : ""; // 🔧 Save Repair Method
+
+    if (!building || !room || !desc) {
+      alert("Please fill in all required fields.");
+      submitBtn.disabled = false;
+      submitBtn.textContent = editId ? "UPDATE" : "SUBMIT REQUEST";
+      return;
+    }
+
+    try {
+      const user = auth.currentUser;
+      const staff = user ? user.displayName || user.email : "Admin";
+      const createdByEmail = user ? user.email : "Admin";
+
+      // New Photo Upload
+      const newFiles = Array.from(photoInput.files || []);
+      const newUrls = newFiles.length ? await uploadPhotos(newFiles) : [];
+
+      // Merge photos
+      const imageUrls = [...existingPhotos, ...newUrls];
+      const photoURL = imageUrls[0] || ""; 
+
+      const data = {
+        building,
+        room,
+        issue: desc,
+        staff,
+        createdByEmail,
+        status,
+        repairMethod, // 🔧 Save to DB
+        imageUrls,
+        photoURL,
+        updatedAt: serverTimestamp(),
+      };
+
+      if (editId) {
+        // Update
+        await updateDoc(doc(db, "maintenance", editId), data);
+        alert("Updated successfully.");
+      } else {
+        // Create
+        data.createdAt = serverTimestamp();
+        await addDoc(collection(db, "maintenance"), data);
+        alert("Registered successfully.");
+      }
+
+      location.href = "maintenance_list.html";
+
+    } catch (err) {
+      console.error("Save Error:", err);
+      alert("Error saving data.");
+      submitBtn.disabled = false;
+      submitBtn.textContent = editId ? "UPDATE" : "SUBMIT REQUEST";
+    }
   });
-});
+}
 
-// 2025-11-19 보수방법 저장 누락 문제 해결 완료
+/* ========== Photo Preview ========== */
+if (photoInput) {
+  photoInput.addEventListener("change", () => {
+    // Re-render existing
+    let html = existingPhotos.map(url => `<img src="${url}" style="width:80px;height:80px;object-fit:cover;border:1px solid #E2E8F0;margin-right:8px;">`).join("");
+    
+    [...photoInput.files].forEach((file) => {
+      if (!file.type.startsWith("image/")) return;
+      const src = URL.createObjectURL(file);
+      html += `<img src="${src}" style="width:80px;height:80px;object-fit:cover;border:1px solid #E2E8F0;margin-right:8px;">`;
+    });
+    
+    preview.innerHTML = html;
+  });
+}
+
+// Auth Check
+if (auth) {
+    onAuthStateChanged(auth, (user) => {
+        if (!user) {
+             alert("Please login.");
+             location.href = "index.html";
+        }
+    });
+}

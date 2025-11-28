@@ -1,4 +1,3 @@
-<!-- 📄 maintenance_list.html (유지보수 목록 페이지 전체 코드 - 보수방법 줄바꿈 처리 적용) -->
 <!DOCTYPE html>
 <html lang="ko">
 <head>
@@ -6,235 +5,526 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>HARU 유지보수 관리</title>
   <link rel="stylesheet" href="common.css" />
+
+  <!-- =============================
+       🔥 새 헤더 스타일 (유지)
+       ============================= -->
   <style>
-    .container {
-      max-width: 1100px;
-      margin: 0 auto;
-      background: hsl(var(--color-bg-elevated));
-      border: 1px solid hsl(var(--color-border-subtle));
-      border-radius: var(--radius-lg);
-      box-shadow: var(--shadow-md);
-      padding: 20px;
-    }
-    h2 { 
-      margin-bottom: 16px; 
-      font-size: var(--font-size-xl);
-      font-weight: 700;
-      color: hsl(var(--color-text-primary));
-    }
-    .filter {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      align-items: center;
-      margin-bottom: 16px;
-    }
-    .filter select, .filter input {
-      border-radius: var(--radius-md);
-      border: 1px solid hsl(var(--color-border-subtle));
-      padding: 8px 12px;
-      font-size: 14px;
-      background: hsl(var(--color-bg-input));
-      color: hsl(var(--color-text-primary));
-    }
-    .filter button {
-      border: none;
-      border-radius: 8px;
-      padding: 0 14px;
-      height: 36px;
-      cursor: pointer;
-      color: #fff;
-    }
-    #filterBtn { background: hsl(var(--color-primary)); }
-    #resetBtn { background: #777; }
-    button.btn-green {
-      background-color: #16a34a !important;
-      color: white !important;
-      font-weight: 600;
-      font-size: 14px;
-      padding: 8px 16px;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-      transition: background 0.2s ease, transform 0.1s ease;
-      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
-    }
-    button.btn-green:hover { background-color: #15803d !important; transform: translateY(-1px); }
-    button.btn-green:disabled { background-color: #9ca3af; cursor: not-allowed; box-shadow: none; }
-
-    /* ✅ 표 줄바꿈/폭 고정 (보수방법 길어져도 옆으로 안 퍼지게) */
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      text-align: center;
-      font-size: 15px;
-      table-layout: fixed;               /* 칸 폭 고정 */
-    }
-    th, td {
-      border-bottom: 1px solid hsl(var(--color-border-subtle));
-      padding: 10px;
-      vertical-align: middle;
-      word-break: break-word;            /* 단어 중간이라도 줄바꿈 */
-      white-space: normal;              /* 옆으로 늘어나지 않고 줄바꿈 */
+    :root {
+      --tk-black: #111111;
+      --tk-gray: #888888;
+      --tk-light-gray: #f4f4f4;
+      --tk-white: #ffffff;
+      --tk-border: #e0e0e0;
+      --tk-accent: #000000;
     }
 
-    th {
-      background: hsl(var(--color-bg-card));
-      font-weight: 600;
-      color: hsl(var(--color-text-primary));
+    body {
+      padding-top: 60px;
+      font-family: 'Noto Sans KR', sans-serif;
+      background-color: #f9f9f9;
     }
-    .photo-thumb {
-      width: 70px;
-      height: 70px;
-      object-fit: cover;
-      border-radius: 6px;
-      cursor: pointer;
-    }
-    .mobile-card {
-      background: hsl(var(--color-bg-card));
-      border: 1px solid hsl(var(--color-border-subtle));
-      border-radius: 10px;
-      padding: 12px;
-      margin-bottom: 10px;
-      box-shadow: var(--shadow-sm);
-      word-break: break-word;
-      white-space: normal;
-    }
-    .mobile-card img {
-      width: 100%;
-      border-radius: 10px;
-      margin-top: 8px;
-    }
-    @media (min-width: 769px) {
-      .table-wrap { display: block; }
-      .mobile-card-list { display: none; }
-    }
-    @media (max-width: 768px) {
-      .table-wrap { display: none; }
-      .mobile-card-list { display: block; }
-    }
-    .modal-bg {
+
+    /* --- Header Layout --- */
+    .main-header {
       position: fixed;
-      inset: 0;
-      background: rgba(0, 0, 0, 0.6);
-      display: none;
-      justify-content: center;
+      top: 0; left: 0;
+      width: 100%; height: 60px;
+      background: rgba(255,255,255,0.95);
+      border-bottom: 1px solid var(--tk-border);
+      z-index: 1000;
+      display: flex; align-items: center; justify-content: center;
+      backdrop-filter: blur(5px);
+    }
+
+    .header-inner {
+      width: 100%; max-width: 1400px;
+      padding: 0 24px;
+      display: flex;
+      justify-content: space-between;
       align-items: center;
-      z-index: 9999;
-      padding: 20px;
     }
-    .modal-card {
-      background: #fff;
-      border-radius: 12px;
-      padding: 20px;
-      max-width: 600px;
-      width: 90%;
-      max-height: 80vh;
-      overflow-y: auto;
-      word-break: break-word;
-      white-space: normal;
+
+    .logo {
+      font-weight: 700; font-size: 18px;
+      color: var(--tk-black);
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
     }
-    .modal-card img {
-      width: 100%;
-      border-radius: 8px;
-      margin-top: 10px;
+
+    .menu-wrap { position: relative; display: flex; align-items: center; }
+
+    .menu-toggle {
+      background: transparent; border: none;
+      cursor: pointer;
+      display: flex; align-items: center;
+      gap: 10px; padding: 8px 0;
+      transition: opacity .3s;
     }
-    .modal-card textarea {
-      width: 100%;
-      border: 1px solid hsl(var(--color-border-subtle));
-      border-radius: 8px;
-      padding: 8px;
-      min-height: 60px;
+    .menu-toggle:hover { opacity: .6; }
+
+    .menu-label {
+      font-size: 12px; font-weight: 500;
+      color: var(--tk-black);
+      letter-spacing: .1em;
     }
-    footer {
-      text-align: center;
-      color: #777;
-      padding: 16px 0;
+
+    .hamburger-lines { display:flex; flex-direction:column; gap:4px; }
+    .line { width:18px; height:1.5px; background:var(--tk-black); transition:.3s; }
+
+    .menu-toggle[aria-expanded="true"] .line1 { transform: rotate(45deg) translate(2px,2px); }
+    .menu-toggle[aria-expanded="true"] .line2 { transform: rotate(-45deg) translate(2px,-2px); }
+
+    .menu-list {
+      display:none;
+      position:absolute;
+      top:50px;
+      right:-20px;
+      width:220px;
+      background:var(--tk-white);
+      border:1px solid var(--tk-border);
+      padding:12px 0;
+      flex-direction:column;
+      box-shadow:0 10px 40px rgba(0,0,0,0.05);
+      list-style:none;
+      z-index:1001;
+    }
+
+    .menu-list.open { display:flex; animation: fadeIn .2s ease-out; }
+
+    .menu-list li a {
+      display:block;
+      padding:10px 24px;
+      font-size:13px;
+      color: var(--tk-gray);
+      text-decoration:none;
+      border-left:2px solid transparent;
+      transition:.2s;
+    }
+    .menu-list li a:hover {
+      background:#fafafa;
+      color:var(--tk-black);
+      border-left-color:var(--tk-black);
+      padding-left:30px;
+    }
+
+    .menu-list li a.admin-link {
+      color:#e74c3c;
+      font-weight:600;
+    }
+
+    .logout-btn {
+      background:transparent;
+      border:none;
+      color:var(--tk-black);
+      font-size:11px;
+      font-weight:500;
+      letter-spacing:.1em;
+      cursor:pointer;
+      text-transform:uppercase;
+      border-bottom:1px solid transparent;
+      padding:4px 0;
+      margin-left:40px;
+      transition:.3s;
+    }
+    .logout-btn:hover { border-bottom-color:var(--tk-black); }
+
+    @keyframes fadeIn { from{opacity:0; transform:translateY(-5px);} to{opacity:1; transform:translateY(0);} }
+
+    @media(max-width:768px){
+      .main-header{height:50px;}
+      .header-inner{padding:0 16px;}
+      .logo{font-size:16px;}
+      .logout-btn{display:none;}
+      .menu-toggle .menu-label{display:none;}
+      .menu-list{
+        position:fixed; top:50px; left:0; right:0;
+        width:100%; border:none;
+        border-bottom:1px solid var(--tk-border);
+      }
+      .menu-list li a{padding:14px 24px; font-size:14px;}
+    }
+  </style>
+
+  <!-- =============================
+       maintenance_list 원본 스타일
+       ============================= -->
+  <style>
+    body { background-color:#F8FAFC; color:#2C3E50; }
+    main { max-width:1200px; margin:0 auto; padding:40px 24px; }
+
+    .page-header {
+      display:flex; justify-content:space-between; align-items:center;
+      margin-bottom:30px; padding-bottom:20px;
+      border-bottom:1px solid #E2E8F0;
+    }
+
+    h2 { margin:0; font-size:28px; font-weight:800; }
+
+    .btn-add {
+      background:#2C3E50; color:#fff; padding:12px 24px;
+      border:1px solid #2C3E50;
+      font-size:13px; font-weight:700;
+      display:inline-flex; align-items:center; gap:8px;
+      text-decoration:none; transition:.2s;
+    }
+    .btn-add:hover { background:#000; border-color:#000; transform:translateY(-2px); }
+
+    .building-tabs { display:flex; flex-wrap:wrap; gap:8px; justify-content:center; margin-bottom:30px; }
+    .building-tabs button {
+      padding:10px 18px; background:#fff; border:1px solid #E2E8F0;
+      font-size:13px; font-weight:700; cursor:pointer; transition:.2s;
+    }
+    .building-tabs button.active {
+      background:#2C3E50; color:#fff; border-color:#2C3E50;
+      box-shadow:0 4px 12px rgba(44,62,80,0.2);
+    }
+
+    .filter-container {
+      background:#fff; border:1px solid #E2E8F0; padding:20px;
+      display:flex; flex-wrap:wrap; gap:12px;
+      box-shadow:0 4px 12px rgba(0,0,0,0.02);
+      margin-bottom:30px;
+    }
+
+    .filter-item {
+      height:42px; padding:0 12px; border:1px solid #CBD5E1;
+      background:#F8FAFC; color:#2C3E50; font-size:13px;
+      min-width:140px;
+    }
+    input.filter-item{flex:1; min-width:200px;}
+
+    .filter-btn{height:42px; padding:0 20px; font-weight:700; cursor:pointer;}
+    .btn-search{background:#2C3E50; color:#fff;}
+    .btn-reset{background:#fff; border:1px solid #CBD5E1;}
+
+    .maintenance-grid {
+      display:grid;
+      grid-template-columns:repeat(auto-fill,minmax(300px,1fr));
+      gap:24px;
+    }
+
+    .maintenance-card {
+      background:#fff; border:1px solid #E2E8F0;
+      padding:24px; display:flex; flex-direction:column;
+      cursor:pointer; transition:.3s;
+      position:relative;
+    }
+    .maintenance-card:hover {
+      transform:translateY(-5px);
+      border-color:#2C3E50;
+      box-shadow:0 15px 30px rgba(0,0,0,0.05);
+    }
+
+    .status-badge{
+      position:absolute; top:24px; right:24px;
+      padding:4px 10px; font-size:11px; font-weight:800;
+      color:#fff; text-transform:uppercase;
+    }
+    .status-received{background:#f1c40f;}
+    .status-progress{background:#2980b9;}
+    .status-completed{background:#27ae60;}
+
+    .card-header{margin-bottom:12px; padding-right:60px;}
+    .card-title{font-size:18px; font-weight:800; margin:0 0 4px;}
+    .card-subtitle{font-size:13px; font-weight:600; color:#64748B;}
+
+    .card-body{flex:1; margin-bottom:16px;}
+    .info-row{margin-bottom:8px; font-size:14px; color:#334155;}
+    .info-label{font-size:12px; font-weight:700; color:#64748B;}
+
+    .card-meta{
+      font-size:11px; color:#94A3B8;
+      margin-top:16px; padding-top:12px;
+      border-top:1px solid #F1F5F9;
+      display:flex; justify-content:space-between;
+    }
+
+    .action-btn{
+      flex:1; padding:8px 0;
+      font-size:12px; font-weight:700;
+      border:1px solid #E2E8F0; background:#fff;
+    }
+    .action-btn.delete:hover { color:#e74c3c; border-color:#e74c3c; background:#FFF5F5; }
+
+    .modal-bg{
+      position:fixed; top:0; left:0; width:100%; height:100%;
+      background:rgba(44,62,80,0.8);
+      backdrop-filter:blur(4px);
+      display:none; justify-content:center; align-items:center;
+      z-index:9999; padding:20px;
+    }
+    /* 사진 모달은 투명 배경 */
+    .modal-card{background:transparent;} 
+    #modalImg{width:100%; max-height:80vh; object-fit:contain;}
+    
+    /* 📘 보수 방법 모달을 위한 추가 스타일 (텍스트 모달은 흰색 배경 필요) */
+    #methodModal .modal-card {
+        background: #fff;
+        border-radius: 0;
+        border: 1px solid #E2E8F0;
+        padding: 24px;
+        width: 100%;
+        max-width: 500px;
+        box-shadow: 0 20px 50px rgba(0,0,0,0.2);
+    }
+    #methodModal h3 {
+        margin: 0 0 16px 0;
+        font-size: 1.2rem;
+        font-weight: 800;
+        color: #2C3E50;
+        border-bottom: 2px solid #2C3E50;
+        padding-bottom: 8px;
+    }
+    #methodContent {
+        font-size: 0.95rem;
+        line-height: 1.6;
+        color: #334155;
+        white-space: pre-wrap;
+        margin-bottom: 24px;
+        min-height: 60px;
+    }
+    .method-close-btn {
+        width: 100%;
+        padding: 12px;
+        background: #2C3E50;
+        color: #fff;
+        font-weight: 700;
+        border: none;
+        cursor: pointer;
+    }
+    
+    /* 보수 방법 버튼 스타일 (리스트용) */
+    .method-btn {
+        display: block;
+        width: 100%;
+        margin-top: 12px;
+        padding: 8px;
+        background: #F8FAFC;
+        border: 1px solid #CBD5E1;
+        color: #2C3E50;
+        font-size: 12px;
+        font-weight: 700;
+        cursor: pointer;
+        transition: .2s;
+    }
+    .method-btn:hover {
+        background: #2C3E50;
+        color: #fff;
+    }
+
+    @media(max-width:768px){
+      .filter-container{flex-direction:column;}
+      .filter-item,.filter-btn{width:100%;}
+      .page-header{flex-direction:column; gap:10px;}
+      .btn-add{width:100%; justify-content:center;}
+      .building-tabs button{flex:1 1 45%;}
     }
   </style>
 </head>
+
 <body>
-  <div id="header-placeholder"></div>
 
+  <!-- 🟢 FIREBASE CONFIGURATION -->
+  <script>
+    window.__firebase_config = JSON.stringify({
+      apiKey: "AIzaSyAyD0Gn5-zqzPzdXjQzZhVlMQvqTzUmHKs",
+      authDomain: "return-linen-management.firebaseapp.com",
+      projectId: "return-linen-management",
+      storageBucket: "return-linen-management.firebasestorage.app",
+      messagingSenderId: "310421638033",
+      appId: "1:310421638033:web:280047bf93a8c780f8e830",
+      measurementId: "G-D6BDRRKD9Y"
+    });
+  </script>
+
+  <!-- =============================
+       🔥 새 헤더 HTML
+       ============================= -->
+  <header class="main-header">
+    <div class="header-inner">
+      <div class="logo">HARU</div>
+
+      <div class="menu-wrap">
+        <button class="menu-toggle" aria-haspopup="true" aria-expanded="false">
+          <span class="menu-label">MENU</span>
+          <div class="hamburger-lines">
+            <span class="line line1"></span>
+            <span class="line line2"></span>
+          </div>
+        </button>
+
+        <ul class="menu-list" role="menu">
+          <li><a href="board.html">게시판</a></li>
+          <li><a href="chat.html">채팅</a></li>
+          <li><a href="incoming_form.html">입고등록</a></li>
+          <li><a href="return_form.html">반품등록</a></li>
+          <li><a href="history_dashboard.html">내역관리</a></li>
+          <li><a href="inventory.html">재고관리</a></li>
+          <li><a href="admin_dashboard.html">린넨 통계</a></li>
+          <li><a href="lost_items_list.html">분실물관리</a></li>
+          <li><a href="maintenance_list.html">객실유지보수</a></li>
+          <li><a href="orders_list.html">주문요청</a></li>
+          <li><a href="worklog.html">근무기록</a></li>
+          <li><a href="notices.html">공지사항</a></li>
+          <li><a href="profile.html">내 정보</a></li>
+          <li><a href="schedule_dashboard.html">작업 스케줄러</a></li>
+
+          <li class="super-admin-only" style="display:none;"><a href="admin.html" class="admin-link">관리자 설정</a></li>
+          <li class="super-admin-only" style="display:none;"><a href="admin_users.html" class="admin-link">사용자 관리</a></li>
+        </ul>
+      </div>
+
+      <button id="logoutBtn" class="logout-btn">SIGN OUT</button>
+    </div>
+  </header>
+
+  <!-- =============================
+       본문
+       ============================= -->
   <main>
-    <div class="container section">
-      <h2>🛠️ 유지보수 관리</h2>
+    <div class="page-header">
+      <h2>유지보수 관리</h2>
+      <a href="maintenance.html" class="btn-add">＋ 유지보수 등록</a>
+    </div>
 
-      <!-- 🔎 필터 영역 -->
-      <div class="filter">
-        <select id="filterBuilding">
-          <option value="">전체 건물</option>
-          <option value="아라키초A">아라키초A</option>
-          <option value="아라키초B">아라키초B</option>
-          <option value="다이쿄초">다이쿄초</option>
-          <option value="가부키초">가부키초</option>
-          <option value="다카다노바바">다카다노바바</option>
-          <option value="오쿠보1">오쿠보1</option>
-          <option value="오쿠보2">오쿠보2</option>
-          <option value="오쿠보4">오쿠보4</option>
-        </select>
-        <input type="text" id="searchInput" placeholder="내용 / 객실 / 등록자 검색" />
-        <button id="filterBtn">검색</button>
-        <button id="resetBtn">초기화</button>
-        <button id="btnAdd" class="primary btn-green" onclick="location.href='maintenance.html'">+ 유지보수 등록</button>
+    <div class="building-tabs">
+      <button class="active" data-building="">전체</button>
+      <button data-building="아라키초A">아라키초A</button>
+      <button data-building="아라키초B">아라키초B</button>
+      <button data-building="다이쿄초">다이쿄초</button>
+      <button data-building="가부키초">가부키초</button>
+      <button data-building="다카다노바바">다카다노바바</button>
+      <button data-building="오쿠보1">오쿠보1</button>
+      <button data-building="오쿠보2">오쿠보2</button>
+      <button data-building="오쿠보4">오쿠보4</button>
+    </div>
+
+    <div class="filter-container">
+      <select id="filterBuilding" class="filter-item">
+        <option value="">전체 건물</option>
+        <option>아라키초A</option>
+        <option>아라키초B</option>
+        <option>다이쿄초</option>
+        <option>가부키초</option>
+        <option>다카다노바바</option>
+        <option>오쿠보1</option>
+        <option>오쿠보2</option>
+        <option>오쿠보4</option>
+      </select>
+
+      <select id="filterStatus" class="filter-item">
+        <option value="">전체 상태</option>
+        <option value="접수됨">접수됨</option>
+        <option value="진행중">진행중</option>
+        <option value="완료">완료</option>
+      </select>
+
+      <input type="text" id="searchInput" class="filter-item" placeholder="내용, 객실, 작업자 검색" />
+
+      <button id="filterBtn" class="filter-btn btn-search">검색</button>
+      <button id="resetBtn" class="filter-btn btn-reset">초기화</button>
+    </div>
+
+    <div id="maintenanceList" class="maintenance-grid">
+      <div style="grid-column:1/-1; text-align:center; padding:60px; color:#94A3B8;">
+        데이터를 불러오는 중입니다...
       </div>
-
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th>등록일</th>
-              <th>건물</th>
-              <th>객실</th>
-              <th>내용</th>
-              <th>보수방법</th>
-              <th>등록자</th>
-              <th>비고</th>
-              <th>사진</th>
-              <th>상태</th>
-              <th>작업</th>
-            </tr>
-          </thead>
-          <tbody id="maintenanceBody"></tbody>
-        </table>
-      </div>
-
-      <div class="mobile-card-list" id="mobileList"></div>
     </div>
   </main>
 
-  <div id="detailModal" class="modal-bg">
-    <div class="modal-card" id="detailContent"></div>
-  </div>
+  <div id="detailModal" class="modal-bg"></div>
 
-  <div id="photoModal" class="modal-bg">
+  <!-- 🖼 사진 모달 -->
+  <div id="photoModal" class="modal-bg" onclick="this.style.display='none'">
     <div class="modal-card">
-      <img id="modalImg" src="">
-      <div style="text-align:center;margin-top:10px;">
-        <button onclick="photoModal.style.display='none'">닫기</button>
-      </div>
+      <img id="modalImg" src="" alt="확대 이미지">
     </div>
   </div>
 
-  <footer>© 2025 HARU · by KIM HYUN JUN</footer>
+  <!-- 📘 보수 방법 모달 (추가됨) -->
+  <div id="methodModal" class="modal-bg" style="z-index: 10000;">
+    <div class="modal-card">
+      <h3>REPAIR METHOD (보수 방법)</h3>
+      <div id="methodContent">
+        <!-- JS로 내용 삽입 -->
+      </div>
+      <button id="btnMethodClose" class="method-close-btn">CLOSE</button>
+    </div>
+  </div>
 
-  <!-- ✅ 헤더 (메뉴) -->
-  <script type="module">
-    import { initHeaderMenu } from "./header.js";
-    fetch("header.html")
-      .then(r => r.text())
-      .then(h => {
-        document.getElementById("header-placeholder").innerHTML = h;
-        initHeaderMenu();
+  <footer>
+    © 2025 HARU SYSTEM · TOKYO
+  </footer>
+
+  <!-- =============================
+       메뉴 토글 스크립트
+       ============================= -->
+  <script>
+    const toggleBtn = document.querySelector('.menu-toggle');
+    const menuList = document.querySelector('.menu-list');
+
+    if (toggleBtn && menuList) {
+      toggleBtn.addEventListener("click", () => {
+        const open = menuList.classList.toggle("open");
+        toggleBtn.setAttribute("aria-expanded", open);
       });
+
+      document.addEventListener("click", (e) => {
+        if (!menuList.contains(e.target) && !toggleBtn.contains(e.target)) {
+          menuList.classList.remove("open");
+          toggleBtn.setAttribute("aria-expanded", "false");
+        }
+      });
+    }
   </script>
 
-  <!-- ✅ Firebase 초기화: 반드시 maintenance_list.js 보다 먼저, 캐시 무효화 쿼리 추가 -->
-  <script type="module" src="storage.js?v=20251028A"></script>
+  <!-- =============================
+       🔥 로그아웃 + 관리자 권한 복구
+       ============================= -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getAuth, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+    import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-  <!-- ✅ 유지보수 기능 스크립트 -->
-  <script type="module" src="maintenance_list.js?v=20251120A"></script>
+    if (window.__firebase_config) {
+      const app = initializeApp(JSON.parse(window.__firebase_config));
+      const auth = getAuth(app);
+      const db = getFirestore(app);
+
+      const SUPER_ADMIN_EMAIL = "rlaguswns95@haru-tokyo.com";
+
+      // 로그아웃 confirm 기능
+      const logoutBtn = document.getElementById("logoutBtn");
+      if (logoutBtn) {
+        logoutBtn.addEventListener("click", () => {
+          if (confirm("로그아웃 하시겠습니까?")) {
+            signOut(auth).then(() => {
+              location.href = "index.html";
+            }).catch(err => {
+              console.error("로그아웃 실패:", err);
+            });
+          }
+        });
+      }
+
+      // 관리자 페이지 표시
+      onAuthStateChanged(auth, (user) => {
+        if (user && user.email === SUPER_ADMIN_EMAIL) {
+          document.querySelectorAll(".super-admin-only").forEach(el => {
+            el.style.display = "block";
+          });
+        }
+      });
+    }
+  </script>
+
+  <!-- =============================
+       페이지 기능 스크립트
+       ============================= -->
+  <script type="module" src="maintenance_list.js"></script>
   <script type="module" src="scrollTop.js"></script>
+  <script type="module" src="notice_popup.js"></script>
 
 </body>
 </html>

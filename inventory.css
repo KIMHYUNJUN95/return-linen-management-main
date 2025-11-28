@@ -1,213 +1,247 @@
 /* ===============================
-   📦 HARU Inventory Styles (Glass + 정렬 개선 + 가독성 향상 완성본)
+   📦 HARU Inventory Styles
+   Theme: Tokyo Day Bright (Minimal & Sharp)
    =============================== */
 
+/* 메인 컨테이너 */
 .inv-container {
-  max-width: 1100px;
+  max-width: 1200px;
   margin: 0 auto;
-  padding: 20px;
+  padding: 40px 24px;
+  animation: fadeIn 0.5s ease-out;
 }
 
-/* 제목 */
 .inv-container h2 {
-  color: var(--text);
-  font-weight: 700;
-  margin-bottom: 20px;
+  color: var(--haru-navy);
+  font-weight: 800;
+  font-size: 28px;
+  margin-bottom: 30px;
+  letter-spacing: -0.02em;
 }
 
 /* -------------------------------
-   🏢 건물 탭 (Glass 버튼 스타일 + 가독성 개선)
+   🏢 건물 탭 (Modern Rectangular Tabs)
 --------------------------------*/
 .building-tabs {
   display: flex;
   flex-wrap: wrap;
-  gap: 10px;
+  gap: 8px;
   justify-content: center;
-  margin-bottom: 18px;
+  margin-bottom: 30px;
 }
 
 .building-tabs button {
-  padding: 10px 18px;
-  border: 1px solid rgba(255, 255, 255, 0.25);
-  border-radius: 12px;
-  background: rgba(30, 41, 59, 0.5); /* 🔹 어두운 투명 Glass */
-  color: #e2e8f0;
-  font-weight: 600;
-  font-size: 14px;
-  backdrop-filter: blur(8px);
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+  padding: 12px 20px;
+  border: 1px solid #E2E8F0;
+  border-radius: 0; /* 각진 모서리 */
+  background: #FFFFFF;
+  color: #64748B;
+  font-weight: 700;
+  font-size: 13px;
   cursor: pointer;
-  transition: all 0.25s ease;
+  transition: all 0.2s ease;
+  letter-spacing: 0.02em;
 }
 
 .building-tabs button:hover {
-  background: rgba(51, 65, 85, 0.75);
-  transform: translateY(-1px);
-  color: #fff;
+  background: #F8FAFC;
+  color: var(--haru-navy);
+  border-color: var(--haru-navy);
 }
 
 .building-tabs button.active {
-  background: linear-gradient(135deg, #00b4d8, #0077b6);
-  color: #fff;
-  border: none;
-  box-shadow: 0 0 10px rgba(0,183,255,0.5);
+  background: var(--haru-navy);
+  color: #FFFFFF;
+  border-color: var(--haru-navy);
+  box-shadow: 0 4px 12px rgba(44, 62, 80, 0.2);
 }
 
 /* -------------------------------
-   🔍 필터 영역
+   🔍 필터 영역 (White Panel)
 --------------------------------*/
 .inv-filters {
   display: flex;
   flex-wrap: wrap;
-  gap: 12px;
+  gap: 16px;
   align-items: center;
-  background: var(--elev);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 14px;
-  margin-bottom: 18px;
+  background: #FFFFFF;
+  border: 1px solid #E2E8F0;
+  border-radius: 0;
+  padding: 24px;
+  margin-bottom: 24px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.03);
 }
 
 .inv-filters .group {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
 }
 
 .inv-filters label {
-  font-weight: 600;
-  color: var(--text);
+  font-weight: 700;
+  color: var(--haru-navy);
+  font-size: 12px;
+  text-transform: uppercase;
 }
 
 .inv-filters input,
 .inv-filters select {
-  border-radius: 8px;
-  border: 1px solid var(--border);
-  padding: 6px 10px;
+  border-radius: 0;
+  border: 1px solid #CBD5E1;
+  padding: 0 12px;
   font-size: 14px;
-  background: #fff;
-  height: 36px;
+  background: #F8FAFC;
+  height: 40px;
+  color: var(--haru-navy);
+  min-width: 150px;
+  transition: all 0.2s;
+}
+
+.inv-filters input:focus,
+.inv-filters select:focus {
+  outline: none;
+  border-color: var(--haru-navy);
+  background: #FFFFFF;
 }
 
 .inv-filters .actions {
   margin-left: auto;
   display: flex;
-  gap: 8px;
+  gap: 10px;
 }
 
+/* 버튼 공통 스타일 */
 .btn {
-  border: 1px solid var(--border);
-  background: var(--elev);
-  color: var(--text);
+  height: 40px;
+  padding: 0 20px;
+  font-size: 13px;
+  font-weight: 700;
+  border: none;
   cursor: pointer;
-  font-size: 14px;
-  height: 36px;
-  padding: 0 14px;
-  border-radius: 8px;
-  transition: 0.2s;
+  transition: all 0.2s;
+  border-radius: 0;
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .btn:hover {
-  opacity: 0.85;
+  transform: translateY(-1px);
 }
 
 .btn.primary {
-  background: #111;
-  color: #fff;
-  border: none;
-  font-weight: 600;
+  background: var(--haru-navy);
+  color: #FFFFFF;
+  border: 1px solid var(--haru-navy);
+}
+.btn.primary:hover {
+  background: #000000;
+  border-color: #000000;
 }
 
 .btn.ghost {
-  background: transparent;
-  border: 1px solid #ccc;
+  background: #FFFFFF;
+  border: 1px solid #CBD5E1;
+  color: #64748B;
+}
+.btn.ghost:hover {
+  border-color: var(--haru-navy);
+  color: var(--haru-navy);
 }
 
 .btn.danger {
-  background: #d33;
-  color: #fff;
-  border: none;
+  background: #FFFFFF;
+  color: #E74C3C;
+  border: 1px solid #E74C3C;
+}
+.btn.danger:hover {
+  background: #E74C3C;
+  color: #FFFFFF;
 }
 
 /* -------------------------------
-   📋 테이블
+   📋 테이블 (Minimal)
 --------------------------------*/
 .table-wrap {
   overflow-x: auto;
-  background: var(--surface);
-  border-radius: 12px;
-  border: 1px solid var(--border);
-  box-shadow: var(--shadow);
-  margin-top: 20px;
+  background: #FFFFFF;
+  border-radius: 0;
+  border: 1px solid #E2E8F0;
+  margin-top: 30px;
 }
 
 table {
   width: 100%;
   border-collapse: collapse;
   font-size: 14px;
-  color: var(--text);
+  color: #334155;
   table-layout: fixed;
 }
 
 thead th {
-  background: rgba(255,255,255,0.8);
-  backdrop-filter: blur(6px);
-  font-weight: 600;
-  color: var(--text);
+  background: #F8FAFC; /* Soft Gray Header */
+  font-weight: 700;
+  color: #64748B;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 16px 12px;
+  border-bottom: 2px solid #E2E8F0;
+  text-align: left;
 }
 
 th, td {
-  padding: 10px 12px;
-  border-bottom: 1px solid rgba(0,0,0,0.1);
+  padding: 14px 12px;
+  border-bottom: 1px solid #F1F5F9;
   vertical-align: middle;
-  text-align: left;
-  overflow-wrap: break-word;
 }
 
-th {
-  border-bottom: 2px solid rgba(0,0,0,0.15);
-}
-
-/* ✅ “관리” 칸 중앙정렬 */
+/* 중앙 정렬 컬럼 */
 th:last-child,
-td:last-child {
+td:last-child,
+th.text-center,
+td.text-center {
   text-align: center;
 }
 
 tr:hover td {
-  background: rgba(0, 0, 0, 0.03);
+  background: #FAFAFA;
 }
 
 .t-right {
   text-align: right;
 }
 
-/* 상태 뱃지 */
+/* 상태 뱃지 (Text Only or Minimal Box) */
 .status-badge {
   display: inline-block;
   padding: 4px 8px;
-  border-radius: 8px;
-  font-weight: 600;
-  font-size: 13px;
+  border-radius: 2px;
+  font-weight: 700;
+  font-size: 11px;
+  text-transform: uppercase;
 }
 
 .status-ok {
-  background: rgba(16, 185, 129, 0.15);
-  color: #10b981;
+  background: rgba(39, 174, 96, 0.1);
+  color: #27ae60;
 }
 
 .status-out {
-  background: rgba(239, 68, 68, 0.15);
-  color: #ef4444;
+  background: rgba(231, 76, 60, 0.1);
+  color: #e74c3c;
 }
 
 /* -------------------------------
-   🧾 모달
+   🧾 모달 (Clean White)
 --------------------------------*/
 .modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0,0,0,0.5);
+  background: rgba(44, 62, 80, 0.6); /* Navy tint backdrop */
+  backdrop-filter: blur(4px);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -215,57 +249,71 @@ tr:hover td {
 }
 
 .modal {
-  background: #fff;
-  border-radius: 12px;
-  padding: 20px;
+  background: #FFFFFF;
+  border-radius: 0; /* 각지게 */
+  padding: 40px;
   width: 90%;
-  max-width: 420px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+  max-width: 450px;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  border: 1px solid #E2E8F0;
 }
 
 .modal h3 {
-  font-weight: 700;
-  margin-bottom: 12px;
-  color: #111;
+  font-weight: 800;
+  margin-top: 0;
+  margin-bottom: 24px;
+  color: var(--haru-navy);
+  font-size: 18px;
+  letter-spacing: -0.02em;
 }
 
 .modal label {
   display: flex;
   flex-direction: column;
-  font-weight: 600;
-  font-size: 14px;
-  color: #333;
-  margin-bottom: 10px;
+  font-weight: 700;
+  font-size: 12px;
+  color: #64748B;
+  margin-bottom: 16px;
+  text-transform: uppercase;
 }
 
 .modal input,
 .modal select {
-  margin-top: 4px;
-  border-radius: 8px;
-  border: 1px solid #ccc;
-  padding: 8px;
+  margin-top: 8px;
+  border-radius: 0;
+  border: 1px solid #CBD5E1;
+  padding: 10px;
+  background: #F8FAFC;
+  height: 40px;
+  font-size: 14px;
+  color: var(--haru-navy);
+}
+
+.modal input:focus,
+.modal select:focus {
+  outline: none;
+  border-color: var(--haru-navy);
+  background: #FFFFFF;
 }
 
 .modal-actions {
   display: flex;
   justify-content: flex-end;
-  gap: 8px;
-  margin-top: 16px;
+  gap: 10px;
+  margin-top: 30px;
 }
 
 /* -------------------------------
-   📋 전체화면 재고리스트
+   📋 전체화면 모드 (Bright Overlay)
 --------------------------------*/
 .inventory-fullscreen {
   display: none;
   position: fixed;
   inset: 0;
-  background: rgba(0,0,0,0.75);
+  background: #FFFFFF; /* 밝은 배경 */
   z-index: 1000;
   flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  padding: 20px;
+  padding: 40px;
 }
 
 .inventory-fullscreen.active {
@@ -277,80 +325,104 @@ tr:hover td {
   justify-content: space-between;
   align-items: center;
   width: 100%;
-  max-width: 1000px;
-  margin-bottom: 12px;
-  color: #fff;
+  max-width: 1200px;
+  margin: 0 auto 20px;
+  border-bottom: 2px solid #E2E8F0;
+  padding-bottom: 20px;
+}
+
+.inventory-fullscreen header h2 {
+  margin: 0;
+  color: var(--haru-navy);
 }
 
 .inventory-fullscreen .content {
   width: 100%;
-  max-width: 1000px;
-  background: #fff;
-  border-radius: 12px;
-  padding: 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+  background: #FFFFFF;
+  border-radius: 0;
+  border: 1px solid #E2E8F0;
+  flex: 1;
   overflow-y: auto;
-  max-height: 80vh;
 }
 
-.inventory-fullscreen table {
-  width: 100%;
-  border-collapse: collapse;
+/* 전체화면 버튼 */
+#btnOpenInventoryFull {
+  position: fixed;
+  bottom: 30px;
+  right: 30px;
+  background: var(--haru-navy);
+  color: #FFFFFF;
+  border-radius: 0;
+  padding: 16px 24px;
+  box-shadow: 0 10px 20px rgba(44, 62, 80, 0.3);
+  z-index: 100;
+  font-weight: 700;
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border: none;
+  cursor: pointer;
+  transition: transform 0.2s;
 }
 
-.inventory-fullscreen th,
-.inventory-fullscreen td {
-  padding: 8px 10px;
-  border-bottom: 1px solid #ddd;
-  font-size: 14px;
+#btnOpenInventoryFull:hover {
+  transform: translateY(-2px);
+  background: #000000;
 }
 
-.inventory-fullscreen th {
-  background: #f1f3f5;
+#btnCloseInventoryFull {
+  background: transparent;
+  color: #E74C3C;
+  border: 1px solid #E74C3C;
+  border-radius: 0;
+  padding: 8px 16px;
+  font-weight: 700;
+  cursor: pointer;
+}
+#btnCloseInventoryFull:hover {
+  background: #E74C3C;
+  color: #FFFFFF;
+}
+
+/* 애니메이션 */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 /* -------------------------------
    📱 반응형
 --------------------------------*/
 @media (max-width: 768px) {
+  .inv-container { padding: 20px; }
+  
   .inv-filters {
     flex-direction: column;
-    align-items: flex-start;
+    align-items: stretch;
+    padding: 20px;
   }
 
   .inv-filters .actions {
     width: 100%;
     justify-content: space-between;
+    margin-top: 10px;
   }
 
   .building-tabs button {
     flex: 1 1 45%;
   }
 
-  table th,
-  table td {
+  table th, table td {
+    padding: 10px 8px;
     font-size: 13px;
-    padding: 8px;
   }
-
-  #btnOpenInventoryFull {
-    position: fixed;
-    bottom: 18px;
-    right: 18px;
-    background: #111;
-    color: #fff;
-    border-radius: 50px;
-    padding: 12px 20px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-    z-index: 100;
-    font-weight: 600;
-    font-size: 14px;
-  }
-
-  #btnCloseInventoryFull {
-    background: #d33;
-    color: #fff;
-    border: none;
-    border-radius: 8px;
-    padding: 8px 12px;
+  
+  .inventory-fullscreen {
+    padding: 10px;
   }
 }
+```
+
+다음 수정할 파일(**inventory.html**과 **inventory.js**)을 보내주세요.

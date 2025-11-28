@@ -4,202 +4,340 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>HARU 내역 관리</title>
+  
+  <!-- 공통 스타일 -->
   <link rel="stylesheet" href="common.css" />
+
   <style>
-    /* ✅ 카드형 스타일 */
+    /* -------------------------------
+       🎨 Page Specific Styles
+       Theme: Tokyo Day Bright (Minimal)
+       ------------------------------- */
+    
+    body {
+      background-color: var(--bg-base); /* Soft Gray */
+      color: var(--haru-navy);
+    }
+
+    main {
+      display: flex;
+      justify-content: center;
+      padding-top: 60px;
+      padding-bottom: 80px;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 900px;
+      padding: 0 24px;
+      animation: fadeIn 0.5s ease-out;
+    }
+
+    /* 헤더 */
+    .page-header {
+      margin-bottom: 40px;
+      border-bottom: 1px solid #E2E8F0;
+      padding-bottom: 20px;
+    }
+
+    h2 {
+      margin: 0;
+      color: var(--haru-navy);
+      font-weight: 800;
+      font-size: 28px;
+      letter-spacing: -0.02em;
+    }
+
+    /* 🔍 필터 섹션 (White Panel) */
+    .filter-section {
+      background: #FFFFFF;
+      border: 1px solid #E2E8F0;
+      border-radius: 0; /* 건축적 미니멀리즘 */
+      padding: 24px;
+      margin-bottom: 24px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.03);
+    }
+
+    .filter-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      align-items: center;
+    }
+
+    /* 입력 필드 스타일 */
+    select, input[type="date"] {
+      height: 40px;
+      padding: 0 12px;
+      border: 1px solid #CBD5E1;
+      background: #F8FAFC;
+      border-radius: 0;
+      font-size: 13px;
+      color: var(--haru-navy);
+      transition: all 0.2s;
+      min-width: 140px;
+    }
+
+    select:focus, input:focus {
+      outline: none;
+      border-color: var(--haru-navy);
+      background: #FFFFFF;
+    }
+
+    /* 버튼 스타일 */
+    button {
+      height: 40px;
+      padding: 0 20px;
+      font-size: 13px;
+      font-weight: 700;
+      border: none;
+      cursor: pointer;
+      transition: all 0.2s;
+      border-radius: 0;
+      white-space: nowrap;
+    }
+
+    .btn-primary {
+      background: var(--haru-navy);
+      color: #FFFFFF;
+      border: 1px solid var(--haru-navy);
+    }
+    .btn-primary:hover {
+      background: #000000;
+      border-color: #000000;
+    }
+
+    .btn-secondary {
+      background: #FFFFFF;
+      color: #64748B;
+      border: 1px solid #CBD5E1;
+    }
+    .btn-secondary:hover {
+      border-color: var(--haru-navy);
+      color: var(--haru-navy);
+    }
+
+    /* 📤 내보내기 버튼 그룹 */
+    .export-buttons {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      margin-bottom: 30px;
+    }
+    
+    .export-buttons button {
+      background: #FFFFFF;
+      border: 1px solid #E2E8F0;
+      color: var(--haru-navy);
+      font-size: 12px;
+    }
+    .export-buttons button:hover {
+      background: #F8FAFC;
+      border-color: var(--haru-navy);
+    }
+
+    /* 📱 내역 카드 리스트 */
     .history-section {
       display: flex;
       flex-direction: column;
-      gap: 12px;
-      padding: 8px 0;
+      gap: 16px;
     }
+
     .history-card {
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      box-shadow: var(--shadow);
-      padding: 14px;
-      transition: 0.2s;
+      background: #FFFFFF;
+      border: 1px solid #E2E8F0;
+      border-radius: 0;
+      padding: 24px;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.02);
+      transition: all 0.2s;
+      position: relative;
+      border-left: 4px solid transparent; /* 상태 표시용 */
     }
-    .history-card[data-type="입고"] {
-      background: #f0f6ff;
-      border-left: 6px solid #4c9aff;
-    }
-    .history-card[data-type="반품"] {
-      background: #fff7f7;
-      border-left: 6px solid #ff6b6b;
-    }
+
     .history-card:hover {
       transform: translateY(-2px);
-      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+      box-shadow: 0 10px 20px rgba(0,0,0,0.05);
     }
+
+    /* 상태별 컬러 (Tokyo Theme) */
+    .history-card[data-type="입고"] {
+      border-left-color: #2980b9; /* Calm Blue */
+    }
+    .history-card[data-type="반품"] {
+      border-left-color: #e74c3c; /* Soft Red */
+    }
+
     .history-card header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      font-weight: 600;
-      margin-bottom: 6px;
+      margin-bottom: 12px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid #F1F5F9;
     }
+
+    .history-card .type-badge {
+      font-size: 11px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--haru-navy);
+    }
+    
+    .history-card[data-type="입고"] .type-badge { color: #2980b9; }
+    .history-card[data-type="반품"] .type-badge { color: #e74c3c; }
+
     .history-card .meta {
-      font-size: 13px;
-      color: #777;
+      font-size: 12px;
+      color: #94A3B8;
+      font-family: var(--font-en);
     }
+
     .history-card .content {
       font-size: 14px;
-      color: var(--text);
-      margin-top: 4px;
-      line-height: 1.5;
+      color: #334155;
+      line-height: 1.6;
     }
-    .legacy-label {
-      display: inline-block;
-      background: #888;
-      color: #fff;
-      font-size: 12px;
-      padding: 2px 8px;
-      border-radius: 8px;
-      margin-top: 8px;
+
+    .history-card .info-row {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 4px;
     }
-    .history-card .actions {
+    .history-card .info-label {
+      font-weight: 700;
+      color: var(--haru-navy);
+      min-width: 60px;
+    }
+
+    /* 수정/삭제 버튼 (카드 내부) */
+    .card-actions {
       display: flex;
       justify-content: flex-end;
       gap: 8px;
-      margin-top: 10px;
-    }
-    .history-card .actions button {
-      padding: 6px 14px;
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
-      font-size: 14px;
-      font-weight: 500;
-      transition: 0.2s;
-    }
-    .actions .btn-edit {
-      background: #007bff;
-      color: #fff;
-    }
-    .actions .btn-del {
-      background: #d32f2f;
-      color: #fff;
-    }
-    .actions button:hover {
-      opacity: 0.9;
+      margin-top: 16px;
+      border-top: 1px solid #F1F5F9;
+      padding-top: 12px;
     }
 
-    /* 📤 내보내기 버튼 */
-    .export-buttons {
-      display: flex;
-      gap: 10px;
-      margin: 12px 0;
+    .btn-action {
+      padding: 4px 12px;
+      height: 28px;
+      font-size: 11px;
+      background: transparent;
+      border: 1px solid #E2E8F0;
+      color: #64748B;
     }
-    .export-buttons button {
-      flex: 1;
-      padding: 10px 14px;
-      border: none;
-      border-radius: var(--radius);
-      font-weight: 600;
-      cursor: pointer;
-      transition: 0.2s;
+    .btn-action:hover {
+      border-color: var(--haru-navy);
+      color: var(--haru-navy);
     }
-    .export-buttons .excel {
-      background: #2e7d32;
-      color: #fff;
-    }
-    .export-buttons .pdf {
-      background: #c62828;
-      color: #fff;
-    }
-    .export-buttons button:hover {
-      opacity: 0.9;
+    .btn-action.del:hover {
+      border-color: #e74c3c;
+      color: #e74c3c;
     }
 
-    /* 📅 날짜 필드 */
-    input[type="date"] {
-      color: #333;
-      background-color: #fff;
-      appearance: none;
-      -webkit-appearance: none;
-      -moz-appearance: none;
-      padding: 6px 10px;
-      border: 1px solid var(--border);
-      border-radius: 8px;
+    /* 레거시 라벨 */
+    .legacy-label {
+      display: inline-block;
+      background: #F1F5F9;
+      color: #94A3B8;
+      font-size: 10px;
+      padding: 2px 6px;
+      border-radius: 2px;
+      margin-top: 8px;
     }
 
-    /* 📱 반응형 */
-    @media (max-width: 600px) {
-      .export-buttons {
+    /* Footer */
+    footer {
+      text-align: center;
+      color: #CBD5E1;
+      padding: 20px 0;
+      font-size: 12px;
+      letter-spacing: 0.05em;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Mobile */
+    @media (max-width: 768px) {
+      .filter-row {
         flex-direction: column;
+        align-items: stretch;
+      }
+      .export-buttons {
+        justify-content: stretch;
       }
       .export-buttons button {
-        width: 100%;
-      }
-      .filter {
-        flex-direction: column;
-      }
-      .filter select, .filter input, .filter button {
-        width: 100%;
+        flex: 1;
       }
     }
   </style>
 </head>
 
 <body>
+  <!-- ✅ 헤더 로드 -->
   <div id="header-placeholder"></div>
 
   <main>
     <div class="container">
-      <h2 style="margin-bottom:12px;">린넨 입고·반품 내역</h2>
-
-      <!-- 🔍 필터 -->
-      <div class="filter" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px;">
-        <select id="filterType">
-          <option value="">전체 구분</option>
-          <option value="incoming">입고</option>
-          <option value="returns">반품</option>
-        </select>
-        <select id="filterBuilding">
-          <option value="">전체 건물</option>
-          <option value="아라키초A">아라키초A</option>
-          <option value="아라키초B">아라키초B</option>
-          <option value="다이쿄초">다이쿄초</option>
-          <option value="가부키초">가부키초</option>
-          <option value="다카다노바바">다카다노바바</option>
-          <option value="오쿠보1">오쿠보1</option>
-          <option value="오쿠보2">오쿠보2</option>
-          <option value="오쿠보4">오쿠보4</option>
-        </select>
-        <input type="date" id="startDate" />
-        <input type="date" id="endDate" />
-        <button id="filterBtn" class="primary">검색</button>
-        <button id="resetBtn" class="secondary">초기화</button>
+      
+      <div class="page-header">
+        <h2>내역 조회</h2>
       </div>
 
-      <!-- 📤 엑셀 / PDF 내보내기 -->
+      <!-- 🔍 필터 섹션 -->
+      <div class="filter-section">
+        <div class="filter-row">
+          <select id="filterType">
+            <option value="">전체 구분</option>
+            <option value="incoming">입고 내역</option>
+            <option value="returns">반품 내역</option>
+          </select>
+          
+          <select id="filterBuilding">
+            <option value="">전체 건물</option>
+            <option value="아라키초A">아라키초A</option>
+            <option value="아라키초B">아라키초B</option>
+            <option value="다이쿄초">다이쿄초</option>
+            <option value="가부키초">가부키초</option>
+            <option value="다카다노바바">다카다노바바</option>
+            <option value="오쿠보1">오쿠보1</option>
+            <option value="오쿠보2">오쿠보2</option>
+            <option value="오쿠보4">오쿠보4</option>
+          </select>
+          
+          <input type="date" id="startDate" />
+          <span style="color:#CBD5E1;">~</span>
+          <input type="date" id="endDate" />
+          
+          <button id="filterBtn" class="btn-primary">검색</button>
+          <button id="resetBtn" class="btn-secondary">초기화</button>
+        </div>
+      </div>
+
+      <!-- 📤 내보내기 버튼 -->
       <div class="export-buttons">
-        <button id="btnExcel" class="excel">엑셀 내보내기</button>
-        <button id="btnPDF" class="pdf">PDF 내보내기</button>
+        <button id="btnExcel">EXCEL 다운로드</button>
+        <button id="btnPDF">PDF 다운로드</button>
       </div>
 
-      <!-- 📱 카드형 내역 리스트 -->
+      <!-- 📱 내역 리스트 (JS 로드) -->
       <div class="history-section" id="historyCardBody">
-        <div style="text-align:center;color:#777;padding:20px;">불러오는 중...</div>
+        <div style="text-align:center; color:#CBD5E1; padding:40px;">
+          데이터를 불러오는 중입니다...
+        </div>
       </div>
+
     </div>
   </main>
 
-  <footer style="text-align:center;color:#777;padding:16px 0;">
-    © 2025 HARU · by KIM HYUN JUN
+  <footer>
+    © 2025 HARU SYSTEM · TOKYO
   </footer>
-
-  <!-- ✅ Header 메뉴 -->
-  <script type="module">
-    import { initHeaderMenu } from "./header.js";
-    fetch("header.html")
-      .then(r => r.text())
-      .then(html => {
-        document.getElementById("header-placeholder").innerHTML = html;
-        initHeaderMenu();
-      });
-  </script>
 
   <!-- ✅ 외부 라이브러리 (엑셀/PDF) -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -209,6 +347,8 @@
   <!-- ✅ 메인 스크립트 -->
   <script type="module" src="history_dashboard_fast.js"></script>
   <script type="module" src="scrollTop.js"></script>
+  <script type="module" src="notice_popup.js"></script>
+
 
 </body>
 </html>

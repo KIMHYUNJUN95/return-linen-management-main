@@ -6,136 +6,252 @@
   <title>HARU 분실물 관리</title>
   <link rel="stylesheet" href="common.css" />
   <style>
-    .container {
-      max-width: 1100px;
+    /* -------------------------------
+       🎨 Page Specific Styles
+       Theme: Tokyo Day Bright (Minimal)
+       ------------------------------- */
+    body {
+      background-color: #F8FAFC;
+      color: #2C3E50;
+    }
+
+    main {
+      max-width: 1200px;
       margin: 0 auto;
-      background: hsl(var(--color-bg-elevated));
-      border: 1px solid hsl(var(--color-border-subtle));
-      border-radius: var(--radius-lg);
-      box-shadow: var(--shadow-md);
-      padding: 20px;
+      padding: 40px 24px;
     }
 
-    h2 { 
-      margin-bottom: 16px; 
-      font-size: var(--font-size-xl);
+    /* 헤더 섹션 */
+    .page-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 30px;
+      border-bottom: 1px solid #E2E8F0;
+      padding-bottom: 20px;
+    }
+
+    h2 {
+      margin: 0;
+      font-size: 28px;
+      font-weight: 800;
+      color: #2C3E50;
+      letter-spacing: -0.02em;
+    }
+
+    /* 등록 버튼 (링크 수정됨) */
+    .btn-add {
+      background: #2C3E50;
+      color: #FFFFFF;
+      padding: 12px 24px;
       font-weight: 700;
-      color: hsl(var(--color-text-primary));
+      font-size: 13px;
+      border: 1px solid #2C3E50;
+      text-decoration: none;
+      transition: all 0.2s;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .btn-add:hover {
+      background: #000000;
+      border-color: #000000;
+      transform: translateY(-2px);
     }
 
-    .filter {
+    /* 🔍 필터 바 (White Panel) */
+    .filter-container {
+      background: #FFFFFF;
+      border: 1px solid #E2E8F0;
+      padding: 20px;
+      margin-bottom: 30px;
       display: flex;
       flex-wrap: wrap;
-      gap: 8px;
+      gap: 12px;
       align-items: center;
-      margin-bottom: 16px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.02);
     }
 
-    .filter select, .filter input {
-      border-radius: var(--radius-md);
-      border: 1px solid hsl(var(--color-border-subtle));
-      padding: 8px 12px;
-      font-size: 14px;
-      background: hsl(var(--color-bg-input));
-      color: hsl(var(--color-text-primary));
+    .filter-item {
+      height: 42px;
+      padding: 0 12px;
+      border: 1px solid #CBD5E1;
+      background: #F8FAFC;
+      color: #2C3E50;
+      font-size: 13px;
+      min-width: 140px;
+      transition: border 0.2s;
+    }
+    .filter-item:focus {
+      outline: none;
+      border-color: #2C3E50;
+      background: #FFFFFF;
     }
 
-    .filter button {
+    input.filter-item {
+      flex: 1;
+      min-width: 200px;
+    }
+
+    /* 버튼 그룹 */
+    .filter-btn {
+      height: 42px;
+      padding: 0 20px;
       border: none;
-      border-radius: 8px;
-      padding: 0 14px;
-      height: 36px;
+      font-weight: 700;
+      font-size: 13px;
       cursor: pointer;
+      transition: all 0.2s;
+    }
+    
+    .btn-search {
+      background: #2C3E50;
       color: #fff;
     }
+    .btn-search:hover { background: #000; }
 
-    #filterBtn { background: hsl(var(--color-primary)); }
-    #resetBtn { background: #777; }
+    .btn-reset {
+      background: #FFFFFF;
+      border: 1px solid #CBD5E1;
+      color: #64748B;
+    }
+    .btn-reset:hover {
+      border-color: #2C3E50;
+      color: #2C3E50;
+    }
 
-    /* ✅ 초록색 버튼 스타일 */
-    button.btn-green {
-      background-color: #16a34a !important;
-      color: white !important;
-      font-weight: 600;
-      font-size: 14px;
-      padding: 8px 16px;
-      border: none;
-      border-radius: 8px;
+    /* 📱 카드 그리드 (PC/Mobile 통합) */
+    .lost-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 24px;
+    }
+
+    .lost-card {
+      background: #FFFFFF;
+      border: 1px solid #E2E8F0;
+      padding: 20px;
+      transition: all 0.3s ease;
+      position: relative;
+      display: flex;
+      flex-direction: column;
       cursor: pointer;
-      transition: background 0.2s ease, transform 0.1s ease;
-      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+    }
+    .lost-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 15px 30px rgba(0,0,0,0.05);
+      border-color: #2C3E50;
     }
 
-    button.btn-green:hover {
-      background-color: #15803d !important;
-      transform: translateY(-1px);
+    /* 상태 뱃지 */
+    .status-badge {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      padding: 4px 10px;
+      font-size: 11px;
+      font-weight: 800;
+      color: #fff;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      z-index: 2;
     }
+    .status-keeping { background: #2980b9; }   /* 보관중 - Blue */
+    .status-returned { background: #27ae60; }  /* 회수 - Green */
+    .status-discarded { background: #7f8c8d; } /* 폐기 - Gray */
 
-    button.btn-green:disabled {
-      background-color: #9ca3af;
-      cursor: not-allowed;
-      box-shadow: none;
-    }
-
-    table {
+    .card-img-wrap {
       width: 100%;
-      border-collapse: collapse;
-      text-align: center;
-      font-size: 15px;
+      height: 200px;
+      background: #F8FAFC;
+      margin-bottom: 16px;
+      border: 1px solid #F1F5F9;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      position: relative;
     }
-
-    th, td {
-      border-bottom: 1px solid hsl(var(--color-border-subtle));
-      padding: 10px;
-      vertical-align: middle;
-    }
-
-    th {
-      background: hsl(var(--color-bg-card));
-      font-weight: 600;
-      color: hsl(var(--color-text-primary));
-    }
-
-    .photo-thumb {
-      width: 70px;
-      height: 70px;
+    
+    .card-img {
+      width: 100%;
+      height: 100%;
       object-fit: cover;
-      border-radius: 6px;
+      transition: transform 0.3s;
+    }
+    .lost-card:hover .card-img {
+      transform: scale(1.05);
+    }
+
+    .card-info { flex: 1; }
+    
+    .card-info h3 {
+      margin: 0 0 8px 0;
+      font-size: 16px;
+      font-weight: 800;
+      color: #2C3E50;
+    }
+    
+    .card-info p {
+      margin: 0 0 12px 0;
+      font-size: 13px;
+      color: #64748B;
+      line-height: 1.5;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .card-meta {
+      font-size: 11px;
+      color: #94A3B8;
+      margin-top: 12px;
+      padding-top: 12px;
+      border-top: 1px solid #F1F5F9;
+      display: flex;
+      justify-content: space-between;
+      font-family: 'Inter', sans-serif;
+    }
+
+    /* 카드 하단 버튼 */
+    .card-actions {
+      margin-top: 16px;
+      display: flex;
+      gap: 8px;
+    }
+    .action-btn {
+      flex: 1;
+      padding: 8px 0;
+      font-size: 12px;
+      font-weight: 700;
+      border: 1px solid #E2E8F0;
+      background: #FFFFFF;
       cursor: pointer;
+      color: #64748B;
+      transition: all 0.2s;
+    }
+    .action-btn:hover {
+      border-color: #2C3E50;
+      color: #2C3E50;
+      background: #F8FAFC;
+    }
+    .action-btn.delete:hover {
+      border-color: #e74c3c;
+      color: #e74c3c;
+      background: #FFF5F5;
     }
 
-    /* ✅ 모바일 카드형 */
-    .mobile-card {
-      background: hsl(var(--color-bg-card));
-      border: 1px solid hsl(var(--color-border-subtle));
-      border-radius: 10px;
-      padding: 12px;
-      margin-bottom: 10px;
-      box-shadow: var(--shadow-sm);
-    }
-
-    .mobile-card img {
-      width: 100%;
-      border-radius: 10px;
-      margin-top: 8px;
-    }
-
-    /* ✅ 반응형 */
-    @media (min-width: 769px) {
-      .table-wrap { display: block; }
-      .mobile-card-list { display: none; }
-    }
-    @media (max-width: 768px) {
-      .table-wrap { display: none; }
-      .mobile-card-list { display: block; }
-    }
-
-    /* ✅ 모달 */
+    /* ===============================
+       🧾 모달 스타일 (상세/사진)
+       =============================== */
     .modal-bg {
       position: fixed;
-      inset: 0;
-      background: rgba(0, 0, 0, 0.6);
-      display: none;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(44, 62, 80, 0.8);
+      backdrop-filter: blur(4px);
+      display: none; /* JS로 제어 */
       justify-content: center;
       align-items: center;
       z-index: 9999;
@@ -143,118 +259,190 @@
     }
 
     .modal-card {
-      background: #fff;
-      border-radius: 12px;
-      padding: 20px;
+      background: #FFFFFF;
+      border-radius: 0;
+      padding: 40px;
       max-width: 600px;
-      width: 90%;
-      max-height: 80vh;
+      width: 100%;
+      max-height: 90vh;
       overflow-y: auto;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+      position: relative;
     }
 
-    .modal-card img {
+    .modal-close {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      background: transparent;
+      border: none;
+      font-size: 24px;
+      cursor: pointer;
+      color: #64748B;
+    }
+
+    /* 상세 내용 스타일 */
+    .detail-title {
+      font-size: 20px;
+      font-weight: 800;
+      color: #2C3E50;
+      margin-bottom: 10px;
+      padding-right: 30px;
+    }
+    .detail-meta {
+      font-size: 13px;
+      color: #94A3B8;
+      margin-bottom: 20px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid #E2E8F0;
+    }
+    .detail-desc {
+      font-size: 15px;
+      line-height: 1.7;
+      color: #334155;
+      margin-bottom: 30px;
+      white-space: pre-wrap;
+    }
+    .detail-photos {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+      gap: 10px;
+    }
+    .detail-photos img {
       width: 100%;
-      border-radius: 8px;
-      margin-top: 10px;
+      height: 100px;
+      object-fit: cover;
+      border: 1px solid #E2E8F0;
+      cursor: zoom-in;
+      transition: transform 0.2s;
+    }
+    .detail-photos img:hover {
+      transform: scale(1.05);
+      border-color: #2C3E50;
     }
 
-    .modal-card textarea {
+    /* 모달 내 상태 변경/메모 섹션 */
+    .modal-edit-section {
+        margin-top: 30px;
+        padding-top: 20px;
+        border-top: 2px solid #F1F5F9;
+    }
+    .modal-edit-section label {
+        display: block;
+        font-size: 12px;
+        font-weight: 700;
+        color: #64748B;
+        margin-bottom: 8px;
+        text-transform: uppercase;
+    }
+    .modal-edit-section select, 
+    .modal-edit-section textarea {
+        width: 100%;
+        padding: 10px;
+        border: 1px solid #CBD5E1;
+        margin-bottom: 12px;
+        font-size: 14px;
+        color: #2C3E50;
+        background: #F8FAFC;
+    }
+    .btn-save-modal {
+        background: #2C3E50;
+        color: #fff;
+        border: none;
+        padding: 10px 20px;
+        font-weight: 700;
+        cursor: pointer;
+        width: 100%;
+    }
+
+    /* 사진 확대 모달 이미지 */
+    #modalImg {
       width: 100%;
-      border: 1px solid hsl(var(--color-border-subtle));
-      border-radius: 8px;
-      padding: 8px;
-      min-height: 60px;
+      height: auto;
+      max-height: 80vh;
+      object-fit: contain;
     }
 
-    footer {
-      text-align: center;
-      color: #777;
-      padding: 16px 0;
+    @media (max-width: 768px) {
+      .filter-container { flex-direction: column; align-items: stretch; }
+      .filter-item, .filter-btn { width: 100%; }
+      .page-header { flex-direction: column; align-items: flex-start; gap: 10px; }
+      .btn-add { width: 100%; justify-content: center; }
+      .modal-card { padding: 24px; }
     }
   </style>
 </head>
 <body>
-  <!-- ✅ 헤더 (로고 + 메뉴버튼 정상 표시) -->
+  <!-- ✅ 헤더 로드 -->
   <div id="header-placeholder"></div>
 
   <main>
-    <div class="container section">
-      <h2>📋 분실물 관리</h2>
+    <div class="page-header">
+      <h2>분실물 관리</h2>
+      <!-- 🔥 링크 수정: lost_items.html로 이동 -->
+      <a href="lost_items.html" class="btn-add">＋ 분실물 등록</a>
+    </div>
 
-      <!-- 🔎 필터 영역 -->
-      <div class="filter">
-        <select id="filterBuilding">
-          <option value="">전체 건물</option>
-          <option value="아라키초A">아라키초A</option>
-          <option value="아라키초B">아라키초B</option>
-          <option value="다이쿄초">다이쿄초</option>
-          <option value="가부키초">가부키초</option>
-          <option value="다카다노바바">다카다노바바</option>
-          <option value="오쿠보1">오쿠보1</option>
-          <option value="오쿠보2">오쿠보2</option>
-          <option value="오쿠보4">오쿠보4</option>
-        </select>
-        <input type="text" id="searchInput" placeholder="내용 / 객실 / 등록자 검색" />
-        <button id="filterBtn">검색</button>
-        <button id="resetBtn">초기화</button>
-        <!-- ✅ 초록색으로 수정 -->
-        <button id="btnAdd" class="primary btn-green" onclick="location.href='lost_items.html'">+ 분실물 등록</button>
+    <!-- 🔎 필터 -->
+    <div class="filter-container">
+      <select id="filterBuilding" class="filter-item">
+        <option value="">전체 건물</option>
+        <option value="아라키초A">아라키초A</option>
+        <option value="아라키초B">아라키초B</option>
+        <option value="다이쿄초">다이쿄초</option>
+        <option value="가부키초">가부키초</option>
+        <option value="다카다노바바">다카다노바바</option>
+        <option value="오쿠보1">오쿠보1</option>
+        <option value="오쿠보2">오쿠보2</option>
+        <option value="오쿠보4">오쿠보4</option>
+      </select>
+      
+      <select id="filterStatus" class="filter-item">
+        <option value="">전체 상태</option>
+        <option value="보관중">보관중</option>
+        <option value="회수">회수 완료</option>
+        <option value="폐기">폐기 처리</option>
+      </select>
+
+      <input type="text" id="searchInput" class="filter-item" placeholder="내용, 객실호수 검색" />
+      
+      <button id="filterBtn" class="filter-btn btn-search">검색</button>
+      <button id="resetBtn" class="filter-btn btn-reset">초기화</button>
+    </div>
+
+    <!-- 📱 카드 그리드 -->
+    <div id="lostList" class="lost-grid">
+      <div style="grid-column: 1/-1; text-align: center; padding: 60px; color: #94A3B8;">
+        데이터를 불러오는 중입니다...
       </div>
-
-      <!-- ✅ PC 리스트 -->
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th>등록일</th>
-              <th>건물</th>
-              <th>객실</th>
-              <th>내용</th>
-              <th>사진</th>
-              <th>상태</th>
-              <th>작업</th>
-            </tr>
-          </thead>
-          <tbody id="lostBody"></tbody>
-        </table>
-      </div>
-
-      <!-- ✅ 모바일 카드 리스트 -->
-      <div class="mobile-card-list" id="mobileList"></div>
     </div>
   </main>
 
-  <!-- ✅ 상세 모달 -->
+  <!-- ✅ 상세 보기 모달 -->
   <div id="detailModal" class="modal-bg">
-    <div class="modal-card" id="detailContent"></div>
-  </div>
-
-  <!-- ✅ 사진 확대 모달 -->
-  <div id="photoModal" class="modal-bg">
     <div class="modal-card">
-      <img id="modalImg" src="">
-      <div style="text-align:center;margin-top:10px;">
-        <button onclick="photoModal.style.display='none'">닫기</button>
+      <button class="modal-close" id="closeDetailModal">×</button>
+      <div id="detailContent">
+        <!-- JS에서 내용 주입 -->
       </div>
     </div>
   </div>
 
-  <footer>© 2025 HARU · by KIM HYUN JUN</footer>
+  <!-- ✅ 사진 확대 모달 -->
+  <div id="photoModal" class="modal-bg" onclick="this.style.display='none'">
+    <div class="modal-card" style="background: transparent; box-shadow: none; border: none; display: flex; justify-content: center; padding: 0;">
+      <img id="modalImg" src="" alt="확대 이미지">
+    </div>
+  </div>
 
-  <!-- ✅ 헤더 로드 -->
-  <script type="module">
-    import { initHeaderMenu } from "./header.js";
-    fetch("header.html")
-      .then(r => r.text())
-      .then(h => {
-        document.getElementById("header-placeholder").innerHTML = h;
-        initHeaderMenu();
-      });
-  </script>
+  <footer>
+    © 2025 HARU SYSTEM · TOKYO
+  </footer>
 
   <!-- ✅ 기능 스크립트 -->
   <script type="module" src="lost_items_list.js"></script>
   <script type="module" src="scrollTop.js"></script>
+  <script type="module" src="notice_popup.js"></script>
 
 </body>
 </html>

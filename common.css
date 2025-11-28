@@ -1,17 +1,40 @@
 /* ========================================
-   🎨 HARU Common Styles (미래적 디자인 시스템)
+   🎨 HARU Common Styles 
+   Concept: Tokyo Day Bright (Modern Minimalist)
    ======================================== */
 
-/* Import Design Tokens */
-@import url('./styles/tokens.css');
-@import url('./styles/layout.css');
-@import url('./styles/components.css');
+/* 1. Google Fonts Import (Noto Sans KR + Inter) */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap');
 
-/* Google Fonts */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&display=swap');
+/* 2. Design Tokens (Tokyo Day Theme) - 이 파일 하나로 디자인 완성을 위해 직접 선언 */
+:root {
+  /* Brand Colors */
+  --haru-navy: #2C3E50;       /* 메인 텍스트, 헤더 타이틀 */
+  --haru-navy-dark: #1A252F;
+  --haru-gold: #D4AF37;       /* 포인트, 액티브 상태 */
+  --haru-gold-hover: #B5952F;
+  --haru-green: #27ae60;      /* 성공, 등록 버튼 */
+  --haru-red: #e74c3c;        /* 에러, 삭제 */
+  
+  /* Backgrounds */
+  --bg-base: #F8FAFC;         /* 전체 배경 (아주 연한 쿨그레이) */
+  --bg-card: #FFFFFF;         /* 카드 배경 (완전한 화이트) */
+  --bg-glass: rgba(255, 255, 255, 0.9); /* 헤더용 글래스 */
+  
+  /* Borders & Shadows */
+  --border-color: #E2E8F0;
+  --border-focus: #D4AF37;
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.05);
+  --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.08);
+  --shadow-float: 0 20px 25px -5px rgba(0,0,0,0.05), 0 10px 10px -5px rgba(0,0,0,0.01);
 
-/* Reset */
+  /* Typography */
+  --font-body: 'Noto Sans KR', sans-serif;
+  --font-en: 'Inter', sans-serif;
+}
+
+/* 3. Reset & Base Styles */
 *, *::before, *::after {
   box-sizing: border-box;
 }
@@ -20,15 +43,13 @@ html, body {
   margin: 0;
   padding: 0;
   font-family: var(--font-body);
-  background: hsl(var(--color-bg-base));
-  color: hsl(var(--color-text-primary));
+  background-color: var(--bg-base);
+  color: var(--haru-navy);
+  line-height: 1.6;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  text-rendering: optimizeLegibility;
-  overflow-x: hidden;
 }
 
-/* 📄 Page Structure */
 body {
   display: flex;
   flex-direction: column;
@@ -37,9 +58,29 @@ body {
 
 main {
   flex: 1;
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 24px; /* 콘텐츠 여백 */
 }
 
-/* 🎨 Header (Solid Navigation) */
+a {
+  text-decoration: none;
+  color: inherit;
+  transition: color 0.2s;
+}
+
+ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+/* ========================================
+   🏢 Layout Components
+   ======================================== */
+
+/* Header (Glassmorphism) */
 .main-header {
   position: sticky;
   top: 0;
@@ -47,302 +88,306 @@ main {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background: hsl(var(--color-bg-elevated));
-  border-bottom: 2px solid hsl(var(--color-border-subtle));
-  padding: var(--space-4) var(--space-6);
-  box-shadow: var(--shadow-lg);
+  background: var(--bg-glass);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border-color);
+  padding: 0 24px;
+  height: 70px;
+  box-shadow: var(--shadow-sm);
+  transition: all 0.3s ease;
 }
 
 .main-header .logo {
-  font-family: var(--font-display);
-  font-weight: 900;
-  font-size: var(--font-size-2xl);
-  background: linear-gradient(135deg, hsl(var(--color-primary)), hsl(var(--color-secondary)));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  user-select: none;
-  letter-spacing: 0.05em;
+  font-family: var(--font-en); /* 영문 로고는 Inter */
+  font-weight: 800;
+  font-size: 20px;
+  color: var(--haru-navy);
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  background: none; /* 그라데이션 제거, 단색으로 깔끔하게 */
+  -webkit-text-fill-color: initial;
 }
 
+/* Navigation & Menu */
 .menu-wrap {
   position: relative;
-  flex: 1;
   display: flex;
-  justify-content: center;
+  align-items: center;
 }
 
 .menu-toggle {
-  background: linear-gradient(135deg, hsl(var(--color-primary)), hsl(var(--color-secondary)));
-  color: #fff;
-  border: none;
-  border-radius: var(--radius-md);
-  padding: var(--space-2) var(--space-4);
+  background: transparent;
+  color: var(--haru-navy);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  padding: 8px 16px;
   font-weight: 600;
-  font-size: var(--font-size-base);
+  font-size: 14px;
   cursor: pointer;
-  transition: all var(--transition-fast);
-  box-shadow: var(--shadow-md);
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .menu-toggle:hover {
+  background: var(--haru-navy);
+  color: #fff;
+  border-color: var(--haru-navy);
   transform: translateY(-1px);
-  box-shadow: var(--shadow-lg), var(--shadow-glow);
 }
 
+/* Dropdown Menu (Floating Card) */
 .menu-list {
   position: absolute;
-  top: calc(100% + var(--space-2));
-  left: 50%;
-  transform: translateX(-50%);
-  background: hsl(var(--color-bg-card));
-  border: 2px solid hsl(var(--color-border-strong));
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-xl), 0 0 0 1px rgba(0, 0, 0, 0.5);
-  list-style: none;
-  padding: var(--space-2) 0;
+  top: 50px; /* 버튼 아래 */
+  right: 0;  /* 우측 정렬 */
+  left: auto;
+  transform: none;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  box-shadow: var(--shadow-float);
+  padding: 8px 0;
   display: none;
-  min-width: 220px;
+  min-width: 200px;
   max-height: 70vh;
   overflow-y: auto;
   z-index: 1001;
+  animation: slideDown 0.2s ease-out;
 }
 
 .menu-list.open {
-  display: block;
-  animation: slideDown var(--transition-base);
-}
-
-.menu-list li {
-  margin: 0;
+  display: flex;
+  flex-direction: column;
 }
 
 .menu-list li a {
   display: block;
-  padding: var(--space-3) var(--space-4);
-  color: hsl(var(--color-text-primary));
-  text-decoration: none;
-  font-size: var(--font-size-sm);
+  padding: 10px 20px;
+  color: var(--haru-navy);
+  font-size: 14px;
   font-weight: 500;
-  transition: all var(--transition-fast);
   border-left: 3px solid transparent;
+  transition: all 0.2s;
 }
 
 .menu-list li a:hover {
-  background: hsl(var(--color-bg-elevated));
-  color: hsl(var(--color-primary));
-  border-left-color: hsl(var(--color-primary));
+  background-color: #F8FAFC;
+  color: var(--haru-navy);
+  border-left-color: var(--haru-gold); /* 포인트 컬러 */
+  padding-left: 24px;
 }
 
 .logout-btn {
-  background: hsl(var(--color-bg-input));
-  border: 1px solid hsl(var(--color-border-subtle));
-  border-radius: var(--radius-md);
-  padding: var(--space-2) var(--space-4);
-  color: hsl(var(--color-text-secondary));
-  font-weight: 600;
+  background: transparent;
+  border: none;
+  color: #94A3B8;
+  font-weight: 500;
+  font-size: 13px;
   cursor: pointer;
-  box-shadow: var(--shadow-sm);
-  transition: all var(--transition-fast);
+  margin-left: 16px;
+  transition: color 0.2s;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
 }
 
 .logout-btn:hover {
-  border-color: hsl(var(--color-error));
-  color: hsl(var(--color-error));
-  background: hsl(var(--color-bg-elevated));
-  box-shadow: var(--shadow-md);
-}
-
-/* 👣 Footer */
-footer {
-  text-align: center;
-  padding: var(--space-6) var(--space-4);
-  background: hsl(var(--color-bg-elevated));
-  border-top: 2px solid hsl(var(--color-border-subtle));
-  color: hsl(var(--color-text-tertiary));
-  font-size: var(--font-size-sm);
-  margin-top: var(--space-8);
-  box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.08);
-}
-
-footer strong {
-  color: hsl(var(--color-primary));
-  font-weight: 700;
-}
-
-/* 🎴 Empty State */
-.empty-state {
-  text-align: center;
-  padding: var(--space-12) var(--space-4);
-  color: hsl(var(--color-text-tertiary));
-}
-
-.empty-state-icon {
-  font-size: var(--font-size-4xl);
-  margin-bottom: var(--space-4);
-  opacity: 0.5;
-}
-
-.empty-state-text {
-  font-size: var(--font-size-lg);
-}
-
-/* 📱 Responsive (Mobile) */
-@media (max-width: 768px) {
-  .main-header {
-    padding: var(--space-3) var(--space-4);
-  }
-
-  .main-header .logo {
-    font-size: var(--font-size-xl);
-  }
-
-  .menu-list {
-    left: auto;
-    right: 0;
-    transform: none;
-    max-width: 80vw;
-  }
-
-  .logout-btn {
-    padding: var(--space-2) var(--space-3);
-    font-size: var(--font-size-sm);
-  }
-}
-
-/* ⚡ Utility Classes */
-.text-center { text-align: center; }
-.text-left { text-align: left; }
-.text-right { text-align: right; }
-
-.fw-normal { font-weight: 400; }
-.fw-medium { font-weight: 500; }
-.fw-semibold { font-weight: 600; }
-.fw-bold { font-weight: 700; }
-
-.text-primary { color: hsl(var(--color-primary)); }
-.text-secondary { color: hsl(var(--color-text-secondary)); }
-.text-tertiary { color: hsl(var(--color-text-tertiary)); }
-.text-success { color: hsl(var(--color-success)); }
-.text-warning { color: hsl(var(--color-warning)); }
-.text-error { color: hsl(var(--color-error)); }
-
-/* 🎨 Scrollbar */
-::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
-}
-
-::-webkit-scrollbar-track {
-  background: hsl(var(--color-bg-elevated));
-}
-
-::-webkit-scrollbar-thumb {
-  background: hsla(var(--color-primary), 0.5);
-  border-radius: var(--radius-full);
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: hsl(var(--color-primary));
+  color: var(--haru-red);
+  text-decoration: underline;
+  background: none;
+  box-shadow: none;
 }
 
 /* ========================================
-   📐 HARU 가독성 향상 레이어 (공통 Section/Card)
-======================================== */
+   📄 Content Layout (Sections & Cards)
+   ======================================== */
 
-/* 기능 영역 섹션 */
 .section {
-  padding: var(--space-5);
-  margin-bottom: var(--space-6);
-  background: hsl(var(--color-bg-elevated));
-  border: 1px solid hsl(var(--color-border-subtle));
-  border-radius: var(--radius-lg);
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 32px;
+  margin-bottom: 24px;
   box-shadow: var(--shadow-md);
+  transition: box-shadow 0.3s ease;
+}
+
+.section:hover {
+  box-shadow: var(--shadow-lg);
 }
 
 .section h2 {
-  font-size: var(--font-size-xl);
+  font-size: 20px;
   font-weight: 700;
-  color: hsl(var(--color-text-primary));
-  margin-bottom: var(--space-4);
+  color: var(--haru-navy);
+  margin-top: 0;
+  margin-bottom: 24px;
+  padding-bottom: 12px;
+  border-bottom: 2px solid #F1F5F9; /* 연한 밑줄 */
 }
 
 .section h3 {
-  font-size: var(--font-size-lg);
+  font-size: 16px;
   font-weight: 600;
-  color: hsl(var(--color-text-secondary));
-  margin-bottom: var(--space-3);
+  color: #64748B;
+  margin-bottom: 16px;
 }
 
-/* 폼 요소 */
+/* ========================================
+   📝 Forms & Inputs (Minimalist)
+   ======================================== */
+
 input, select, textarea {
   width: 100%;
-  padding: var(--space-3) var(--space-4);
-  background: hsl(var(--color-bg-input));
-  color: hsl(var(--color-text-primary));
-  border: 1px solid hsl(var(--color-border-subtle));
-  border-radius: var(--radius-md);
-  font-size: var(--font-size-base);
+  padding: 12px 16px;
+  background: #F8FAFC;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  color: var(--haru-navy);
+  font-size: 15px;
+  font-family: var(--font-body);
+  transition: all 0.2s ease;
+  margin-bottom: 12px;
+}
+
+input::placeholder, textarea::placeholder {
+  color: #94A3B8;
 }
 
 input:focus, select:focus, textarea:focus {
   outline: none;
-  border-color: hsl(var(--color-primary));
-  box-shadow: 0 0 0 2px hsla(var(--color-primary), 0.3);
+  background: #FFFFFF;
+  border-color: var(--haru-gold); /* 포커스 시 골드 */
+  box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.1);
 }
 
-/* ✅ 초록색 버튼 (분실물등록, 유지보수등록 전용) */
+/* Buttons */
+button {
+  font-family: var(--font-body);
+}
+
+/* Green Action Button (유지보수, 등록 등) */
 button.btn-green {
-  background-color: #16a34a;
+  background-color: var(--haru-navy); /* 메인 컬러와 통일성을 위해 네이비 추천 or Green 유지 */
+  /* 원래 Green 유지 요청 시 아래 사용 */
+  background-color: var(--haru-green);
   color: white;
   font-weight: 600;
-  font-size: 16px;
-  padding: 12px 0;
+  font-size: 15px;
+  padding: 12px 24px;
   border: none;
-  border-radius: 8px;
+  border-radius: 6px;
   cursor: pointer;
-  transition: background 0.2s ease, transform 0.1s ease;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+  width: 100%;
+  transition: all 0.2s;
+  box-shadow: var(--shadow-sm);
 }
 
 button.btn-green:hover {
-  background-color: #15803d;
+  background-color: #219150;
   transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
 }
 
 button.btn-green:disabled {
-  background-color: #9ca3af;
+  background-color: #CBD5E1;
   cursor: not-allowed;
+  transform: none;
   box-shadow: none;
 }
 
-/* 📊 출근자 현황 칩 스타일 */
+/* ========================================
+   📊 Utility & Chips
+   ======================================== */
+
 .info-chip {
-  background: hsla(var(--color-bg-elevated), 0.6);
-  border: 1px solid hsl(var(--color-border-subtle));
-  border-radius: 9999px;
-  padding: 4px 10px;
-  font-size: 0.85rem;
-  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  background: #F1F5F9;
+  color: var(--haru-navy);
+  border: 1px solid var(--border-color);
+  border-radius: 99px;
+  padding: 6px 12px;
+  font-size: 13px;
+  font-weight: 500;
+  margin-right: 8px;
+  margin-bottom: 8px;
 }
 
+.text-center { text-align: center; }
+.text-right { text-align: right; }
+.text-primary { color: var(--haru-navy); }
+.text-gold { color: var(--haru-gold); }
+.text-error { color: var(--haru-red); }
+
+/* Footer */
+footer {
+  text-align: center;
+  padding: 32px 24px;
+  color: #94A3B8;
+  font-size: 12px;
+  font-weight: 500;
+  margin-top: auto;
+}
+
+footer strong {
+  color: var(--haru-navy);
+  font-weight: 700;
+}
+
+/* Empty State */
+.empty-state {
+  text-align: center;
+  padding: 60px 20px;
+  color: #94A3B8;
+}
+.empty-state-icon {
+  font-size: 48px;
+  margin-bottom: 16px;
+  display: block;
+  opacity: 0.3;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #CBD5E1;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #94A3B8;
+}
+
+/* Animation */
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Mobile Responsive */
 @media (max-width: 768px) {
-  .info-chip {
-    font-size: 0.8rem;
-    padding: 3px 8px;
+  main {
+    padding: 16px;
   }
-}
-
-#recentLogs .log-card.condensed {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  padding: var(--space-4);
-}
-
-/* 반응형 여백 조정 */
-@media (max-width: 768px) {
+  
   .section {
-    padding: var(--space-4);
+    padding: 24px 20px;
+  }
+  
+  .menu-list {
+    width: 200px;
+    right: 16px;
+  }
+  
+  .main-header {
+    height: 60px;
+    padding: 0 16px;
   }
 }

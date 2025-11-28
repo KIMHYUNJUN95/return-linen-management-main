@@ -4,91 +4,111 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>HARU 게시판</title>
+  
+  <!-- 공통 스타일 -->
   <link rel="stylesheet" href="common.css">
 
   <style>
+    /* -------------------------------
+       🎨 Page Specific Styles
+       Theme: Tokyo Day Bright (Minimal)
+       ------------------------------- */
+    
+    body {
+      background-color: var(--bg-base); /* Soft Gray (#F8FAFC) */
+      color: var(--haru-navy);
+    }
+
     main {
       display: flex;
       justify-content: center;
       width: 100%;
+      padding-top: 40px;
     }
 
     .board-container {
       width: 100%;
-      max-width: 960px;
-      margin: 32px auto;
-      background: #fff;
-      border: 1px solid hsl(var(--color-border-subtle));
-      padding: 32px 32px 24px;
-      box-sizing: border-box;
+      max-width: 1000px;
+      margin: 0 auto 60px;
+      background: #FFFFFF;
+      border: 1px solid #E2E8F0;
+      border-radius: 0; /* 건축적 미니멀리즘 */
+      padding: 40px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.03);
+      animation: fadeIn 0.5s ease-out;
     }
 
+    /* 타이틀 섹션 */
     .board-header {
-      text-align: center;
-      margin-bottom: 32px;
+      margin-bottom: 40px;
+      border-bottom: 1px solid #E2E8F0;
+      padding-bottom: 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
     }
 
     .board-page-title {
+      margin: 0;
       font-size: 28px;
-      font-weight: 700;
-      letter-spacing: 0.05em;
-      margin-bottom: 16px;
-      color: #222;
+      font-weight: 800;
+      color: var(--haru-navy);
+      letter-spacing: -0.02em;
+      text-transform: uppercase;
     }
 
-    .board-page-title::after {
-      content: "";
-      display: block;
-      width: 40px;
-      height: 2px;
-      background: #333;
-      margin: 12px auto 0;
+    .board-subtitle {
+      font-size: 13px;
+      color: #94A3B8;
+      font-family: var(--font-en);
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
     }
 
     /* ================================
-       테이블 & 레이아웃 안정화 핵심
+       📊 테이블 스타일 (Modern Minimal)
        ================================ */
+    .table-wrap {
+      overflow-x: auto;
+    }
+
     table.board-table {
       width: 100%;
       border-collapse: collapse;
-      border-top: 2px solid #333;
-      font-size: 13px;
-      background: #fff;
-      table-layout: fixed;
+      font-size: 14px;
+      table-layout: fixed; /* 컬럼 너비 고정 */
     }
 
     .board-table thead th {
-      padding: 12px 10px;
+      background: #F8FAFC;
+      color: #64748B;
+      font-weight: 700;
+      font-size: 12px;
+      padding: 16px 12px;
       text-align: center;
-      font-weight: 600;
-      color: #555;
-      border-bottom: 1px solid #d9d9d9;
-      background: #fafafa;
+      border-bottom: 2px solid #E2E8F0;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
     }
 
     .board-table tbody td {
-      padding: 12px 10px;
-      border-bottom: 1px solid #e5e5e5;
-      color: #333;
+      padding: 16px 12px;
+      border-bottom: 1px solid #F1F5F9;
+      color: #334155;
+      vertical-align: middle;
       word-break: break-word;
-      overflow-wrap: break-word;
     }
 
-    .board-table tbody tr:hover {
-      background: #fbfbfb;
+    .board-table tbody tr:hover td {
+      background: #FAFAFA;
     }
 
+    /* 컬럼 별 스타일 */
     .board-no {
-      width: 70px;
+      width: 60px;
       text-align: center;
-    }
-
-    .board-date {
-      width: 130px;
-      text-align: center;
-      white-space: normal !important; /* 🔥 날짜 자동 줄바꿈 */
-      word-break: break-word;
-      color: #777;
+      color: #94A3B8;
+      font-family: var(--font-en);
       font-size: 12px;
     }
 
@@ -96,195 +116,247 @@
       text-align: left;
       cursor: pointer;
       font-weight: 500;
+      color: var(--haru-navy);
+      transition: color 0.2s;
+    }
+    .board-title:hover {
+      color: var(--haru-gold);
+      text-decoration: underline;
+      text-underline-offset: 4px;
     }
 
-    .pinned-row {
-      background: #fffdf4;
+    .board-date {
+      width: 120px;
+      text-align: center;
+      color: #94A3B8;
+      font-size: 12px;
+      font-family: var(--font-en);
+    }
+
+    /* 공지사항 강조 (Soft Yellow Background) */
+    .pinned-row td {
+      background: #FFFEF2;
+    }
+    .pinned-row:hover td {
+      background: #FFFBE0;
+    }
+    .pinned-row .board-title {
+      font-weight: 700;
+    }
+    .pinned-badge {
+      display: inline-block;
+      padding: 2px 6px;
+      background: var(--haru-navy);
+      color: #fff;
+      font-size: 10px;
+      margin-right: 6px;
+      border-radius: 2px;
+      font-weight: 700;
     }
 
     /* ================================
-       🔥 제목 + 버튼 정렬 깨짐 방지
+       📝 글쓰기 폼 & 버튼
        ================================ */
-    .board-title-inner {
-      display: flex;
-      flex-direction: column; /* 제목 위, 버튼 아래 */
-      gap: 6px;
-    }
-
-    .board-title-text {
-      font-size: 14px;
-      font-weight: 600;
-      color: #222;
-      line-height: 1.4;
-    }
-
-    .board-actions-inline {
-      display: flex;
-      gap: 6px;
-      flex-wrap: wrap; /* 🔥 버튼 줄바꿈 허용 → 절대 밀리지 않음 */
-    }
-
     .board-bottom-bar {
       display: flex;
       justify-content: flex-end;
-      margin-top: 16px;
+      margin-top: 30px;
+      padding-top: 20px;
+      border-top: 1px solid #E2E8F0;
     }
 
+    /* 버튼 스타일 (Sharp & Minimal) */
     .board-write-btn {
-      padding: 6px 18px;
-      font-size: 12px;
-      border-radius: 16px;
-      border: 1px solid #222;
-      background: #fff;
-      color: #222;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      height: 44px;
+      padding: 0 24px;
+      background: var(--haru-navy);
+      color: #FFFFFF;
+      font-size: 13px;
+      font-weight: 700;
+      border: 1px solid var(--haru-navy);
       cursor: pointer;
-      min-width: 72px;
+      transition: all 0.2s;
+      border-radius: 0;
+      letter-spacing: 0.05em;
     }
 
     .board-write-btn:hover {
-      background: #222;
-      color: #fff;
+      background: #000000;
+      border-color: #000000;
     }
 
+    /* 글쓰기 폼 영역 */
     .post-form {
-      margin-top: 24px;
-      padding-top: 20px;
-      border-top: 1px solid #e5e5e5;
-      display: none;
+      background: #F8FAFC;
+      padding: 30px;
+      margin-top: 20px;
+      border: 1px solid #E2E8F0;
+      display: none; /* 토글 */
+      animation: slideDown 0.3s ease-out;
     }
+    .post-form.is-open { display: block; }
 
-    .post-form.is-open {
+    .post-form-row { margin-bottom: 20px; }
+
+    .post-form label {
       display: block;
+      font-size: 12px;
+      font-weight: 700;
+      color: #64748B;
+      margin-bottom: 8px;
+      text-transform: uppercase;
     }
 
-    .post-form-row {
-      margin-bottom: 10px;
-    }
-
-    .post-form input,
+    .post-form input[type="text"],
     .post-form textarea {
       width: 100%;
-      padding: 8px 10px;
-      font-size: 13px;
-      border: 1px solid #d5d5d5;
-      border-radius: 3px;
-      box-sizing: border-box;
+      padding: 12px;
+      border: 1px solid #CBD5E1;
+      background: #FFFFFF;
+      border-radius: 0;
+      font-size: 14px;
+      color: var(--haru-navy);
+      transition: all 0.2s;
+    }
+
+    .post-form input[type="text"]:focus,
+    .post-form textarea:focus {
+      outline: none;
+      border-color: var(--haru-navy);
     }
 
     .post-form textarea {
-      min-height: 140px;
+      min-height: 180px;
       resize: vertical;
     }
 
+    /* 체크박스 커스텀 */
     .pinned-label {
       display: flex;
       align-items: center;
       gap: 8px;
-      font-size: 14px;
-      margin: 10px 0 16px 0;
-      color: #444;
+      cursor: pointer;
+      margin-top: 10px;
     }
-
-    .pinned-label input[type="checkbox"] {
+    .pinned-label input {
       width: 16px;
       height: 16px;
-      margin: 0;
+      accent-color: var(--haru-navy);
     }
 
-    .modal-bg {
-      position: fixed;
-      inset: 0;
-      background: rgba(0,0,0,0.5);
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      z-index: 9999;
+    /* 폼 내부 버튼 */
+    .post-form button[type="submit"] {
+      width: 100%;
+      height: 48px;
+      margin-top: 20px;
+      background: var(--haru-navy);
+      color: #FFF;
+      font-weight: 700;
+      font-size: 14px;
+      border: none;
+      cursor: pointer;
+      transition: background 0.2s;
     }
-
-    .modal {
-      width: 90%;
-      max-width: 480px;
-      background: #fff;
-      padding: 20px;
-      border-radius: 12px;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.25);
+    .post-form button[type="submit"]:hover {
+      background: var(--haru-gold);
     }
 
     /* ================================
-        모바일 최적화
+       🛠️ 모달 스타일 (버그 수정됨)
        ================================ */
+    .modal-bg {
+      position: fixed; /* 화면 고정 (필수) */
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(44, 62, 80, 0.6); /* 배경 어둡게 */
+      backdrop-filter: blur(4px); /* 블러 효과 */
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 9999; /* 최상단 */
+    }
+
+    .modal {
+      background: #FFFFFF;
+      width: 90%;
+      max-width: 600px;
+      max-height: 85vh;
+      overflow-y: auto; /* 내용 길면 스크롤 */
+      border-radius: 0; /* 각진 모서리 */
+      border: 1px solid #E2E8F0;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+      padding: 40px;
+      position: relative;
+      animation: fadeIn 0.2s ease-out;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes slideDown {
+      from { opacity: 0; transform: translateY(-10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Mobile */
     @media (max-width: 768px) {
-
       .board-container {
-        padding: 20px 14px 18px;
-        border-left: none;
-        border-right: none;
-        border-radius: 0;
-        width: 100%;
+        padding: 20px;
+        border: none;
+        box-shadow: none;
       }
-
-      .board-page-title {
-        font-size: 22px;
-      }
-
-      .board-table thead th {
-        font-size: 12px;
-        padding: 10px 6px;
-      }
-
-      .board-table tbody td {
-        padding: 10px 6px;
-        font-size: 12px;
-      }
-
-      .board-no {
-        display: none;
-      }
-
-      .board-date {
-        width: 85px;
-        font-size: 11px;
-        white-space: normal !important;
-      }
-
-      .board-title-text {
-        font-size: 13px;
-      }
-
-      .board-write-btn {
-        padding: 6px 14px;
-        font-size: 11px;
-      }
+      .board-header { flex-direction: column; align-items: flex-start; gap: 8px; }
+      .board-no { display: none; }
+      .board-date { width: 90px; font-size: 11px; }
+      .board-table thead th { padding: 10px 8px; font-size: 11px; }
+      .board-table tbody td { padding: 12px 8px; font-size: 13px; }
+      .modal { padding: 20px; width: 95%; }
     }
   </style>
 </head>
 
 <body>
+  <!-- ✅ 헤더 로드 -->
   <div id="header-placeholder"></div>
 
   <main>
-    <div class="board-container section">
+    <div class="board-container">
 
+      <!-- 헤더 -->
       <div class="board-header">
-        <h1 class="board-page-title">Q&amp;A</h1>
+        <h1 class="board-page-title">게시판</h1>
+        <span class="board-subtitle">Notice & Community</span>
       </div>
 
-      <table class="board-table">
-        <thead>
-          <tr>
-            <th class="board-no">No</th>
-            <th>제목</th>
-            <th class="board-date">작성시간</th>
-          </tr>
-        </thead>
+      <!-- 테이블 -->
+      <div class="table-wrap">
+        <table class="board-table">
+          <thead>
+            <tr>
+              <th class="board-no">No</th>
+              <th>제목</th>
+              <th class="board-date">작성일</th>
+            </tr>
+          </thead>
+          <tbody id="postList">
+            <!-- JS 로드 -->
+            <tr><td colspan="3" style="text-align:center; padding:40px; color:#94A3B8;">데이터를 불러오는 중입니다...</td></tr>
+          </tbody>
+        </table>
+      </div>
 
-        <tbody id="postList"></tbody>
-      </table>
-
+      <!-- 하단 액션바 -->
       <div class="board-bottom-bar">
         <button type="button" id="togglePostForm" class="board-write-btn">글쓰기</button>
       </div>
 
+      <!-- 글쓰기 폼 (토글) -->
       <form id="postForm" class="post-form">
         <div class="post-form-row">
           <label for="title">제목</label>
@@ -293,36 +365,30 @@
 
         <div class="post-form-row">
           <label for="content">내용</label>
-          <textarea id="content" placeholder="내용을 입력하세요" required></textarea>
+          <textarea id="content" placeholder="내용을 자유롭게 작성하세요" required></textarea>
         </div>
 
         <label class="pinned-label">
           <input type="checkbox" id="pinned">
-          공지로 상단 고정
+          <span>상단 공지 고정 (관리자 전용)</span>
         </label>
 
-        <button type="submit" class="primary">등록</button>
+        <button type="submit">등록하기</button>
       </form>
 
     </div>
   </main>
 
-  <footer style="text-align:center;color:#777;padding:20px 0;">
-    © 2025 HARU · by KIM HYUN JUN
+  <footer>
+    © 2025 HARU SYSTEM · TOKYO
   </footer>
 
+  <!-- ✅ 기능 스크립트 -->
   <script type="module" src="board.js"></script>
-  <script type="module">
-    import { initHeaderMenu } from "./header.js";
-    fetch("header.html")
-      .then(r => r.text())
-      .then(html => {
-        document.getElementById("header-placeholder").innerHTML = html;
-        initHeaderMenu();
-      });
-  </script>
   <script type="module" src="notice_popup.js"></script>
   <script type="module" src="scrollTop.js"></script>
+  <script type="module" src="notice_popup.js"></script>
+
 
 </body>
 </html>

@@ -1,88 +1,86 @@
 // ========================================
-// 📅 HARU 주기 관리 대시보드
-// - FullCalendar
-// - 사진 업로드 완료
-// - 다음 주기 자동 생성
-// - 과거 일정도 캘린더에 표시
-// - 사진 없이 강제 완료 옵션 추가
+// 📅 HARU Schedule Dashboard Controller
+// Logic: FullCalendar, Photo Upload, Cyclic Task Generation
+// Design: Tokyo Day Bright (No Emoji, Architectural)
 // ========================================
 
-import { db, storage, auth } from "./storage.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
 import {
+  getFirestore,
   collection,
-  getDocs,
-  addDoc,
   query,
   orderBy,
-  updateDoc,
+  getDocs,
   doc,
-  serverTimestamp,
+  updateDoc,
+  addDoc,
+  serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-import {
-  ref,
-  uploadBytes,
-  getDownloadURL,
-} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
-import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
-/* ========================================
-   🔧 DOM
-======================================== */
-const fBuilding = document.getElementById("fBuilding");
-const fStatus = document.getElementById("fStatus");
-const fMonth = document.getElementById("fMonth");
-const btnRefresh = document.getElementById("btnRefresh");
-const mobileList = document.getElementById("mobileList");
+// 🔴 1. Firebase Initialization (Safe Handling)
+let firebaseConfig = {};
+if (window.__firebase_config) {
+  try {
+    firebaseConfig = JSON.parse(window.__firebase_config);
+  } catch (e) {
+    console.error("Firebase Config Error:", e);
+  }
+}
 
-const detailModal = document.getElementById("detailModal");
-const completeModal = document.getElementById("completeModal");
-const photoModal = document.getElementById("photoModal");
+let app, auth, db, storage;
+if (firebaseConfig.apiKey) {
+    app = initializeApp(firebaseConfig);
+    auth = getAuth(app);
+    db = getFirestore(app);
+    storage = getStorage(app);
+} else {
+    // Fallback
+    auth = { onAuthStateChanged: () => {} };
+}
 
-const btnDetailClose = document.getElementById("btnDetailClose");
-const btnOpenComplete = document.getElementById("btnOpenComplete");
+// 2. DOM Elements
+const calendarEl = document.getElementById('calendar');
+const mobileListEl = document.getElementById('mobileList');
 
-const btnCompleteCancel = document.getElementById("btnCompleteCancel");
-const btnCompleteSubmit = document.getElementById("btnCompleteSubmit");
+// Filters
+const fBuilding = document.getElementById('fBuilding');
+const fStatus = document.getElementById('fStatus');
+const fMonth = document.getElementById('fMonth'); // Monthly Summary Filter
+const btnRefresh = document.getElementById('btnRefresh');
+const btnGoOverview = document.getElementById('btnGoOverview');
 
-const btnPhotoClose = document.getElementById("btnPhotoClose");
+// Modals
+const detailModal = document.getElementById('detailModal');
+const completeModal = document.getElementById('completeModal');
+const photoModal = document.getElementById('photoModal');
 
+// State
 let calendar;
-let currentUser = null;
-let selectedDoc = null;
-let allItems = [];
+let allSchedules = [];
+let selectedEventData = null;
 let isProcessing = false;
 
-/* ========================================
-   🧭 유틸
-======================================== */
+// ========================================
+// 🛠 Helpers
+// ========================================
+
 const todayISO = () => new Date().toISOString().slice(0, 10);
 
 function toISODate(v) {
   if (!v) return null;
-  try {
-    // 순수 YYYY-MM-DD
-    if (typeof v === "string" && /^\d{4}-\d{2}-\d{2}$/.test(v)) {
-      return v;
-    }
-    // Firestore Timestamp
-    if (typeof v === "object" && v.seconds) {
-      return new Date(v.seconds * 1000).toISOString().slice(0, 10);
-    }
-    // Date 문자열
-    const d = new Date(v);
-    if (!isNaN(d.getTime())) {
-      return d.toISOString().slice(0, 10);
-    }
-  } catch (e) {
-    console.warn("toISODate 변환 실패:", v);
+  if (v && v.seconds) {
+    return new Date(v.seconds * 1000).toISOString().slice(0, 10);
   }
+  if (typeof v === 'string') return v.slice(0, 10);
   return null;
 }
 
-function addMonths(isoYYYYMMDD, months) {
-  const base = isoYYYYMMDD ? new Date(isoYYYYMMDD) : new Date();
-  base.setMonth(base.getMonth() + months);
-  return base.toISOString().slice(0, 10);
+function addMonths(dateStr, months) {
+  const date = new Date(dateStr);
+  date.setMonth(date.getMonth() + parseInt(months));
+  return date.toISOString().slice(0, 10);
 }
 
 function yyyymmOf(date = new Date()) {
@@ -91,223 +89,252 @@ function yyyymmOf(date = new Date()) {
   return `${y}-${m}`;
 }
 
-/* ========================================
-   🔐 로그인 + 초기 로드
-======================================== */
-onAuthStateChanged(auth, (user) => {
-  if (!user) {
-    alert("로그인 후 이용 가능합니다.");
-    location.href = "login.html";
-  } else {
-    currentUser = user;
-    if (document.readyState === "loading") {
-      window.addEventListener("DOMContentLoaded", loadSchedule, { once: true });
-    } else {
-      loadSchedule();
-    }
+// Status Styling Helper
+function getStatusInfo(status, dueDate) {
+  const today = todayISO();
+  
+  if (status === 'done') {
+    return { label: "DONE", class: "evt-done", color: "#166534", bg: "#DCFCE7", border: "#166534" };
   }
-});
-
-/* ========================================
-   📥 Firestore 일정 불러오기
-======================================== */
-async function loadSchedule() {
-  try {
-    const colRef = collection(db, "maintenance_schedule");
-    // 과거 포함 전체
-    const qy = query(colRef, orderBy("nextDue", "asc"));
-    const snap = await getDocs(qy);
-
-    const items = [];
-    snap.forEach((s) => items.push({ id: s.id, ...s.data() }));
-
-    const today = todayISO();
-
-    // 상태 계산
-    items.forEach((it) => {
-      const due = toISODate(it.nextDue);
-      if (it.status === "done") {
-        it._computedStatus = "done";
-      } else if (due && due < today) {
-        it._computedStatus = "overdue";
-      } else {
-        it._computedStatus = it.status || "upcoming";
-      }
-    });
-
-    allItems = items;
-
-    const filtered = applyFilters(items);
-
-    renderCalendar(filtered);
-    renderMobileList(filtered);
-    renderMonthlySummary(allItems);
-  } catch (err) {
-    console.error("🚨 스케줄 불러오기 오류:", err);
+  
+  if (dueDate && dueDate < today) {
+    return { label: "OVERDUE", class: "evt-overdue", color: "#991B1B", bg: "#FEE2E2", border: "#991B1B" };
   }
+  
+  return { label: "UPCOMING", class: "evt-upcoming", color: "#0369A1", bg: "#E0F2FE", border: "#0369A1" };
 }
 
-/* ========================================
-   🔍 필터 적용
-======================================== */
-function applyFilters(items) {
-  const b = fBuilding ? fBuilding.value : "";
-  const s = fStatus ? fStatus.value : "";
-  const m = fMonth ? fMonth.value : "";
+// ========================================
+// 📅 Calendar & List Rendering
+// ========================================
 
-  return items.filter((row) => {
-    let ok = true;
-    if (b && row.building !== b) ok = false;
-
-    const stat = row._computedStatus || row.status || "upcoming";
-    if (s && stat !== s) ok = false;
-
-    if (m) {
-      const nd = toISODate(row.nextDue);
-      if (!(nd && nd.startsWith(m))) ok = false;
-    }
-
-    return ok;
-  });
-}
-
-/* ========================================
-   📅 캘린더
-======================================== */
-function renderCalendar(data) {
-  const calendarEl = document.getElementById("calendar");
+function initCalendar() {
   if (!calendarEl) return;
 
-  // 완료는 캘린더에서 빼고 보여주고 싶어서 필터링
-  const events = data
-    .filter((d) => (d._computedStatus || d.status) !== "done")
-    .map((d) => {
-      const start = toISODate(d.nextDue) || toISODate(d.startDate) || null;
-      return {
-        title: `${d.building}-${d.room || "-"} · ${d.taskName}`,
-        start,
-        classNames: [
-          (d._computedStatus === "overdue" && "ev-overdue") ||
-            (d._computedStatus === "progress" && "ev-progress") ||
-            (d._computedStatus === "upcoming" && "ev-upcoming") ||
-            "ev-upcoming",
-        ],
-        extendedProps: d,
-      };
-    })
-    .filter((e) => !!e.start);
-
-  if (calendar) calendar.destroy();
-
   calendar = new FullCalendar.Calendar(calendarEl, {
-    initialView: "dayGridMonth",
-    locale: "ko",
-    height: "auto",
-    initialDate: new Date(), // 오늘 기준
-    events,
-    eventClick: (info) => {
-      const data = info.event.extendedProps;
-      openDetailModal(data);
+    initialView: 'dayGridMonth',
+    headerToolbar: {
+      left: 'prev,next today',
+      center: 'title',
+      right: 'dayGridMonth,listWeek'
     },
+    height: 'auto',
+    contentHeight: 700,
+    events: [],
+    eventClick: handleEventClick,
+    eventContent: function(arg) {
+        return {
+            html: `<div class="fc-event-main-frame">
+                    <div class="fc-event-title-container">
+                        <div class="fc-event-title" style="font-weight:600;">
+                            ${arg.event.title}
+                        </div>
+                    </div>
+                   </div>`
+        };
+    }
   });
-
   calendar.render();
 }
 
-/* ========================================
-   📱 모바일 리스트
-======================================== */
 function renderMobileList(data) {
-  if (!mobileList) return;
-  if (!data.length) {
-    mobileList.innerHTML =
-      '<div style="text-align:center;opacity:.6;">데이터가 없습니다.</div>';
+  if (!mobileListEl) return;
+  
+  if (data.length === 0) {
+    mobileListEl.innerHTML = `<div style="text-align:center; padding:2rem; color:#64748B; border:1px dashed #CBD5E1;">NO TASKS FOUND</div>`;
     return;
   }
 
-  const html = data
-    .map((d) => {
-      const st = d._computedStatus || d.status || "upcoming";
-      const badgeClass =
-        st === "done"
-          ? "b-done"
-          : st === "overdue"
-          ? "b-overdue"
-          : st === "progress"
-          ? "b-progress"
-          : "b-upcoming";
-
-      return `
-        <div class="ml-item" data-id="${d.id}">
-          <div class="ml-top" style="display:flex;justify-content:space-between;align-items:center;">
-            <div><b>${d.building}</b> - ${d.room || "-"}</div>
-            <div class="badge ${badgeClass}">${statusText(st)}</div>
+  mobileListEl.innerHTML = data.map(d => {
+    const dueDate = d.nextDueDate || d.nextDue;
+    const statusInfo = getStatusInfo(d.status, dueDate);
+    
+    return `
+      <div class="calendar-card" style="margin-bottom: 1rem; padding: 1.2rem; cursor:pointer;" onclick="openDetailFromList('${d.id}')">
+        <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:0.5rem;">
+          <div>
+            <span style="font-size:0.75rem; font-weight:700; color:#64748B; text-transform:uppercase;">${d.building} · ${d.room}</span>
+            <h4 style="margin:0.2rem 0 0 0; font-size:1rem; font-weight:700; color:#2C3E50;">${d.taskName}</h4>
           </div>
-          <div style="margin-top:4px;font-weight:600;">${d.taskName}</div>
-          <div class="ml-meta" style="font-size:12px;color:#6b7280;">📅 예정일: ${toISODate(
-            d.nextDue
-          ) || "-"} | 🕓 최근: ${toISODate(d.lastDone) || "-"}</div>
-          <div class="ml-actions" style="margin-top:6px;display:flex;gap:6px;">
-            <button class="btn btn-sm" data-action="detail" style="height:30px;">상세</button>
-            ${
-              st === "done"
-                ? ""
-                : '<button class="btn btn-sm btn-primary" data-action="complete" style="height:30px;">완료</button>'
-            }
-          </div>
+          <span style="
+            font-size:0.7rem; font-weight:700; padding:2px 6px; 
+            color:${statusInfo.color}; background:${statusInfo.bg}; border:1px solid ${statusInfo.border};
+          ">${statusInfo.label}</span>
         </div>
-      `;
-    })
-    .join("");
+        
+        <div style="font-size:0.85rem; color:#64748B; margin-top:0.8rem; display:flex; justify-content:space-between;">
+           <span>DUE: <strong style="color:#2C3E50;">${dueDate || '-'}</strong></span>
+           <span>CYCLE: ${d.cycleMonths || 0} MON</span>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
 
-  mobileList.innerHTML = html;
+// Global helper for onclick
+window.openDetailFromList = (id) => {
+    const target = allSchedules.find(s => s.id === id);
+    if(target) openDetailModal(target);
+};
 
-  mobileList.querySelectorAll(".ml-item button").forEach((btn) => {
-    btn.addEventListener("click", () => {
-      const id = btn.closest(".ml-item").dataset.id;
-      const action = btn.dataset.action;
-      const target = data.find((d) => d.id === id);
-      if (!target) return;
-      if (action === "detail") openDetailModal(target);
-      if (action === "complete") openCompleteModal(target);
+// ========================================
+// 📡 Data Loading
+// ========================================
+
+async function loadSchedules() {
+  if (!db) return;
+
+  try {
+    const q = query(collection(db, "maintenance_schedule"), orderBy("timestamp", "desc"));
+    const snap = await getDocs(q);
+    
+    const items = [];
+    snap.forEach(doc => {
+      items.push({ id: doc.id, ...doc.data() });
     });
+
+    allSchedules = items;
+    applyFiltersAndRender();
+    renderMonthlySummary(items); // Monthly Stats
+
+  } catch (err) {
+    console.error("Error loading schedules:", err);
+  }
+}
+
+function applyFiltersAndRender() {
+  const buildingVal = fBuilding ? fBuilding.value : "";
+  const statusVal = fStatus ? fStatus.value : "";
+  const monthVal = fMonth ? fMonth.value : ""; // YYYY-MM
+
+  const today = todayISO();
+
+  const filtered = allSchedules.filter(d => {
+    const dueDate = toISODate(d.nextDueDate || d.nextDue);
+    const startDate = toISODate(d.startDate);
+
+    // 1. Building Filter
+    if (buildingVal && d.building !== buildingVal) return false;
+
+    // 2. Status Filter
+    if (statusVal) {
+        const isDone = d.status === 'done';
+        const isOverdue = dueDate && dueDate < today && !isDone;
+        const isUpcoming = dueDate && dueDate >= today && !isDone;
+
+        if (statusVal === 'done' && !isDone) return false;
+        if (statusVal === 'overdue' && !isOverdue) return false;
+        if (statusVal === 'upcoming' && !isUpcoming) return false;
+    }
+
+    // 3. Month Filter (Check both due date and start date)
+    if (monthVal) {
+        const dueMatch = dueDate && dueDate.startsWith(monthVal);
+        const startMatch = startDate && startDate.startsWith(monthVal);
+        if (!dueMatch && !startMatch) return false;
+    }
+
+    return true;
   });
+
+  // Render Calendar Events
+  const events = filtered.map(d => {
+    const dueDate = toISODate(d.nextDueDate || d.nextDue);
+    if (!dueDate) return null;
+    
+    const statusInfo = getStatusInfo(d.status, dueDate);
+    // Optional: Hide 'done' tasks from calendar to reduce clutter
+    // if (d.status === 'done') return null;
+
+    return {
+      id: d.id,
+      title: `${d.room ? d.room : ''} ${d.taskName}`,
+      start: dueDate,
+      classNames: [statusInfo.class],
+      extendedProps: d
+    };
+  }).filter(e => e !== null);
+
+  if (calendar) {
+    calendar.removeAllEvents();
+    calendar.addEventSource(events);
+  }
+  
+  renderMobileList(filtered);
 }
 
-/* ========================================
-   🧾 상태 텍스트
-======================================== */
-function statusText(s) {
-  return (
-    {
-      upcoming: "예정",
-      progress: "진행중",
-      overdue: "지연",
-      done: "완료",
-    }[s] || s
-  );
+// ========================================
+// 📊 Monthly Summary
+// ========================================
+function renderMonthlySummary(items) {
+    const container = document.createElement('div');
+    // Ensure container exists
+    let summarySection = document.getElementById('monthlySummarySection');
+    if (!summarySection) {
+        summarySection = document.createElement('section');
+        summarySection.id = 'monthlySummarySection';
+        summarySection.style.marginBottom = '20px';
+        const calCard = document.querySelector('.calendar-card');
+        if(calCard) calCard.parentNode.insertBefore(summarySection, calCard);
+    }
+
+    const ym = yyyymmOf(new Date()); // Current Month
+    const currentMonthItems = items.filter(it => {
+        const next = toISODate(it.nextDueDate || it.nextDue);
+        return next && next.startsWith(ym);
+    });
+
+    const done = currentMonthItems.filter(it => it.status === 'done').length;
+    const total = currentMonthItems.length;
+    const overdue = currentMonthItems.filter(it => {
+        const d = toISODate(it.nextDueDate || it.nextDue);
+        return it.status !== 'done' && d < todayISO();
+    }).length;
+
+    summarySection.innerHTML = `
+        <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:1rem;">
+            <div style="background:#fff; border:1px solid #CBD5E1; padding:1.5rem; text-align:center;">
+                <div style="font-weight:700; color:#64748B; font-size:0.8rem;">TOTAL TASKS</div>
+                <div style="font-size:1.8rem; font-weight:800; color:#2C3E50;">${total}</div>
+            </div>
+            <div style="background:#fff; border:1px solid #CBD5E1; padding:1.5rem; text-align:center;">
+                <div style="font-weight:700; color:#64748B; font-size:0.8rem;">DONE</div>
+                <div style="font-size:1.8rem; font-weight:800; color:#166534;">${done}</div>
+            </div>
+            <div style="background:#fff; border:1px solid #CBD5E1; padding:1.5rem; text-align:center;">
+                <div style="font-weight:700; color:#64748B; font-size:0.8rem;">OVERDUE</div>
+                <div style="font-size:1.8rem; font-weight:800; color:#991B1B;">${overdue}</div>
+            </div>
+        </div>
+    `;
 }
 
-/* ========================================
-   🔍 상세 모달
-======================================== */
+// ========================================
+// 🖱 Interactions & Modals
+// ========================================
+
+function handleEventClick(info) {
+  openDetailModal(info.event.extendedProps);
+}
+
 function openDetailModal(data) {
+  selectedEventData = data;
   if (!detailModal) return;
-  selectedDoc = data;
 
-  const setText = (id, val) => {
-    const el = document.getElementById(id);
-    if (el) el.textContent = val ?? "-";
-  };
+  const dueDate = toISODate(data.nextDueDate || data.nextDue);
+  const lastDate = toISODate(data.lastDoneDate || data.lastDone);
 
-  setText("dBuilding", data.building);
-  setText("dRoom", data.room);
-  setText("dTask", data.taskName);
-  setText("dStatus", statusText(data._computedStatus || data.status));
-  setText("dNextDue", toISODate(data.nextDue));
-  setText("dLastDone", toISODate(data.lastDone));
-  setText("dNote", data.note);
+  document.getElementById('dBuilding').textContent = data.building || '-';
+  document.getElementById('dRoom').textContent = data.room || '-';
+  document.getElementById('dTask').textContent = data.taskName || '-';
+  document.getElementById('dNextDue').textContent = dueDate || '-';
+  document.getElementById('dLastDone').textContent = lastDate || 'NEVER';
+  document.getElementById('dNote').textContent = data.note || '-';
+  
+  const statusInfo = getStatusInfo(data.status, dueDate);
+  document.getElementById('dStatus').innerHTML = `<span style="color:${statusInfo.color}; font-weight:700;">${statusInfo.label}</span>`;
 
+  // Photo
   const photoWrap = document.getElementById("dPhotoWrap");
   if (photoWrap) {
     if (data.photoUrl) {
@@ -319,208 +346,139 @@ function openDetailModal(data) {
     }
   }
 
-  detailModal.style.display = "flex";
+  detailModal.style.display = 'flex';
+  
+  // Hide Complete button if already done
+  const btnComplete = document.getElementById('btnOpenComplete');
+  if (btnComplete) {
+      btnComplete.style.display = (data.status === 'done') ? 'none' : 'block';
+  }
 }
 
-if (btnDetailClose)
-  btnDetailClose.onclick = () => (detailModal.style.display = "none");
-
+// Open Complete Modal
+const btnOpenComplete = document.getElementById('btnOpenComplete');
 if (btnOpenComplete) {
-  btnOpenComplete.onclick = () => {
-    detailModal.style.display = "none";
-    if (
-      selectedDoc &&
-      (selectedDoc._computedStatus || selectedDoc.status) !== "done"
-    ) {
-      openCompleteModal(selectedDoc);
-    } else {
-      alert("이미 완료된 작업입니다.");
-    }
-  };
+    btnOpenComplete.addEventListener('click', () => {
+        detailModal.style.display = 'none';
+        completeModal.style.display = 'flex';
+    });
+}
+
+// Submit Complete
+const btnCompleteSubmit = document.getElementById('btnCompleteSubmit');
+if (btnCompleteSubmit) {
+    btnCompleteSubmit.addEventListener('click', async () => {
+        if (!selectedEventData || !db) return;
+        if (isProcessing) return;
+        isProcessing = true;
+
+        const note = document.getElementById('cNote').value;
+        const fileEl = document.getElementById('cPhoto');
+        const file = fileEl ? fileEl.files[0] : null;
+
+        try {
+            const today = todayISO();
+            let photoUrl = null;
+
+            // 1. Upload Photo if exists
+            if (file && storage) {
+                const path = `maintenance_photos/${selectedEventData.building}_${Date.now()}_${file.name}`;
+                const fileRef = ref(storage, path);
+                const snap = await uploadBytes(fileRef, file);
+                photoUrl = await getDownloadURL(snap.ref);
+            } else {
+                if (!confirm("사진 없이 완료 처리하시겠습니까?")) {
+                    isProcessing = false;
+                    return;
+                }
+            }
+
+            // 2. Update Current (Mark as Done)
+            const cycle = parseInt(selectedEventData.cycleMonths || 0);
+            const docRef = doc(db, "maintenance_schedule", selectedEventData.id);
+            
+            await updateDoc(docRef, {
+                status: 'done',
+                lastDoneDate: today,
+                photoUrl: photoUrl || selectedEventData.photoUrl || null,
+                updatedAt: serverTimestamp(),
+                note: note
+            });
+
+            // 3. Create Next Cycle Task (if cycle > 0)
+            if (cycle > 0) {
+                const nextDate = addMonths(today, cycle);
+                await addDoc(collection(db, "maintenance_schedule"), {
+                    building: selectedEventData.building,
+                    room: selectedEventData.room,
+                    taskName: selectedEventData.taskName,
+                    cycleMonths: cycle,
+                    status: 'upcoming',
+                    startDate: today,
+                    nextDueDate: nextDate,
+                    lastDoneDate: null,
+                    createdBy: auth.currentUser?.email || 'System',
+                    timestamp: serverTimestamp()
+                });
+            }
+
+            alert("✅ 작업 완료 및 다음 주기 생성됨!");
+            completeModal.style.display = 'none';
+            document.getElementById('cNote').value = '';
+            if(fileEl) fileEl.value = '';
+            
+            loadSchedules();
+
+        } catch (err) {
+            console.error("Completion error:", err);
+            alert("처리 중 오류가 발생했습니다.");
+        } finally {
+            isProcessing = false;
+        }
+    });
 }
 
 /* ========================================
-   🖼 사진 모달
+   🖼 Photo Modal
 ======================================== */
 function openPhotoModal(url) {
   if (!photoModal) return;
   const img = document.getElementById("photoImg");
   const link = document.getElementById("btnPhotoOpen");
-  const cap = document.getElementById("photoCap");
+  
   if (img) img.src = url;
   if (link) link.href = url;
-  if (cap) cap.textContent = "";
+  
   photoModal.style.display = "flex";
 }
 
 if (btnPhotoClose) btnPhotoClose.onclick = () => (photoModal.style.display = "none");
 
-/* ========================================
-   ✅ 완료 모달 + 사진업로드 + 다음주기 생성
-   🔥 사진이 없으면 관리자가 강제로 완료 가능
-======================================== */
-function openCompleteModal(data) {
-  if (!completeModal) return;
-  if (isProcessing) return alert("처리 중입니다. 잠시만 기다려주세요.");
-  selectedDoc = data;
-  completeModal.style.display = "flex";
-}
+// Close Buttons
+const btnDetailClose = document.getElementById('btnDetailClose');
+if(btnDetailClose) btnDetailClose.addEventListener('click', () => detailModal.style.display = 'none');
 
-if (btnCompleteCancel)
-  btnCompleteCancel.onclick = () => (completeModal.style.display = "none");
+const btnCompleteCancel = document.getElementById('btnCompleteCancel');
+if(btnCompleteCancel) btnCompleteCancel.addEventListener('click', () => completeModal.style.display = 'none');
 
-if (btnCompleteSubmit) {
-  btnCompleteSubmit.onclick = async () => {
-    if (!selectedDoc) return;
-    if (isProcessing) return;
-    isProcessing = true;
+// ========================================
+// 🔄 Initialization
+// ========================================
 
-    const noteEl = document.getElementById("cNote");
-    const fileEl = document.getElementById("cPhoto");
-    const note = noteEl ? noteEl.value.trim() : "";
-    const file = fileEl ? fileEl.files[0] : null;
+document.addEventListener('DOMContentLoaded', () => {
+    initCalendar();
+});
 
-    try {
-      const doneDate = todayISO();
-      let photoUrl = null;
-
-      if (file) {
-        // 정상 흐름: 사진 업로드
-        const path = `maintenance_photos/${selectedDoc.building}_${
-          selectedDoc.room || "-"
-        }_${Date.now()}_${file.name}`;
-        const fileRef = ref(storage, path);
-        const snap = await uploadBytes(fileRef, file);
-        photoUrl = await getDownloadURL(snap.ref);
-      } else {
-        // 🔥 사진 없이 강제 완료
-        const ok = confirm("사진 없이 완료 처리하시겠습니까?");
-        if (!ok) {
-          isProcessing = false;
-          return;
+if (auth) {
+    onAuthStateChanged(auth, (user) => {
+        if (user) {
+            loadSchedules();
         }
-      }
-
-      // 원본 문서 업데이트
-      const docRef = doc(db, "maintenance_schedule", selectedDoc.id);
-      await updateDoc(docRef, {
-        status: "done",
-        note,
-        photoUrl: photoUrl || selectedDoc.photoUrl || null,
-        lastDone: doneDate,
-        updatedBy: currentUser?.email || "unknown",
-        timestamp: serverTimestamp(),
-      });
-
-      // 다음 주기 자동 생성
-      const cycle = Number(selectedDoc.cycleMonths || 0);
-      if (cycle > 0) {
-        const nextDue = addMonths(doneDate, cycle);
-        await addDoc(collection(db, "maintenance_schedule"), {
-          building: selectedDoc.building,
-          room: selectedDoc.room || "-",
-          taskName: selectedDoc.taskName,
-          cycleMonths: cycle,
-          note: "",
-          status: "upcoming",
-          startDate: doneDate,
-          nextDue,
-          lastDone: null,
-          createdBy: currentUser?.email || "unknown",
-          timestamp: serverTimestamp(),
-        });
-      }
-
-      alert("✅ 완료 처리되었습니다.");
-      completeModal.style.display = "none";
-
-      await loadSchedule();
-      if (calendar) calendar.gotoDate(new Date());
-    } catch (err) {
-      console.error("🚨 완료 처리 오류:", err);
-      alert("처리 중 오류가 발생했습니다.");
-    } finally {
-      isProcessing = false;
-    }
-  };
+    });
 }
 
-/* ========================================
-   📊 이번달 요약
-======================================== */
-function ensureSummaryContainer() {
-  let summary = document.getElementById("monthlySummary");
-  if (!summary) {
-    const calWrap = document.querySelector(".calendar-card");
-    if (!calWrap || !calWrap.parentElement) return null;
-    summary = document.createElement("section");
-    summary.id = "monthlySummary";
-    summary.style.marginTop = "12px";
-    summary.innerHTML = `<div id="monthlySummaryInner"></div>`;
-    calWrap.parentElement.insertBefore(
-      summary,
-      document.getElementById("mobileList")
-    );
-  }
-  return summary;
-}
-
-function renderMonthlySummary(items) {
-  const summaryWrap = ensureSummaryContainer();
-  if (!summaryWrap) return;
-  const container = document.getElementById("monthlySummaryInner");
-  if (!container) return;
-
-  const ym = yyyymmOf(new Date());
-  const currentMonthItems = items.filter((it) => {
-    const next = toISODate(it.nextDue);
-    const start = toISODate(it.startDate);
-    return (next && next.startsWith(ym)) || (start && start.startsWith(ym));
-  });
-
-  const done = currentMonthItems.filter(
-    (it) => (it.status || it._computedStatus) === "done"
-  ).length;
-  const notDone = currentMonthItems.filter(
-    (it) => (it.status || it._computedStatus) !== "done"
-  );
-  const overdue = notDone.filter(
-    (it) => (it._computedStatus || it.status) === "overdue"
-  ).length;
-  const upcoming = notDone.filter(
-    (it) => (it._computedStatus || it.status) === "upcoming"
-  ).length;
-  const progress = notDone.filter(
-    (it) => (it._computedStatus || it.status) === "progress"
-  ).length;
-
-  container.innerHTML = `
-    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;">
-      <div style="background:#fff;border:1px solid #e6eaf0;border-radius:12px;padding:14px;">
-        <div style="font-weight:800;color:#111;">이번달 완료</div>
-        <div style="font-size:28px;font-weight:900;color:#10b981;margin-top:4px;">${done}</div>
-      </div>
-      <div style="background:#fff;border:1px solid #e6eaf0;border-radius:12px;padding:14px;">
-        <div style="font-weight:800;color:#111;">이번달 미완료</div>
-        <div style="font-size:28px;font-weight:900;color:#ef4444;margin-top:4px;">${notDone.length}</div>
-      </div>
-      <div style="background:#fff;border:1px solid #e6eaf0;border-radius:12px;padding:14px;">
-        <div style="font-weight:800;color:#111;">지연</div>
-        <div style="font-size:28px;font-weight:900;color:#b91c1c;margin-top:4px;">${overdue}</div>
-      </div>
-      <div style="background:#fff;border:1px solid #e6eaf0;border-radius:12px;padding:14px;">
-        <div style="font-weight:800;color:#111;">예정</div>
-        <div style="font-size:28px;font-weight:900;color:#0ea5e9;margin-top:4px;">${upcoming}</div>
-      </div>
-      <div style="background:#fff;border:1px solid #e6eaf0;border-radius:12px;padding:14px;">
-        <div style="font-weight:800;color:#111;">진행중</div>
-        <div style="font-size:28px;font-weight:900;color:#a16207;margin-top:4px;">${progress}</div>
-      </div>
-    </div>
-  `;
-}
-
-/* ========================================
-   🔄 새로고침 버튼
-======================================== */
-if (btnRefresh) btnRefresh.onclick = () => loadSchedule();
+if (fBuilding) fBuilding.addEventListener('change', applyFiltersAndRender);
+if (fStatus) fStatus.addEventListener('change', applyFiltersAndRender);
+if (fMonth) fMonth.addEventListener('change', applyFiltersAndRender);
+if (btnRefresh) btnRefresh.addEventListener('click', loadSchedules);
+if (btnGoOverview) btnGoOverview.addEventListener('click', () => location.href = 'schedule_overview.html');
