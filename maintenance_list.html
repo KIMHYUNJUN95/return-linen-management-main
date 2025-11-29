@@ -6,10 +6,13 @@
   <title>HARU 유지보수 관리</title>
   <link rel="stylesheet" href="common.css" />
 
-  <!-- =============================
-       🔥 새 헤더 스타일 (유지)
-       ============================= -->
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+
   <style>
+    /* 🎨 TOKYO DAY BRIGHT Design System */
     :root {
       --tk-black: #111111;
       --tk-gray: #888888;
@@ -19,130 +22,190 @@
       --tk-accent: #000000;
     }
 
+    * { box-sizing: border-box; border-radius: 0px !important; }
+
     body {
       padding-top: 60px;
       font-family: 'Noto Sans KR', sans-serif;
       background-color: #f9f9f9;
+      margin: 0;
     }
 
-    /* --- Header Layout --- */
+    /* 🔹 Header CSS (NEW GRID SYSTEM - Consistent with other pages) */
     .main-header {
       position: fixed;
-      top: 0; left: 0;
-      width: 100%; height: 60px;
-      background: rgba(255,255,255,0.95);
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 60px;
+      background: rgba(255, 255, 255, 0.95);
       border-bottom: 1px solid var(--tk-border);
       z-index: 1000;
-      display: flex; align-items: center; justify-content: center;
       backdrop-filter: blur(5px);
     }
 
     .header-inner {
-      width: 100%; max-width: 1400px;
+      width: 100%;
+      max-width: 1400px;
+      height: 100%;
+      margin: 0 auto;
       padding: 0 24px;
-      display: flex;
-      justify-content: space-between;
+      /* ✅ Grid로 좌-중-우 완벽 분리 */
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
       align-items: center;
     }
 
+    /* 1. 로고: 왼쪽 정렬 */
     .logo {
-      font-weight: 700; font-size: 18px;
+      justify-self: start;
+      font-family: 'Noto Sans KR', sans-serif;
+      font-weight: 700;
+      font-size: 18px;
       color: var(--tk-black);
       letter-spacing: 0.15em;
       text-transform: uppercase;
     }
 
-    .menu-wrap { position: relative; display: flex; align-items: center; }
-
-    .menu-toggle {
-      background: transparent; border: none;
-      cursor: pointer;
-      display: flex; align-items: center;
-      gap: 10px; padding: 8px 0;
-      transition: opacity .3s;
+    /* 2. 메뉴 랩: 중앙 정렬 */
+    .menu-wrap {
+      justify-self: center;
+      position: relative;
     }
-    .menu-toggle:hover { opacity: .6; }
+
+    /* 3. 로그아웃: 오른쪽 정렬 */
+    .logout-btn {
+      justify-self: end;
+      background: transparent;
+      border: none;
+      color: var(--tk-black);
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 0.1em;
+      cursor: pointer;
+      text-transform: uppercase;
+      padding: 4px 0;
+      transition: opacity 0.3s;
+    }
+    .logout-btn:hover {
+      opacity: 0.6;
+    }
+
+    /* 메뉴 버튼 */
+    .menu-toggle {
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px;
+      transition: opacity 0.3s;
+    }
+    .menu-toggle:hover { opacity: 0.6; }
 
     .menu-label {
-      font-size: 12px; font-weight: 500;
+      font-size: 12px;
+      font-weight: 600;
       color: var(--tk-black);
-      letter-spacing: .1em;
+      letter-spacing: 0.1em;
     }
 
-    .hamburger-lines { display:flex; flex-direction:column; gap:4px; }
-    .line { width:18px; height:1.5px; background:var(--tk-black); transition:.3s; }
+    .hamburger-lines {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .line {
+      width: 18px;
+      height: 1.5px;
+      background-color: var(--tk-black);
+      display: block;
+      transition: transform 0.3s ease;
+    }
 
-    .menu-toggle[aria-expanded="true"] .line1 { transform: rotate(45deg) translate(2px,2px); }
-    .menu-toggle[aria-expanded="true"] .line2 { transform: rotate(-45deg) translate(2px,-2px); }
+    .menu-toggle[aria-expanded="true"] .line1 { transform: rotate(45deg) translate(2px, 2px); }
+    .menu-toggle[aria-expanded="true"] .line2 { transform: rotate(-45deg) translate(2px, -2px); width: 18px; }
 
+    /* 드롭다운 메뉴 */
     .menu-list {
-      display:none;
-      position:absolute;
-      top:50px;
-      right:-20px;
-      width:220px;
-      background:var(--tk-white);
-      border:1px solid var(--tk-border);
-      padding:12px 0;
-      flex-direction:column;
-      box-shadow:0 10px 40px rgba(0,0,0,0.05);
-      list-style:none;
-      z-index:1001;
+      display: none;
+      position: absolute;
+      top: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 220px;
+      background: var(--tk-white);
+      border: 1px solid var(--tk-border);
+      padding: 12px 0;
+      flex-direction: column;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.05);
+      list-style: none;
+      z-index: 1001;
+      margin-top: 10px;
     }
 
-    .menu-list.open { display:flex; animation: fadeIn .2s ease-out; }
+    .menu-list.open {
+      display: flex;
+      animation: fadeInDropdown 0.2s ease-out;
+    }
+
+    @keyframes fadeInDropdown {
+      from { opacity: 0; transform: translate(-50%, -10px); }
+      to { opacity: 1; transform: translate(-50%, 0); }
+    }
 
     .menu-list li a {
-      display:block;
-      padding:10px 24px;
-      font-size:13px;
+      display: block;
+      padding: 10px 24px;
+      font-size: 13px;
       color: var(--tk-gray);
-      text-decoration:none;
-      border-left:2px solid transparent;
-      transition:.2s;
+      text-decoration: none;
+      transition: all 0.2s;
+      border-left: 2px solid transparent;
     }
     .menu-list li a:hover {
-      background:#fafafa;
-      color:var(--tk-black);
-      border-left-color:var(--tk-black);
-      padding-left:30px;
+      background-color: #fafafa;
+      color: var(--tk-black);
+      border-left-color: var(--tk-black);
+      padding-left: 30px;
     }
-
     .menu-list li a.admin-link {
-      color:#e74c3c;
-      font-weight:600;
+      color: #e74c3c;
+      font-weight: 600;
     }
 
-    .logout-btn {
-      background:transparent;
-      border:none;
-      color:var(--tk-black);
-      font-size:11px;
-      font-weight:500;
-      letter-spacing:.1em;
-      cursor:pointer;
-      text-transform:uppercase;
-      border-bottom:1px solid transparent;
-      padding:4px 0;
-      margin-left:40px;
-      transition:.3s;
-    }
-    .logout-btn:hover { border-bottom-color:var(--tk-black); }
-
-    @keyframes fadeIn { from{opacity:0; transform:translateY(-5px);} to{opacity:1; transform:translateY(0);} }
-
-    @media(max-width:768px){
-      .main-header{height:50px;}
-      .header-inner{padding:0 16px;}
-      .logo{font-size:16px;}
-      .logout-btn{display:none;}
-      .menu-toggle .menu-label{display:none;}
-      .menu-list{
-        position:fixed; top:50px; left:0; right:0;
-        width:100%; border:none;
-        border-bottom:1px solid var(--tk-border);
+    /* Mobile Header Optimization */
+    @media (max-width: 768px) {
+      .main-header { height: 50px; }
+      .header-inner { padding: 0 16px; }
+      
+      .logo { font-size: 16px; }
+      .menu-label { font-size: 11px; }
+      .menu-toggle { gap: 6px; }
+      .logout-btn { 
+        display: block; /* 모바일에서도 표시 */
+        font-size: 10px; 
       }
-      .menu-list li a{padding:14px 24px; font-size:14px;}
+
+      .menu-list {
+        position: fixed;
+        top: 50px;
+        left: 0;
+        right: 0;
+        width: 100vw;
+        transform: none;
+        margin-top: 0;
+        border: none;
+        border-bottom: 1px solid var(--tk-border);
+        box-shadow: 0 5px 10px rgba(0,0,0,0.05);
+      }
+      .menu-list.open { animation: fadeInMobile 0.2s ease-out; }
+      @keyframes fadeInMobile {
+        from { opacity: 0; transform: translateY(-5px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+      .menu-list li a { padding: 14px 24px; font-size: 14px; }
     }
   </style>
 
@@ -339,12 +402,14 @@
   </script>
 
   <!-- =============================
-       🔥 새 헤더 HTML
+       🔥 헤더 HTML (New Grid System)
        ============================= -->
   <header class="main-header">
     <div class="header-inner">
+      <!-- 1. 좌측 -->
       <div class="logo">HARU</div>
 
+      <!-- 2. 중앙 -->
       <div class="menu-wrap">
         <button class="menu-toggle" aria-haspopup="true" aria-expanded="false">
           <span class="menu-label">MENU</span>
@@ -375,6 +440,7 @@
         </ul>
       </div>
 
+      <!-- 3. 우측 -->
       <button id="logoutBtn" class="logout-btn">SIGN OUT</button>
     </div>
   </header>
@@ -461,22 +527,24 @@
        메뉴 토글 스크립트
        ============================= -->
   <script>
-    const toggleBtn = document.querySelector('.menu-toggle');
-    const menuList = document.querySelector('.menu-list');
+    document.addEventListener('DOMContentLoaded', () => {
+      const toggleBtn = document.querySelector('.menu-toggle');
+      const menuList = document.querySelector('.menu-list');
 
-    if (toggleBtn && menuList) {
-      toggleBtn.addEventListener("click", () => {
-        const open = menuList.classList.toggle("open");
-        toggleBtn.setAttribute("aria-expanded", open);
-      });
+      if (toggleBtn && menuList) {
+        toggleBtn.addEventListener("click", () => {
+          const open = menuList.classList.toggle("open");
+          toggleBtn.setAttribute("aria-expanded", open);
+        });
 
-      document.addEventListener("click", (e) => {
-        if (!menuList.contains(e.target) && !toggleBtn.contains(e.target)) {
-          menuList.classList.remove("open");
-          toggleBtn.setAttribute("aria-expanded", "false");
-        }
-      });
-    }
+        document.addEventListener("click", (e) => {
+          if (!menuList.contains(e.target) && !toggleBtn.contains(e.target)) {
+            menuList.classList.remove("open");
+            toggleBtn.setAttribute("aria-expanded", "false");
+          }
+        });
+      }
+    });
   </script>
 
   <!-- =============================
