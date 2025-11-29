@@ -56,72 +56,113 @@ try {
 }
 
 // ----------------------------------------
-// 3) 모달 생성
+// 3) 모달 생성 (디자인 수정됨: White Post-it Style)
 // ----------------------------------------
 function createNoticeModal() {
   if (document.getElementById("noticeModalGlobal")) return;
 
   const style = document.createElement("style");
   style.textContent = `
+    /* 배경 블러 처리 */
     .notice-modal-bg {
       position: fixed;
       inset: 0;
-      background: rgba(44, 62, 80, 0.5);
+      background: rgba(0, 0, 0, 0.4); /* 조금 더 투명하고 모던하게 */
       backdrop-filter: blur(4px);
       display: none;
       justify-content: center;
       align-items: center;
       z-index: 9999;
     }
+
+    /* 포스트잇 컨셉의 흰색 카드 */
     .notice-card {
-      background: white;
+      background: #ffffff;
       width: 90%;
-      max-width: 480px;
-      border: 1px solid #E74C3C;
-      box-shadow: 0 20px 40px rgba(0,0,0,0.2);
-      animation: fadeIn 0.25s ease-out;
-      font-family: 'Inter','Noto Sans KR',sans-serif;
+      max-width: 420px; /* 너무 넓지 않게 조정 */
+      border: 1px solid #E2E8F0; /* 테두리 아주 연하게 */
+      border-radius: 2px; /* 포스트잇 느낌 (살짝 둥글거나 각지게) */
+      box-shadow: 0 15px 40px rgba(0,0,0,0.15); /* 부드러운 그림자 */
+      animation: popIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      font-family: 'Noto Sans KR', sans-serif;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
     }
+
+    /* 헤더: 빨간색 제거 -> 심플한 타이틀 */
     .notice-header {
-      background: #E74C3C;
-      padding: 16px 20px;
-      color: white;
-      font-size: 16px;
+      background: #ffffff;
+      padding: 24px 24px 12px 24px;
+      color: #1e293b; /* HARU Navy Dark */
+      font-size: 18px;
       font-weight: 800;
+      line-height: 1.4;
+      border-bottom: none; /* 선 제거 */
     }
+
+    /* 본문: 여백 확보 */
     .notice-body {
-      padding: 20px;
+      padding: 0 24px 24px 24px;
       font-size: 14px;
-      color: #334155;
+      color: #475569; /* 가독성 좋은 회색 */
       white-space: pre-wrap;
       line-height: 1.6;
-      max-height: 240px;
+      max-height: 300px;
       overflow-y: auto;
     }
+
+    /* 푸터: 버튼 영역 */
     .notice-footer {
-      padding: 14px 20px;
-      background: #F8FAFC;
-      border-top: 1px solid #E2E8F0;
+      padding: 0 24px 24px 24px;
+      background: #ffffff;
       display: flex;
       justify-content: space-between;
+      align-items: center;
+      border-top: none;
     }
+
+    /* 닫기 버튼: 진한 네이비 포인트 */
     .notice-close-btn {
-      background: #2C3E50;
+      background: #1e293b;
       color: white;
       padding: 8px 20px;
       border: none;
-      font-weight: 700;
+      font-size: 13px;
+      font-weight: 600;
       cursor: pointer;
+      border-radius: 2px;
+      transition: opacity 0.2s;
     }
+    .notice-close-btn:hover {
+      opacity: 0.9;
+    }
+
+    /* 체크박스 버튼: 가로 정렬 오류 해결 */
     .notice-check-btn {
       background: transparent;
       border: none;
       cursor: pointer;
       font-size: 12px;
-      color: #64748B;
+      color: #94A3B8; /* 연한 회색 */
       display: flex;
-      align-items: center;
-      gap: 6px;
+      align-items: center; /* 수직 중앙 정렬 */
+      gap: 6px; /* 체크박스와 글자 사이 간격 */
+      padding: 0;
+      white-space: nowrap; /* 글자 줄바꿈 절대 금지 */
+    }
+    
+    /* 체크박스 자체 스타일 미세 조정 */
+    .notice-check-btn input[type="checkbox"] {
+      margin: 0;
+      width: 14px;
+      height: 14px;
+      cursor: pointer;
+    }
+
+    @keyframes popIn {
+      from { opacity: 0; transform: scale(0.95) translateY(10px); }
+      to { opacity: 1; transform: scale(1) translateY(0); }
     }
   `;
 
@@ -129,6 +170,7 @@ function createNoticeModal() {
   modal.id = "noticeModalGlobal";
   modal.className = "notice-modal-bg";
 
+  // HTML 구조는 유지하되 클래스 스타일이 변경됨
   modal.innerHTML = `
     <div class="notice-card">
       <div class="notice-header" id="noticeTitleGlobal"></div>
@@ -194,7 +236,15 @@ window.addEventListener("DOMContentLoaded", async () => {
 
     createNoticeModal();
 
+    // 제목에 [중요] 말머리는 데이터 그대로 유지 (디자인으로 커버)
+    document.getElementById("noticeTitleGlobal").textContent = latest.title; 
+    // 만약 DB 제목에 '[중요]'가 없다면 아래처럼 강제로 붙여도 되지만, 
+    // 깔끔한 디자인을 위해 원본 제목을 우선 사용하거나, 필요시:
+    // document.getElementById("noticeTitleGlobal").textContent = "[NOTICE] " + latest.title;
+    // 여기서는 기존 로직대로 '[중요]'가 포함된 제목이라 가정하고 그대로 둡니다.
+    // (기존 코드: "[중요] " + latest.title 였으므로 유지)
     document.getElementById("noticeTitleGlobal").textContent = "[중요] " + latest.title;
+
     document.getElementById("noticeContentGlobal").textContent = latest.content;
 
     document.getElementById("noticeModalGlobal").style.display = "flex";

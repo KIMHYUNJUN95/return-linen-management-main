@@ -1,13 +1,13 @@
 ﻿<!-- ========================================
-     HARU Header (Tokyo Monochrome - No Emoji)
+     HARU Header (Tokyo Monochrome - Center Menu)
      ======================================== -->
 <header class="main-header">
   <div class="header-inner">
-    <!-- 로고: 군더더기 없는 텍스트형 -->
+    <!-- 1. 좌측: 로고 -->
     <div class="logo">HARU</div>
 
+    <!-- 2. 중앙: 메뉴 버튼 (모바일/PC 모두 중앙 고정) -->
     <div class="menu-wrap">
-      <!-- 메뉴 토글: 심플한 텍스트 + 라인 -->
       <button class="menu-toggle" aria-haspopup="true" aria-expanded="false">
         <span class="menu-label">MENU</span>
         <div class="hamburger-lines">
@@ -16,7 +16,7 @@
         </div>
       </button>
 
-      <!-- 메뉴 리스트: 이모지 제거, 텍스트 중심 -->
+      <!-- 드롭다운 메뉴 -->
       <ul class="menu-list" role="menu">
         <li><a href="board.html">게시판</a></li>
         <li><a href="chat.html" data-menu="chat">채팅</a></li>
@@ -31,13 +31,8 @@
         <li><a href="worklog.html">근무기록</a></li>
         <li><a href="notices.html">공지사항</a></li>
         <li><a href="profile.html">내 정보</a></li>
-        
-        <!-- ✅ 여기 추가됨: 앱 설치 -->
         <li><a id="installHaruBtn">앱 설치</a></li>
-
         <li><a href="schedule_dashboard.html">작업 스케줄러</a></li>
-
-        <!-- ✅ 슈퍼 관리자 전용 -->
         <li class="super-admin-only" style="display:none;">
           <a href="admin.html" class="admin-link">관리자 설정</a>
         </li>
@@ -47,7 +42,7 @@
       </ul>
     </div>
 
-    <!-- 로그아웃: 버튼 형태가 아닌 텍스트 링크 형태 -->
+    <!-- 3. 우측: 로그아웃 버튼 -->
     <button id="logoutBtn" class="logout-btn">SIGN OUT</button>
   </div>
 </header>
@@ -60,16 +55,15 @@
     --tk-light-gray: #f4f4f4;
     --tk-white: #ffffff;
     --tk-border: #e0e0e0;
-    --tk-accent: #000000; /* 완전한 블랙 포인트 */
   }
 
   body {
-    padding-top: 60px; /* 헤더 높이만큼 여백 */
+    padding-top: 60px;
     font-family: 'Noto Sans KR', sans-serif;
-    background-color: #f9f9f9; /* 전체 배경을 아주 연한 회색으로 변경 추천 */
+    background-color: #f9f9f9;
   }
 
-  /* --- Header Layout --- */
+  /* --- Header Layout (Grid System) --- */
   .main-header {
     position: fixed;
     top: 0;
@@ -79,23 +73,25 @@
     background: rgba(255, 255, 255, 0.95);
     border-bottom: 1px solid var(--tk-border);
     z-index: 1000;
-    display: flex;
-    align-items: center;
-    justify-content: center;
     backdrop-filter: blur(5px);
   }
 
   .header-inner {
     width: 100%;
     max-width: 1400px;
+    height: 100%;
+    margin: 0 auto;
     padding: 0 24px;
-    display: flex;
-    justify-content: space-between;
+    
+    /* ✅ 핵심: Grid로 좌-중-우 완벽 분리 */
+    display: grid;
+    grid-template-columns: 1fr auto 1fr; /* 좌측(여유) - 중앙(자동) - 우측(여유) */
     align-items: center;
   }
 
-  /* --- Logo --- */
+  /* 1. 로고: 왼쪽 정렬 */
   .logo {
+    justify-self: start;
     font-family: 'Noto Sans KR', sans-serif;
     font-weight: 700;
     font-size: 18px;
@@ -104,31 +100,49 @@
     text-transform: uppercase;
   }
 
+  /* 2. 메뉴 랩: 중앙 정렬 */
   .menu-wrap {
-    position: relative;
-    display: flex;
-    align-items: center;
+    justify-self: center;
+    position: relative; /* 드롭다운 기준점 */
   }
 
-  /* --- Menu Toggle --- */
+  /* 3. 로그아웃: 오른쪽 정렬 */
+  .logout-btn {
+    justify-self: end;
+    background: transparent;
+    border: none;
+    color: var(--tk-black);
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    cursor: pointer;
+    text-transform: uppercase;
+    padding: 4px 0;
+    transition: opacity 0.3s;
+  }
+  .logout-btn:hover {
+    opacity: 0.6;
+  }
+
+  /* --- Menu Toggle Button --- */
   .menu-toggle {
     background: transparent;
     border: none;
     cursor: pointer;
     display: flex;
     align-items: center;
-    gap: 10px;
-    padding: 8px 0;
+    gap: 8px; /* 텍스트와 라인 사이 간격 */
+    padding: 8px;
     transition: opacity 0.3s;
   }
-
+  
   .menu-toggle:hover {
     opacity: 0.6;
   }
 
   .menu-label {
     font-size: 12px;
-    font-weight: 500;
+    font-weight: 600;
     color: var(--tk-black);
     letter-spacing: 0.1em;
   }
@@ -147,20 +161,22 @@
     transition: transform 0.3s ease;
   }
 
+  /* 햄버거 애니메이션 */
   .menu-toggle[aria-expanded="true"] .line1 {
     transform: rotate(45deg) translate(2px, 2px);
   }
   .menu-toggle[aria-expanded="true"] .line2 {
     transform: rotate(-45deg) translate(2px, -2px);
-    width: 18px;
+    width: 18px; /* 길이 유지 */
   }
 
-  /* --- Menu List --- */
+  /* --- Menu Dropdown --- */
   .menu-list {
     display: none;
     position: absolute;
-    top: 50px;
-    right: -20px;
+    top: 100%; /* 버튼 바로 아래 */
+    left: 50%;
+    transform: translateX(-50%); /* 중앙 정렬 */
     width: 220px;
     background: var(--tk-white);
     border: 1px solid var(--tk-border);
@@ -169,15 +185,17 @@
     box-shadow: 0 10px 40px rgba(0, 0, 0, 0.05);
     list-style: none;
     z-index: 1001;
+    margin-top: 10px; /* 약간의 여백 */
   }
 
   .menu-list.open {
     display: flex;
-    animation: fadeIn 0.2s ease-out;
+    animation: fadeInDropdown 0.2s ease-out;
   }
 
-  .menu-list li {
-    display: block;
+  @keyframes fadeInDropdown {
+    from { opacity: 0; transform: translate(-50%, -10px); }
+    to { opacity: 1; transform: translate(-50%, 0); }
   }
 
   .menu-list li a {
@@ -202,56 +220,57 @@
     font-weight: 600;
   }
 
-  /* --- Logout Button --- */
-  .logout-btn {
-    background: transparent;
-    border: none;
-    color: var(--tk-black);
-    font-size: 11px;
-    font-weight: 500;
-    letter-spacing: 0.1em;
-    cursor: pointer;
-    text-transform: uppercase;
-    border-bottom: 1px solid transparent;
-    padding: 4px 0;
-    margin-left: 40px;
-    transition: border-color 0.3s;
-  }
-
-  .logout-btn:hover {
-    border-bottom-color: var(--tk-black);
-  }
-
-  @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(-5px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
-
+  /* --- Mobile Optimization --- */
   @media (max-width: 768px) {
     .main-header {
       height: 50px;
-      padding: 0;
     }
     .header-inner {
       padding: 0 16px;
+      /* 모바일에서도 Grid 유지 -> 무조건 중앙 정렬됨 */
     }
-    .logo { font-size: 16px; }
+
+    .logo {
+      font-size: 16px;
+    }
+
+    /* 모바일에서 'MENU' 글자를 살리되 조금 작게 */
+    .menu-label {
+      font-size: 11px; 
+    }
+    
+    .menu-toggle {
+      gap: 6px;
+    }
+
+    /* 모바일에서 로그아웃 버튼 크기 조절 */
     .logout-btn {
-      display: none;
+      font-size: 10px;
     }
-    .menu-toggle .menu-label {
-      display: none;
-    }
+
+    /* 모바일 메뉴 드롭다운: 전체 화면 너비 사용 */
     .menu-list {
-      position: fixed;
-      top: 50px;
-      left: 0;
+      position: fixed; /* 뷰포트 기준 */
+      top: 50px; /* 헤더 높이 */
+      left: 0; 
       right: 0;
-      width: 100%;
+      width: 100vw;
+      transform: none; /* 중앙 정렬 해제 (전체 너비이므로) */
+      margin-top: 0;
       border: none;
       border-bottom: 1px solid var(--tk-border);
       box-shadow: 0 5px 10px rgba(0,0,0,0.05);
     }
+    
+    .menu-list.open {
+      animation: fadeInMobile 0.2s ease-out;
+    }
+
+    @keyframes fadeInMobile {
+      from { opacity: 0; transform: translateY(-5px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
     .menu-list li a {
       padding: 14px 24px;
       font-size: 14px;

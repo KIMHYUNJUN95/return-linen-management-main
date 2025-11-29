@@ -14,6 +14,11 @@
        Theme: Tokyo Day Bright (Minimal)
        ------------------------------- */
     
+    /* 모든 요소에 box-sizing 적용하여 크기 계산 오류 방지 */
+    *, *::before, *::after {
+      box-sizing: border-box;
+    }
+
     body {
       background-color: var(--bg-base); /* Soft Gray */
       color: var(--haru-navy);
@@ -80,6 +85,7 @@
 
     input, select, textarea {
       width: 100%;
+      max-width: 100%; /* 화면 밖으로 나가는 것 방지 */
       height: 44px; /* 높이 통일 */
       padding: 0 12px;
       border: 1px solid #CBD5E1;
@@ -88,6 +94,18 @@
       font-size: 14px;
       color: var(--haru-navy);
       transition: all 0.2s;
+      /* ✅ 핵심 수정: 모바일 기본 스타일 제거 및 박스 크기 고정 */
+      -webkit-appearance: none; /* iOS 둥근 모서리/그림자 제거 */
+      appearance: none;
+      box-sizing: border-box; /* 패딩 포함 크기 계산 */
+    }
+
+    /* 날짜 입력창 전용 스타일 (아이콘 공간 확보 등) */
+    input[type="date"] {
+      /* iOS에서 텍스트가 위로 쏠리는 현상 방지 */
+      display: flex;
+      align-items: center;
+      font-family: 'Noto Sans KR', sans-serif; /* 폰트 강제 적용 */
     }
 
     textarea {
@@ -140,6 +158,7 @@
       transition: all 0.2s;
       border-radius: 0;
       white-space: nowrap;
+      box-sizing: border-box;
     }
 
     .btn-primary {

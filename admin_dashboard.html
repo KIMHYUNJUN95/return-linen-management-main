@@ -19,12 +19,14 @@
       --stat-return: #e74c3c;
       --stat-net: #27ae60;
       --bg-base: #F8FAFC;
+      --haru-navy: #1e293b; /* Fallback color if not in common.css */
     }
 
     body {
       background-color: var(--bg-base);
       color: var(--haru-navy);
       /* 폰트는 common.css의 Noto Sans KR 사용 */
+      overflow-x: hidden; /* 가로 스크롤 방지 */
     }
 
     .dash-container {
@@ -50,7 +52,6 @@
       font-weight: 900;
       font-size: 32px;
       letter-spacing: -0.03em;
-      /* 한글 타이틀이므로 기본 폰트 사용 */
     }
 
     .sub-title {
@@ -143,6 +144,7 @@
       letter-spacing: 0.02em;
       cursor: pointer;
       transition: all 0.2s ease;
+      white-space: nowrap; /* 버튼 텍스트 줄바꿈 방지 */
     }
 
     /* Primary Button (Navy) */
@@ -178,7 +180,7 @@
       background: #F8FAFC;
     }
 
-    /* 📊 Cards */
+    /* 📊 Cards (Upper Statistics) */
     .cards {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
@@ -213,7 +215,7 @@
     }
 
     .card p {
-      font-family: var(--font-en); /* 숫자는 영문 폰트가 예쁨 */
+      font-family: var(--font-en, sans-serif);
       font-size: 36px;
       font-weight: 300;
       color: var(--haru-navy);
@@ -221,9 +223,9 @@
       line-height: 1;
     }
 
-    /* 📌 Total Summary (Floating Bar) */
+    /* 📌 Total Summary (Bottom Statistics Bar) */
     .total-summary {
-      display: flex;
+      display: none; /* PC Default: Hide summary bar (Show cards instead) */
       justify-content: space-between;
       align-items: center;
       background: #FFFFFF;
@@ -248,7 +250,7 @@
     }
 
     .summary-item .value {
-      font-family: var(--font-en);
+      font-family: var(--font-en, sans-serif);
       font-size: 24px;
       font-weight: 600;
       color: var(--haru-navy);
@@ -264,6 +266,7 @@
       justify-content: space-between;
       margin-top: 10px;
       padding: 0 2px;
+      flex-wrap: wrap; /* Prevent overlap on small screens */
     }
 
     #rangeLabel, #updatedLabel {
@@ -282,11 +285,23 @@
     .table-scroll {
       max-height: 600px;
       overflow-y: auto;
+      /* Scrollbar styling for webkit */
+      scrollbar-width: thin;
+    }
+    
+    .table-scroll::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    .table-scroll::-webkit-scrollbar-thumb {
+      background-color: #cbd5e1;
     }
 
     table {
       width: 100%;
       border-collapse: collapse;
+      /* PC: 최소 너비 설정 (모바일에서 해제됨) */
+      min-width: 500px; 
     }
 
     thead th {
@@ -300,6 +315,7 @@
       text-align: left;
       border-bottom: 1px solid #E2E8F0;
       z-index: 10;
+      white-space: nowrap;
     }
 
     tbody td {
@@ -329,13 +345,121 @@
       to { opacity: 1; transform: translateY(0); }
     }
 
-    /* Mobile */
+    /* 📱 Mobile Optimization */
     @media (max-width: 768px) {
-      .filters { padding: 20px; gap: 16px; }
-      .filter-actions .btn { flex: 1; min-width: 45%; }
-      .total-summary { flex-direction: column; gap: 20px; padding: 20px; border: 1px solid #E2E8F0; }
-      .summary-item { border-right: none; border-bottom: 1px solid #F1F5F9; padding-bottom: 16px; width: 100%; }
-      .summary-item:last-child { border-bottom: none; padding-bottom: 0; }
+      .dash-container {
+        margin: 20px auto;
+        padding: 0 16px;
+      }
+
+      .page-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+        margin-bottom: 24px;
+      }
+      
+      h2 { font-size: 24px; }
+
+      /* 필터 영역 최적화 */
+      .filters { 
+        flex-direction: column; 
+        align-items: stretch;
+        padding: 20px; 
+        gap: 20px; 
+      }
+      .filter-item { width: 100%; }
+      .filter-item select,
+      .filter-item input[type="date"],
+      .filter-item input[type="month"] {
+        width: 100%;
+        min-width: 0;
+      }
+      .date-range { display: flex; gap: 8px; }
+      .date-range input[type="date"] { flex: 1; }
+      
+      .filter-actions {
+        margin-left: 0;
+        width: 100%;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+        margin-top: 10px;
+      }
+      #btnApply { grid-column: 1 / -1; }
+
+      /* 통계 카드 숨김 & 요약 바 표시 */
+      .cards { display: none; }
+      .total-summary { 
+        display: flex;
+        flex-direction: column; 
+        gap: 0; 
+        padding: 0; 
+        border: 1px solid #E2E8F0; 
+        margin-top: 20px;
+      }
+      .summary-item { 
+        border-right: none; 
+        border-bottom: 1px solid #F1F5F9; 
+        padding: 20px; 
+        width: 100%; 
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+      .summary-item:last-child { border-bottom: none; }
+      .summary-item .label { margin-bottom: 0; }
+
+      /* ✅ [핵심 수정] 테이블 모바일 한눈에 보기 최적화 */
+      .table-scroll {
+        border: none;
+        overflow-x: hidden; /* 가로 스크롤 제거 */
+      }
+      
+      table {
+        min-width: 100%; /* 500px 제한 해제 */
+        width: 100%; /* 화면 꽉 채우기 */
+        table-layout: fixed; /* 칸 크기 고정 (내용 길어도 표 안 늘어남) */
+      }
+      
+      /* 헤더 스타일 */
+      thead th {
+        padding: 10px 4px; /* 여백 대폭 축소 */
+        font-size: 12px;
+        text-align: center; /* 기본 중앙 정렬 */
+      }
+      
+      /* 품목명(첫번째 칸) 넓게 */
+      thead th:first-child {
+        width: 38%; /* 약 40% 할당 */
+        text-align: left;
+        padding-left: 8px;
+      }
+      /* 나머지 숫자칸 */
+      thead th:not(:first-child) {
+        width: 20.6%; /* 나머지 공간 균등 분할 */
+      }
+
+      /* 데이터 셀 스타일 */
+      tbody td {
+        padding: 10px 4px; /* 여백 축소 */
+        font-size: 13px;
+        white-space: nowrap; /* 기본 줄바꿈 금지 */
+      }
+
+      /* 품목명(첫번째 칸) 데이터 스타일 */
+      tbody td:first-child {
+        white-space: normal; /* 긴 이름은 줄바꿈 허용 */
+        word-break: keep-all; /* 단어 단위로 줄바꿈 */
+        padding-left: 8px;
+        line-height: 1.3;
+      }
+      
+      /* 숫자칸 데이터 스타일 */
+      tbody td:not(:first-child) {
+        text-align: right;
+        padding-right: 8px; /* 숫자 가독성 위해 우측 여백 살짝 */
+      }
     }
   </style>
 </head>
@@ -388,7 +512,7 @@
           <label>기간 직접 설정</label>
           <div class="date-range">
             <input type="date" id="startDate" />
-            <span style="color:#CBD5E1">―</span>
+            <span style="color:#CBD5E1; display:flex; align-items:center;">―</span>
             <input type="date" id="endDate" />
           </div>
         </div>
@@ -406,7 +530,7 @@
         <div id="updatedLabel"></div>
       </div>
 
-      <!-- Cards -->
+      <!-- Cards (PC ONLY - Mobile Hidden) -->
       <div class="cards" id="statCards">
         <div class="card">
           <h3>상태</h3>
@@ -416,7 +540,7 @@
         <div class="card"></div>
       </div>
 
-      <!-- Summary -->
+      <!-- Summary (Mobile ONLY - PC Hidden by default CSS) -->
       <div class="total-summary">
         <div class="summary-item">
           <div class="label">총 입고 수량</div>
