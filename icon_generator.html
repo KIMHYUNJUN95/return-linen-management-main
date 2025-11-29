@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>HARU Icon Generator (Option 4)</title>
+  <style>
+    body { 
+      font-family: sans-serif; 
+      background: #f0f2f5; 
+      display: flex; 
+      flex-direction: column; 
+      align-items: center; 
+      padding: 40px; 
+    }
+    h1 { color: #2C3E50; }
+    .container { 
+      display: flex; 
+      gap: 40px; 
+      margin-top: 20px; 
+      flex-wrap: wrap; 
+      justify-content: center; 
+    }
+    .card {
+      background: white;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      text-align: center;
+    }
+    canvas {
+      border: 1px solid #ddd;
+      margin-bottom: 10px;
+      /* 화면에 보일 때는 너무 크지 않게 */
+      max-width: 100%;
+      height: auto;
+    }
+    p { color: #666; font-size: 14px; margin-top: 10px; }
+    .btn {
+      display: inline-block;
+      margin-top: 10px;
+      padding: 8px 16px;
+      background: #2C3E50;
+      color: white;
+      text-decoration: none;
+      border-radius: 4px;
+      font-size: 12px;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>HARU PWA Icon Generator (Linen Stack)</h1>
+  <p>아래 이미지를 <b>우클릭 > 다른 이름으로 저장</b> 하세요.</p>
+
+  <div class="container">
+    
+    <!-- 192px -->
+    <div class="card">
+      <h3>icon-192x192.png</h3>
+      <canvas id="c192" width="192" height="192"></canvas>
+      <div><small>모바일 홈 화면용</small></div>
+    </div>
+
+    <!-- 512px -->
+    <div class="card">
+      <h3>icon-512x512.png</h3>
+      <canvas id="c512" width="512" height="512"></canvas>
+      <div><small>스플래시 화면 / 앱 스토어용</small></div>
+    </div>
+
+    <!-- Favicon (64px) -->
+    <div class="card">
+      <h3>favicon.png</h3>
+      <canvas id="cFav" width="64" height="64"></canvas>
+      <div><small>PC 브라우저 탭용</small></div>
+    </div>
+
+  </div>
+
+  <script>
+    function drawLinenStack(ctx, size) {
+      // 1. Background (White)
+      ctx.fillStyle = "#FFFFFF";
+      ctx.fillRect(0, 0, size, size);
+
+      // Scale factor relative to 512px design
+      const s = size / 512;
+
+      // 2. Linen Stack Drawing
+      // Top Linen (Navy)
+      ctx.fillStyle = "#2C3E50"; // HARU Navy
+      ctx.beginPath();
+      ctx.moveTo(100 * s, 150 * s);
+      ctx.lineTo(412 * s, 150 * s);
+      ctx.quadraticCurveTo(442 * s, 150 * s, 442 * s, 180 * s);
+      ctx.lineTo(442 * s, 200 * s);
+      ctx.lineTo(70 * s, 200 * s);
+      ctx.lineTo(70 * s, 180 * s);
+      ctx.quadraticCurveTo(70 * s, 150 * s, 100 * s, 150 * s);
+      ctx.fill();
+
+      // Middle Linen (Lighter Navy)
+      ctx.fillStyle = "#34495E"; 
+      ctx.beginPath();
+      ctx.moveTo(70 * s, 215 * s); // 약간 띄움
+      ctx.lineTo(442 * s, 215 * s);
+      ctx.lineTo(442 * s, 265 * s);
+      ctx.lineTo(70 * s, 265 * s);
+      ctx.fill();
+
+      // Bottom Linen (Navy)
+      ctx.fillStyle = "#2C3E50";
+      ctx.beginPath();
+      ctx.moveTo(70 * s, 280 * s); // 약간 띄움
+      ctx.lineTo(442 * s, 280 * s);
+      ctx.lineTo(442 * s, 310 * s);
+      ctx.quadraticCurveTo(442 * s, 340 * s, 412 * s, 340 * s);
+      ctx.lineTo(100 * s, 340 * s);
+      ctx.quadraticCurveTo(70 * s, 340 * s, 70 * s, 310 * s);
+      ctx.fill();
+    }
+
+    // Render 192px
+    const c192 = document.getElementById('c192');
+    drawLinenStack(c192.getContext('2d'), 192);
+
+    // Render 512px
+    const c512 = document.getElementById('c512');
+    drawLinenStack(c512.getContext('2d'), 512);
+
+    // Render Favicon (64px)
+    const cFav = document.getElementById('cFav');
+    drawLinenStack(cFav.getContext('2d'), 64);
+
+  </script>
+</body>
+</html>
