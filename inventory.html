@@ -5,16 +5,264 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>HARU · 재고 관리</title>
   <link rel="stylesheet" href="common.css"/>
-  <link rel="stylesheet" href="inventory.css"/>
+  
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+
+  <style>
+    /* 🎨 TOKYO DAY BRIGHT Design System */
+    :root {
+      --color-bg-main: #F8FAFC;
+      --color-surface: #FFFFFF;
+      --color-text-primary: #2C3E50;
+      --color-text-secondary: #64748B;
+      --color-accent: #D4AF37;
+      --color-border: #CBD5E1;
+      --color-primary: #2C3E50;
+      --color-danger: #E74C3C;
+      
+      --space-4: 1rem;
+      --space-5: 1.5rem;
+      --space-6: 2rem;
+    }
+
+    * { box-sizing: border-box; border-radius: 0px !important; }
+    body { background-color: var(--color-bg-main); color: var(--color-text-primary); font-family: 'Inter', 'Noto Sans KR', sans-serif; margin: 0; line-height: 1.5; padding-top: 60px; /* 헤더 공간 */ }
+
+    #bg-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; opacity: 0.3; pointer-events: none; }
+
+    .inv-container { max-width: 1200px; margin: 0 auto; padding: 2rem 1rem; }
+
+    /* Typography */
+    h2 { font-size: 1.75rem; font-weight: 800; letter-spacing: -0.02em; color: var(--color-text-primary); margin-bottom: 2rem; text-transform: uppercase; border-left: 4px solid var(--color-accent); padding-left: 1rem; line-height: 1; }
+
+    /* 🏢 건물 탭 */
+    .building-tabs { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 1.5rem; }
+    .building-tabs button {
+      padding: 10px 16px;
+      background: #fff;
+      border: 1px solid var(--color-border);
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: var(--color-text-secondary);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .building-tabs button:hover { border-color: var(--color-primary); color: var(--color-text-primary); }
+    .building-tabs button.active {
+      background: var(--color-primary);
+      color: #fff;
+      border-color: var(--color-primary);
+      box-shadow: 0 4px 12px rgba(44, 62, 80, 0.2);
+    }
+
+    /* 🔍 필터 & 컨트롤 패널 */
+    .inv-filters {
+      background: #fff;
+      border: 1px solid var(--color-border);
+      padding: 1.5rem;
+      margin-bottom: 2rem;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1.5rem;
+      align-items: flex-end;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.02);
+    }
+
+    .group { display: flex; flex-direction: column; gap: 0.5rem; }
+    .group label { font-weight: 700; font-size: 0.8rem; color: var(--color-text-primary); text-transform: uppercase; letter-spacing: 0.05em; }
+
+    /* ✅ 검색창 레이아웃 수정: Flex로 높이 강제 맞춤 */
+    .search-row {
+      display: flex;
+      gap: 8px;
+      align-items: stretch; /* 높이 강제 통일 */
+    }
+
+    select, input {
+      height: 44px;
+      padding: 0 1rem;
+      border: 1px solid var(--color-border);
+      background: #F8FAFC;
+      color: var(--color-text-primary);
+      font-size: 0.9rem;
+      min-width: 160px;
+      transition: 0.2s;
+      appearance: none;
+    }
+    select:focus, input:focus { outline: none; border-color: var(--color-primary); background: #fff; }
+
+    /* 버튼 스타일 */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      height: 44px;
+      padding: 0 1.5rem;
+      font-weight: 700;
+      font-size: 0.85rem;
+      cursor: pointer;
+      border: 1px solid transparent;
+      transition: all 0.2s;
+      white-space: nowrap;
+    }
+    .btn.primary { background: var(--color-primary); color: #fff; border-color: var(--color-primary); }
+    .btn.primary:hover { background: #34495E; }
+    
+    .btn.danger { background: #fff; color: var(--color-danger); border-color: var(--color-danger); }
+    .btn.danger:hover { background: var(--color-danger); color: #fff; }
+
+    .btn.ghost { background: #fff; color: var(--color-text-secondary); border-color: var(--color-border); }
+    .btn.ghost:hover { border-color: var(--color-primary); color: var(--color-text-primary); }
+
+    .actions { margin-left: auto; display: flex; gap: 0.5rem; flex-wrap: wrap; }
+
+    /* 테이블 스타일 */
+    .table-wrap { overflow-x: auto; background: #fff; border: 1px solid var(--color-border); }
+    table { width: 100%; border-collapse: collapse; min-width: 700px; }
+    th {
+      background: #fff;
+      padding: 16px;
+      text-align: left;
+      font-size: 0.8rem;
+      font-weight: 800;
+      color: var(--color-text-primary);
+      border-bottom: 2px solid var(--color-text-primary);
+      text-transform: uppercase;
+    }
+    td {
+      padding: 14px 16px;
+      border-bottom: 1px solid #F1F5F9;
+      font-size: 0.9rem;
+      color: var(--color-text-primary);
+      vertical-align: middle;
+    }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: #F8FAFC; }
+
+    .t-right { text-align: right; }
+    .text-center { text-align: center; }
+
+    /* 모바일 반응형 */
+    @media (max-width: 768px) {
+      .inv-filters { flex-direction: column; align-items: stretch; gap: 1rem; }
+      .search-row { display: flex; }
+      .search-row input { flex: 1; } /* 입력창이 남은 공간 차지 */
+      .actions { margin-left: 0; flex-direction: column; width: 100%; }
+      .btn { width: 100%; }
+      
+      .building-tabs button { flex: 1 1 calc(33.333% - 8px); text-align: center; font-size: 0.75rem; padding: 8px; }
+    }
+
+    /* Modal */
+    .modal-overlay { position: fixed; inset: 0; background: rgba(44, 62, 80, 0.4); display: none; align-items: center; justify-content: center; z-index: 9999; backdrop-filter: blur(2px); }
+    .modal { background: #fff; width: 90%; max-width: 500px; padding: 2rem; border: 1px solid var(--color-border); box-shadow: 0 10px 40px rgba(0,0,0,0.1); max-height: 90vh; overflow-y: auto; }
+    .modal h3 { font-size: 1.25rem; font-weight: 800; margin-top: 0; margin-bottom: 1.5rem; color: var(--color-primary); border-bottom: 2px solid var(--color-primary); padding-bottom: 0.5rem; }
+    .modal label { display: block; margin-bottom: 1rem; font-weight: 700; font-size: 0.8rem; color: var(--color-text-primary); }
+    .modal input, .modal select { width: 100%; margin-top: 0.5rem; }
+    .modal-actions { display: flex; justify-content: flex-end; gap: 0.5rem; margin-top: 2rem; }
+
+    /* 🔹 Header CSS (Grid Layout) */
+    .main-header {
+      position: fixed; top: 0; left: 0; width: 100%; height: 60px;
+      background: rgba(255, 255, 255, 0.95);
+      border-bottom: 1px solid var(--color-border);
+      z-index: 1000;
+      backdrop-filter: blur(5px);
+    }
+    .header-inner {
+      width: 100%; max-width: 1400px; height: 100%; margin: 0 auto; padding: 0 24px;
+      display: grid !important;
+      grid-template-columns: 1fr auto 1fr !important;
+      align-items: center !important;
+    }
+    .logo { justify-self: start !important; font-family: 'Noto Sans KR', sans-serif; font-weight: 700; font-size: 18px; color: #111; letter-spacing: 0.15em; text-transform: uppercase; }
+    .menu-wrap { justify-self: center !important; position: relative; display: flex; align-items: center; }
+    .logout-btn { justify-self: end !important; display: block !important; background: transparent; border: none; color: #111; font-size: 11px; font-weight: 500; letter-spacing: 0.1em; cursor: pointer; text-transform: uppercase; padding: 4px 0; transition: opacity 0.3s; }
+    .logout-btn:hover { opacity: 0.6; }
+    
+    .menu-toggle { background: transparent; border: none; cursor: pointer; display: flex; align-items: center; gap: 8px; padding: 8px; }
+    .menu-label { font-size: 12px; font-weight: 600; color: #111; letter-spacing: 0.1em; }
+    .hamburger-lines { display: flex; flex-direction: column; gap: 4px; }
+    .line { width: 18px; height: 1.5px; background-color: #111; display: block; transition: transform 0.3s ease; }
+    .menu-toggle[aria-expanded="true"] .line1 { transform: rotate(45deg) translate(2px, 2px); }
+    .menu-toggle[aria-expanded="true"] .line2 { transform: rotate(-45deg) translate(2px, -2px); width: 18px; }
+
+    .menu-list {
+      display: none; position: absolute; top: 100%; left: 50%; transform: translateX(-50%);
+      width: 220px; background: #fff; border: 1px solid var(--color-border); padding: 12px 0;
+      flex-direction: column; box-shadow: 0 10px 40px rgba(0, 0, 0, 0.05); list-style: none; z-index: 1001; margin-top: 10px;
+    }
+    .menu-list.open { display: flex; animation: fadeInDropdown 0.2s ease-out; }
+    .menu-list li a { display: block; padding: 10px 24px; font-size: 13px; color: #888; text-decoration: none; transition: 0.2s; border-left: 2px solid transparent; }
+    .menu-list li a:hover { background: #fafafa; color: #111; border-left-color: #111; padding-left: 30px; }
+
+    @keyframes fadeInDropdown { from { opacity: 0; transform: translate(-50%, -10px); } to { opacity: 1; transform: translate(-50%, 0); } }
+
+    @media (max-width: 768px) {
+      .main-header { height: 50px; }
+      .header-inner { padding: 0 16px; }
+      .logo { font-size: 16px; }
+      .menu-label { font-size: 11px; }
+      .logout-btn { font-size: 10px; }
+      .menu-list { position: fixed; top: 50px; left: 0; right: 0; width: 100vw; transform: none; margin-top: 0; border: none; border-bottom: 1px solid var(--color-border); }
+    }
+
+    footer { text-align: center; padding: 2rem; color: var(--color-text-secondary); font-size: 0.8rem; border-top: 1px solid var(--color-border); margin-top: 2rem; background: #fff; }
+  </style>
 </head>
 <body>
-  <!-- ✅ 헤더 로드 -->
-  <div id="header-placeholder"></div>
+  <!-- 🟢 FIREBASE CONFIGURATION -->
+  <script>
+    window.__firebase_config = JSON.stringify({
+      apiKey: "AIzaSyAyD0Gn5-zqzPzdXjQzZhVlMQvqTzUmHKs",
+      authDomain: "return-linen-management.firebaseapp.com",
+      projectId: "return-linen-management",
+      storageBucket: "return-linen-management.firebasestorage.app",
+      messagingSenderId: "310421638033",
+      appId: "1:310421638033:web:280047bf93a8c780f8e830",
+      measurementId: "G-D6BDRRKD9Y"
+    });
+  </script>
+
+  <!-- 🔹 Header -->
+  <header class="main-header">
+    <div class="header-inner">
+      <div class="logo">HARU</div>
+      <div class="menu-wrap">
+        <button class="menu-toggle" aria-haspopup="true" aria-expanded="false">
+          <span class="menu-label">MENU</span>
+          <div class="hamburger-lines"><span class="line line1"></span><span class="line line2"></span></div>
+        </button>
+        <ul class="menu-list" role="menu">
+          <li><a href="board.html">게시판</a></li>
+          <li><a href="chat.html" data-menu="chat">채팅</a></li>
+          <li><a href="incoming_form.html">입고등록</a></li>
+          <li><a href="return_form.html">반품등록</a></li>
+          <li><a href="history_dashboard.html">내역관리</a></li>
+          <li><a href="inventory.html">재고관리</a></li>
+          <li><a href="admin_dashboard.html">린넨 통계</a></li>
+          <li><a href="lost_items_list.html">분실물관리</a></li>
+          <li><a href="maintenance_list.html">객실유지보수</a></li>
+          <li><a href="orders_list.html">주문요청</a></li>
+          <li><a href="worklog.html">근무기록</a></li>
+          <li><a href="notices.html">공지사항</a></li>
+          <li><a href="profile.html">내 정보</a></li>
+          <li><a href="schedule_dashboard.html">작업 스케줄러</a></li>
+          <li class="super-admin-only" style="display:none;"><a href="admin.html" class="admin-link">관리자 설정</a></li>
+          <li class="super-admin-only" style="display:none;"><a href="admin_users.html" class="admin-link">사용자 관리</a></li>
+        </ul>
+      </div>
+      <button id="logoutBtn" class="logout-btn">SIGN OUT</button>
+    </div>
+  </header>
 
   <main class="inv-container">
     <h2>재고 관리</h2>
 
-    <!-- 🏢 건물 탭 (Modern Tabs) -->
+    <!-- 🏢 건물 탭 -->
     <div class="building-tabs">
       <button class="active" data-building="아라키초A">아라키초A</button>
       <button data-building="아라키초B">아라키초B</button>
@@ -22,11 +270,8 @@
       <button data-building="가부키초">가부키초</button>
       <button data-building="다카다노바바">다카다노바바</button>
       <button data-building="오쿠보1">오쿠보1</button>
-
-      <!-- 오쿠보2 분리 유지 -->
       <button data-building="오쿠보2">오쿠보2(비품)</button>
       <button data-building="오쿠보2_린넨">오쿠보2(린넨)</button>
-
       <button data-building="오쿠보4">오쿠보4</button>
     </div>
 
@@ -48,14 +293,17 @@
         </select>
       </div>
 
-      <div class="group search-wrap">
+      <div class="group">
         <label for="invSearch">품목 검색</label>
-        <input id="invSearch" type="text" placeholder="품목명을 입력하세요"/>
-        <button id="btnResetSearch" class="btn ghost">초기화</button>
+        <!-- ✅ 높이 맞춤 수정: flex 컨테이너 적용 -->
+        <div class="search-row">
+          <input id="invSearch" type="text" placeholder="품목명을 입력하세요" style="flex:1;" />
+          <button id="btnResetSearch" class="btn ghost">초기화</button>
+        </div>
       </div>
 
       <div class="actions">
-        <button id="btnExportInv" class="btn">CSV 다운로드</button>
+        <button id="btnExportInv" class="btn ghost">CSV 다운로드</button>
         <button id="openFormBtn" class="btn primary">품목 등록</button>
         <button id="btnDeleteAllInv" class="btn danger">전체 삭제</button>
       </div>
@@ -84,12 +332,8 @@
     </section>
   </main>
 
-  <footer>
-    © 2025 HARU SYSTEM · TOKYO
-  </footer>
-
   <!-- 🪄 품목 등록/수정 모달 -->
-  <div id="inventoryModal" class="modal-overlay" style="display:none;">
+  <div id="inventoryModal" class="modal-overlay">
     <div class="modal">
       <h3 id="formTitle">품목 관리</h3>
 
@@ -140,9 +384,9 @@
   </div>
 
   <!-- 📋 전체화면 재고리스트 (모바일용) -->
-  <div class="inventory-fullscreen" id="inventoryFullModal">
-    <header>
-      <h2>전체 재고 리스트</h2>
+  <div class="inventory-fullscreen" id="inventoryFullModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:#fff; z-index:2000; overflow-y:auto; padding:20px;">
+    <header style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+      <h2 style="margin:0; font-size:1.5rem;">전체 재고 리스트</h2>
       <button id="btnCloseInventoryFull" class="btn danger">닫기</button>
     </header>
     <div class="content">
@@ -150,8 +394,59 @@
     </div>
   </div>
 
-  <!-- 📱 모바일용 플로팅 버튼 -->
-  <button id="btnOpenInventoryFull">LIST VIEW</button>
+  <footer>
+    © 2025 HARU SYSTEM · TOKYO
+  </footer>
+
+  <!-- Header Script -->
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const menuToggle = document.querySelector(".menu-toggle");
+      const navMenu = document.querySelector(".menu-list");
+      if(menuToggle && navMenu) {
+        menuToggle.addEventListener("click", () => {
+          const isOpen = navMenu.classList.toggle("open");
+          menuToggle.setAttribute("aria-expanded", isOpen);
+        });
+        document.addEventListener("click", (e) => {
+          if (!menuToggle.contains(e.target) && !navMenu.contains(e.target)) {
+            navMenu.classList.remove("open");
+            menuToggle.setAttribute("aria-expanded", "false");
+          }
+        });
+      }
+    });
+  </script>
+
+  <!-- Auth Script -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getAuth, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+    import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+    if (window.__firebase_config) {
+      const app = initializeApp(JSON.parse(window.__firebase_config));
+      const auth = getAuth(app);
+      const db = getFirestore(app);
+
+      const logoutBtn = document.getElementById("logoutBtn");
+      if(logoutBtn) {
+        logoutBtn.addEventListener("click", async () => {
+          if(!confirm("로그아웃 하시겠습니까?")) return;
+          try { await signOut(auth); window.location.reload(); } catch(e) { console.error(e); }
+        });
+      }
+
+      onAuthStateChanged(auth, async (user) => {
+        if(user) {
+           const superAdmin = "rlaguswns95@haru-tokyo.com";
+           if(user.email === superAdmin) {
+             document.querySelectorAll('.super-admin-only').forEach(el => el.style.display = 'block');
+           }
+        }
+      });
+    }
+  </script>
 
   <!-- ✅ 기능 스크립트 -->
   <script type="module" src="inventory.js"></script>

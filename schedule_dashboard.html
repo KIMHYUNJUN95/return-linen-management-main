@@ -31,7 +31,7 @@
     *, *::before, *::after { box-sizing: border-box; }
     * { border-radius: 0px !important; }
     
-    body { background-color: var(--color-bg-main); color: var(--color-text-primary); font-family: 'Inter', 'Noto Sans KR', sans-serif; margin: 0; line-height: 1.5; padding-top: 60px; /* 헤더 높이 확보 */ }
+    body { background-color: var(--color-bg-main); color: var(--color-text-primary); font-family: 'Inter', 'Noto Sans KR', sans-serif; margin: 0; line-height: 1.5; padding-top: 60px; }
 
     #bg-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; opacity: 0.3; pointer-events: none; }
 
@@ -58,20 +58,60 @@
     .btn-secondary:hover { border-color: var(--color-primary); }
     .btn-accent { background: var(--color-accent); color: #fff; border-color: var(--color-accent); }
 
-    /* Calendar Customization (Flat & Sharp) */
+    /* ✅ [NEW] 통계 카드 스타일 (높이 맞춤 적용) */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+    .stat-card {
+      background: #fff;
+      border: 1px solid var(--color-border);
+      padding: 1.5rem 1rem;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+    .stat-title {
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: var(--color-text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 0.5rem;
+      
+      /* ✨ 핵심: 제목 높이를 강제로 고정하여 숫자가 밀리지 않게 함 */
+      min-height: 2.4em; 
+      display: flex;
+      align-items: center; /* 텍스트 세로 중앙 정렬 */
+      justify-content: center;
+      line-height: 1.2;
+    }
+    .stat-value {
+      font-family: var(--font-en, sans-serif);
+      font-size: 2.5rem;
+      font-weight: 800;
+      color: var(--color-text-primary);
+      line-height: 1;
+    }
+    .stat-value.done { color: #27AE60; }
+    .stat-value.overdue { color: #E74C3C; }
+
+    /* Calendar Customization */
     .calendar-card { background: #fff; border: 1px solid var(--color-border); padding: 1.5rem; }
     
-    /* FullCalendar Overrides for Tokyo Day Bright */
     .fc { font-family: 'Inter', 'Noto Sans KR', sans-serif; }
     .fc-toolbar-title { font-size: 1.25rem !important; font-weight: 800 !important; color: var(--color-text-primary); text-transform: uppercase; }
     .fc-button { background-color: #fff !important; color: var(--color-text-primary) !important; border: 1px solid var(--color-border) !important; text-transform: uppercase; font-weight: 600 !important; box-shadow: none !important; }
     .fc-button-active { background-color: var(--color-primary) !important; color: #fff !important; border-color: var(--color-primary) !important; }
     .fc-daygrid-day { border-color: #F1F5F9 !important; }
     .fc-col-header-cell { background-color: #F8FAFC; padding: 10px 0; border-color: var(--color-border) !important; }
-    .fc-day-today { background-color: #FFFBE6 !important; } /* Light yellow for today */
+    .fc-day-today { background-color: #FFFBE6 !important; }
     .fc-event { border: none !important; border-left: 3px solid transparent !important; font-size: 0.8rem; padding: 2px 4px; border-radius: 0 !important; }
 
-    /* Event Colors */
     .evt-upcoming { background-color: #E0F2FE; color: #0369A1; border-left-color: #0284C7 !important; }
     .evt-overdue { background-color: #FEE2E2; color: #991B1B; border-left-color: #DC2626 !important; }
     .evt-done { background-color: #DCFCE7; color: #166534; border-left-color: #16A34A !important; }
@@ -98,9 +138,13 @@
       .filters { flex-direction: column; align-items: stretch; gap: 1rem; }
       .actions { margin-left: 0; display: grid; grid-template-columns: 1fr 1fr 1fr; width: 100%; }
       .btn { padding: 0 0.5rem; font-size: 0.8rem; width: 100%; }
+      
+      /* 모바일에서 통계 카드 폰트 조정 */
+      .stat-value { font-size: 2rem; }
+      .stats-grid { gap: 0.5rem; }
     }
 
-    /* 🔹 Header CSS (NEW GRID SYSTEM) */
+    /* 🔹 Header CSS (Grid System) */
     .main-header {
       position: fixed;
       top: 0;
@@ -119,13 +163,11 @@
       height: 100%;
       margin: 0 auto;
       padding: 0 24px;
-      /* ✅ Grid로 좌-중-우 완벽 분리 */
       display: grid;
       grid-template-columns: 1fr auto 1fr;
       align-items: center;
     }
 
-    /* 1. 로고: 왼쪽 정렬 */
     .logo {
       justify-self: start;
       font-family: 'Noto Sans KR', sans-serif;
@@ -136,13 +178,11 @@
       text-transform: uppercase;
     }
 
-    /* 2. 메뉴 랩: 중앙 정렬 */
     .menu-wrap {
       justify-self: center;
       position: relative;
     }
 
-    /* 3. 로그아웃: 오른쪽 정렬 */
     .logout-btn {
       justify-self: end;
       background: transparent;
@@ -156,11 +196,8 @@
       padding: 4px 0;
       transition: opacity 0.3s;
     }
-    .logout-btn:hover {
-      opacity: 0.6;
-    }
+    .logout-btn:hover { opacity: 0.6; }
 
-    /* 메뉴 버튼 */
     .menu-toggle {
       background: transparent;
       border: none;
@@ -195,7 +232,6 @@
     .menu-toggle[aria-expanded="true"] .line1 { transform: rotate(45deg) translate(2px, 2px); }
     .menu-toggle[aria-expanded="true"] .line2 { transform: rotate(-45deg) translate(2px, -2px); width: 18px; }
 
-    /* 드롭다운 메뉴 */
     .menu-list {
       display: none;
       position: absolute;
@@ -236,29 +272,17 @@
       padding-left: 30px;
     }
 
-    /* Mobile Header Optimization */
     @media (max-width: 768px) {
       .main-header { height: 50px; }
       .header-inner { padding: 0 16px; }
-      
       .logo { font-size: 16px; }
       .menu-label { font-size: 11px; }
       .menu-toggle { gap: 6px; }
-      .logout-btn { 
-        display: block; /* 모바일에서도 표시 */
-        font-size: 10px; 
-      }
-
+      .logout-btn { display: block; font-size: 10px; }
       .menu-list {
-        position: fixed;
-        top: 50px;
-        left: 0;
-        right: 0;
-        width: 100vw;
-        transform: none;
-        margin-top: 0;
-        border: none;
-        border-bottom: 1px solid var(--color-border);
+        position: fixed; top: 50px; left: 0; right: 0;
+        width: 100vw; transform: none; margin-top: 0;
+        border: none; border-bottom: 1px solid var(--color-border);
         box-shadow: 0 5px 10px rgba(0,0,0,0.05);
       }
       .menu-list.open { animation: fadeInMobile 0.2s ease-out; }
@@ -288,20 +312,14 @@
 
   <canvas id="bg-canvas"></canvas>
   
-  <!-- 🔹 Header Updated to Grid Layout -->
+  <!-- 🔹 Header -->
   <header class="main-header">
     <div class="header-inner">
-      <!-- 1. 좌측 -->
       <div class="logo">HARU</div>
-      
-      <!-- 2. 중앙 -->
       <div class="menu-wrap">
         <button class="menu-toggle" aria-haspopup="true" aria-expanded="false">
           <span class="menu-label">MENU</span>
-          <div class="hamburger-lines">
-            <span class="line line1"></span>
-            <span class="line line2"></span>
-          </div>
+          <div class="hamburger-lines"><span class="line line1"></span><span class="line line2"></span></div>
         </button>
         <ul class="menu-list" role="menu">
           <li><a href="board.html">게시판</a></li>
@@ -322,8 +340,6 @@
           <li class="super-admin-only" style="display:none;"><a href="admin_users.html" class="admin-link">사용자 관리</a></li>
         </ul>
       </div>
-
-      <!-- 3. 우측 -->
       <button id="logoutBtn" class="logout-btn">SIGN OUT</button>
     </div>
   </header>
@@ -357,10 +373,30 @@
         </select>
       </div>
       <div class="actions">
-        <!-- ✅ 버튼 텍스트 간소화 (등록 / 목록 / 새로고침) -->
         <a href="schedule_form.html" class="btn btn-primary">등록</a>
         <button id="btnGoOverview" class="btn btn-secondary">목록</button>
         <button id="btnRefresh" class="btn btn-secondary">새로고침</button>
+      </div>
+    </section>
+
+    <!-- ✅ [NEW] 통계 카드 (HTML 복구 및 높이 정렬 완료) -->
+    <section class="stats-grid">
+      <div class="stat-card">
+        <!-- 
+          class="stat-title"에 min-height를 줘서
+          'TOTAL TASKS'처럼 두 줄이 되더라도 공간을 미리 확보해 둠.
+          따라서 아래 숫자(0)들의 시작 높이가 모두 동일하게 맞춰짐.
+        -->
+        <div class="stat-title">TOTAL TASKS</div>
+        <div class="stat-value" id="statTotal">0</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-title">DONE</div>
+        <div class="stat-value done" id="statDone">0</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-title">OVERDUE</div>
+        <div class="stat-value overdue" id="statOverdue">0</div>
       </div>
     </section>
 

@@ -8,6 +8,11 @@
   <!-- 공통 스타일 -->
   <link rel="stylesheet" href="common.css" />
 
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+
   <style>
     /* -------------------------------
        🎨 Chat Specific Styles
@@ -16,18 +21,190 @@
     
     :root {
       --bg-base: #F8FAFC;
+      --tk-black: #111111;
+      --tk-gray: #888888;
+      --tk-light-gray: #f4f4f4;
+      --tk-white: #ffffff;
+      --tk-border: #e0e0e0;
+      --tk-accent: #000000;
+      --haru-navy: #2C3E50;
+    }
+
+    /* ✅ 핵심: 모든 요소의 크기 계산 통일 (높이 맞춤 필수) */
+    *, *::before, *::after {
+      box-sizing: border-box;
     }
 
     body {
       background-color: var(--bg-base);
       color: var(--haru-navy);
-      /* 폰트는 common.css 상속 */
+      font-family: 'Noto Sans KR', sans-serif;
+      margin: 0;
+      padding-top: 60px; /* 헤더 공간 확보 */
     }
 
     main {
       display: flex;
       justify-content: center;
-      padding-top: 40px; /* 헤더 공간 + 여백 */
+      padding-top: 40px;
+      padding-bottom: 40px;
+    }
+
+    /* 🔹 Header CSS (NEW GRID SYSTEM - Consistent with other pages) */
+    .main-header {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 60px;
+      background: rgba(255, 255, 255, 0.95);
+      border-bottom: 1px solid var(--tk-border);
+      z-index: 1000;
+      backdrop-filter: blur(5px);
+    }
+
+    .header-inner {
+      width: 100%;
+      max-width: 1400px;
+      height: 100%;
+      margin: 0 auto;
+      padding: 0 24px;
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      align-items: center;
+    }
+
+    .logo {
+      justify-self: start;
+      font-family: 'Noto Sans KR', sans-serif;
+      font-weight: 700;
+      font-size: 18px;
+      color: var(--tk-black);
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+    }
+
+    .menu-wrap {
+      justify-self: center;
+      position: relative;
+    }
+
+    .logout-btn {
+      justify-self: end;
+      background: transparent;
+      border: none;
+      color: var(--tk-black);
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 0.1em;
+      cursor: pointer;
+      text-transform: uppercase;
+      padding: 4px 0;
+      transition: opacity 0.3s;
+    }
+    .logout-btn:hover { opacity: 0.6; }
+
+    .menu-toggle {
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px;
+      transition: opacity 0.3s;
+    }
+    .menu-toggle:hover { opacity: 0.6; }
+
+    .menu-label {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--tk-black);
+      letter-spacing: 0.1em;
+    }
+
+    .hamburger-lines {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .line {
+      width: 18px;
+      height: 1.5px;
+      background-color: var(--tk-black);
+      display: block;
+      transition: transform 0.3s ease;
+    }
+
+    .menu-toggle[aria-expanded="true"] .line1 { transform: rotate(45deg) translate(2px, 2px); }
+    .menu-toggle[aria-expanded="true"] .line2 { transform: rotate(-45deg) translate(2px, -2px); width: 18px; }
+
+    .menu-list {
+      display: none;
+      position: absolute;
+      top: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 220px;
+      background: var(--tk-white);
+      border: 1px solid var(--tk-border);
+      padding: 12px 0;
+      flex-direction: column;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.05);
+      list-style: none;
+      z-index: 1001;
+      margin-top: 10px;
+    }
+
+    .menu-list.open {
+      display: flex;
+      animation: fadeInDropdown 0.2s ease-out;
+    }
+
+    @keyframes fadeInDropdown {
+      from { opacity: 0; transform: translate(-50%, -10px); }
+      to { opacity: 1; transform: translate(-50%, 0); }
+    }
+
+    .menu-list li a {
+      display: block;
+      padding: 10px 24px;
+      font-size: 13px;
+      color: var(--tk-gray);
+      text-decoration: none;
+      transition: all 0.2s;
+      border-left: 2px solid transparent;
+    }
+    .menu-list li a:hover {
+      background-color: #fafafa;
+      color: var(--tk-black);
+      border-left-color: var(--tk-black);
+      padding-left: 30px;
+    }
+    .menu-list li a.admin-link {
+      color: #e74c3c;
+      font-weight: 600;
+    }
+
+    @media (max-width: 768px) {
+      .main-header { height: 50px; }
+      .header-inner { padding: 0 16px; }
+      .logo { font-size: 16px; }
+      .menu-label { font-size: 11px; }
+      .menu-toggle { gap: 6px; }
+      .logout-btn { display: block; font-size: 10px; }
+      .menu-list {
+        position: fixed; top: 50px; left: 0; right: 0;
+        width: 100vw; transform: none; margin-top: 0;
+        border: none; border-bottom: 1px solid var(--tk-border);
+        box-shadow: 0 5px 10px rgba(0,0,0,0.05);
+      }
+      .menu-list.open { animation: fadeInMobile 0.2s ease-out; }
+      @keyframes fadeInMobile {
+        from { opacity: 0; transform: translateY(-5px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+      .menu-list li a { padding: 14px 24px; font-size: 14px; }
     }
 
     /* 🧭 채팅 레이아웃 (White Panel) */
@@ -58,7 +235,7 @@
     }
 
     .chat-topbar .title {
-      font-family: var(--font-en);
+      font-family: var(--font-en, sans-serif);
       font-weight: 800;
       font-size: 16px;
       letter-spacing: 0.05em;
@@ -110,7 +287,7 @@
       align-self: flex-end;
       background-color: var(--haru-navy);
       color: #FFFFFF;
-      border-radius: 12px 12px 0 12px; /* 모던한 말풍선 형태 */
+      border-radius: 12px 12px 0 12px;
     }
 
     /* ⚪ 상대 메시지 (Light Gray Block) */
@@ -139,7 +316,7 @@
       margin-top: 6px;
       opacity: 0.6;
       text-align: right;
-      font-family: var(--font-en);
+      font-family: var(--font-en, sans-serif);
       letter-spacing: 0.05em;
     }
 
@@ -162,20 +339,21 @@
       border-top: 1px solid #E2E8F0;
     }
 
-    /* 파일 첨부 버튼 (Clean Icon style) */
+    /* ✅ 수정: 파일 첨부 버튼 - 높이 44px 고정 */
     .chat-input label {
       display: flex;
       align-items: center;
       justify-content: center;
-      width: 40px;
-      height: 40px;
+      width: 44px; /* 너비 */
+      height: 44px; /* 높이 통일 */
       border: 1px solid #CBD5E1;
       background: #FFFFFF;
       cursor: pointer;
       transition: all 0.2s;
       color: var(--haru-navy);
       font-size: 20px;
-      border-radius: 0; /* 각지게 */
+      border-radius: 0;
+      margin: 0;
     }
     .chat-input label:hover {
       border-color: var(--haru-navy);
@@ -186,10 +364,10 @@
       display: none;
     }
 
-    /* 텍스트 입력 필드 */
+    /* ✅ 수정: 텍스트 입력 필드 - 높이 44px 고정 */
     .chat-input input[type="text"] {
       flex: 1;
-      height: 40px;
+      height: 44px; /* 높이 통일 */
       border: 1px solid #CBD5E1;
       border-radius: 0;
       padding: 0 16px;
@@ -197,6 +375,8 @@
       color: var(--haru-navy);
       background: #F8FAFC;
       transition: all 0.2s;
+      margin: 0;
+      -webkit-appearance: none; /* 모바일 초기화 */
     }
     .chat-input input[type="text"]:focus {
       outline: none;
@@ -204,9 +384,9 @@
       background: #FFFFFF;
     }
 
-    /* 전송 버튼 (Text Button) */
+    /* ✅ 수정: 전송 버튼 - 높이 44px 고정 */
     .chat-input button {
-      height: 40px;
+      height: 44px; /* 높이 통일 */
       padding: 0 24px;
       background: var(--haru-navy);
       color: #FFFFFF;
@@ -218,7 +398,8 @@
       transition: all 0.2s;
       border-radius: 0;
       text-transform: uppercase;
-      font-family: var(--font-en);
+      font-family: var(--font-en, sans-serif);
+      margin: 0;
     }
     .chat-input button:hover {
       background: #000000;
@@ -262,8 +443,60 @@
 </head>
 <body>
   
-  <!-- ✅ 헤더 (JS 로드) -->
-  <div id="header-placeholder"></div>
+  <!-- 🟢 FIREBASE CONFIGURATION -->
+  <script>
+    window.__firebase_config = JSON.stringify({
+      apiKey: "AIzaSyAyD0Gn5-zqzPzdXjQzZhVlMQvqTzUmHKs",
+      authDomain: "return-linen-management.firebaseapp.com",
+      projectId: "return-linen-management",
+      storageBucket: "return-linen-management.firebasestorage.app",
+      messagingSenderId: "310421638033",
+      appId: "1:310421638033:web:280047bf93a8c780f8e830",
+      measurementId: "G-D6BDRRKD9Y"
+    });
+  </script>
+
+  <!-- 🔹 Header Inlined (Fixed Grid Layout) -->
+  <header class="main-header">
+    <div class="header-inner">
+      <!-- 1. 좌측 -->
+      <div class="logo">HARU</div>
+
+      <!-- 2. 중앙 -->
+      <div class="menu-wrap">
+        <button class="menu-toggle" aria-haspopup="true" aria-expanded="false">
+          <span class="menu-label">MENU</span>
+          <div class="hamburger-lines">
+            <span class="line line1"></span>
+            <span class="line line2"></span>
+          </div>
+        </button>
+
+        <ul class="menu-list" role="menu">
+          <li><a href="board.html">게시판</a></li>
+          <li><a href="chat.html">채팅</a></li>
+          <li><a href="incoming_form.html">입고등록</a></li>
+          <li><a href="return_form.html">반품등록</a></li>
+          <li><a href="history_dashboard.html">내역관리</a></li>
+          <li><a href="inventory.html">재고관리</a></li>
+          <li><a href="admin_dashboard.html">린넨 통계</a></li>
+          <li><a href="lost_items_list.html">분실물관리</a></li>
+          <li><a href="maintenance_list.html">객실유지보수</a></li>
+          <li><a href="orders_list.html">주문요청</a></li>
+          <li><a href="worklog.html">근무기록</a></li>
+          <li><a href="notices.html">공지사항</a></li>
+          <li><a href="profile.html">내 정보</a></li>
+          <li><a href="schedule_dashboard.html">작업 스케줄러</a></li>
+
+          <li class="super-admin-only" style="display:none;"><a href="admin.html" class="admin-link">관리자 설정</a></li>
+          <li class="super-admin-only" style="display:none;"><a href="admin_users.html" class="admin-link">사용자 관리</a></li>
+        </ul>
+      </div>
+
+      <!-- 3. 우측 -->
+      <button id="logoutBtn" class="logout-btn">SIGN OUT</button>
+    </div>
+  </header>
 
   <main>
     <div class="chat-container">
@@ -295,6 +528,70 @@
   <footer>
     © 2025 HARU SYSTEM · TOKYO
   </footer>
+
+  <!-- =============================
+       메뉴 토글 스크립트
+       ============================= -->
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const toggleBtn = document.querySelector('.menu-toggle');
+      const menuList = document.querySelector('.menu-list');
+
+      if (toggleBtn && menuList) {
+        toggleBtn.addEventListener("click", () => {
+          const open = menuList.classList.toggle("open");
+          toggleBtn.setAttribute("aria-expanded", open);
+        });
+
+        document.addEventListener("click", (e) => {
+          if (!menuList.contains(e.target) && !toggleBtn.contains(e.target)) {
+            menuList.classList.remove("open");
+            toggleBtn.setAttribute("aria-expanded", "false");
+          }
+        });
+      }
+    });
+  </script>
+
+  <!-- =============================
+       🔥 로그아웃 + 관리자 권한 복구
+       ============================= -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getAuth, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+    import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+    if (window.__firebase_config) {
+      const app = initializeApp(JSON.parse(window.__firebase_config));
+      const auth = getAuth(app);
+      const db = getFirestore(app);
+
+      const SUPER_ADMIN_EMAIL = "rlaguswns95@haru-tokyo.com";
+
+      // 로그아웃 confirm 기능
+      const logoutBtn = document.getElementById("logoutBtn");
+      if (logoutBtn) {
+        logoutBtn.addEventListener("click", () => {
+          if (confirm("로그아웃 하시겠습니까?")) {
+            signOut(auth).then(() => {
+              location.href = "index.html";
+            }).catch(err => {
+              console.error("로그아웃 실패:", err);
+            });
+          }
+        });
+      }
+
+      // 관리자 페이지 표시
+      onAuthStateChanged(auth, (user) => {
+        if (user && user.email === SUPER_ADMIN_EMAIL) {
+          document.querySelectorAll(".super-admin-only").forEach(el => {
+            el.style.display = "block";
+          });
+        }
+      });
+    }
+  </script>
 
   <!-- ✅ 기능 스크립트 -->
   <script type="module" src="chat.js"></script>

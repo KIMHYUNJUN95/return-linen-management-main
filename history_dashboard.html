@@ -8,21 +8,43 @@
   <!-- 공통 스타일 -->
   <link rel="stylesheet" href="common.css" />
 
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+
   <style>
     /* -------------------------------
        🎨 Page Specific Styles
        Theme: Tokyo Day Bright (Minimal)
        ------------------------------- */
     
+    :root {
+      --color-bg-main: #F8FAFC;
+      --color-surface: #FFFFFF;
+      --color-text-primary: #2C3E50;
+      --color-text-secondary: #64748B;
+      --color-accent: #D4AF37;
+      --color-border: #CBD5E1;
+      --color-primary: #2C3E50;
+      --haru-navy: #2C3E50;
+    }
+
+    /* 초기화 */
+    *, *::before, *::after { box-sizing: border-box; }
+    
     body {
-      background-color: var(--bg-base); /* Soft Gray */
+      background-color: var(--color-bg-main); /* Soft Gray */
       color: var(--haru-navy);
+      font-family: 'Noto Sans KR', sans-serif;
+      margin: 0;
+      padding-top: 60px; /* 헤더 높이 확보 */
     }
 
     main {
       display: flex;
       justify-content: center;
-      padding-top: 60px;
+      padding-top: 40px;
       padding-bottom: 80px;
     }
 
@@ -65,9 +87,18 @@
       align-items: center;
     }
 
+    /* ✅ 날짜 입력 그룹 (새로 추가됨) */
+    .date-range-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex: 1; /* 남은 공간 차지 */
+      min-width: 280px; /* 최소 너비 확보 */
+    }
+
     /* 입력 필드 스타일 */
     select, input[type="date"] {
-      height: 40px;
+      height: 44px; /* 높이 통일 */
       padding: 0 12px;
       border: 1px solid #CBD5E1;
       background: #F8FAFC;
@@ -76,6 +107,18 @@
       color: var(--haru-navy);
       transition: all 0.2s;
       min-width: 140px;
+      font-family: 'Noto Sans KR', sans-serif;
+      /* 모바일 스타일 초기화 */
+      -webkit-appearance: none;
+      appearance: none;
+    }
+
+    /* 날짜 입력창 전용 */
+    input[type="date"] {
+      width: 100%; /* 그룹 내에서 꽉 차게 */
+      display: flex;
+      align-items: center;
+      justify-content: center; /* 텍스트 중앙 정렬 시도 */
     }
 
     select:focus, input:focus {
@@ -86,7 +129,7 @@
 
     /* 버튼 스타일 */
     button {
-      height: 40px;
+      height: 44px; /* 높이 통일 */
       padding: 0 20px;
       font-size: 13px;
       font-weight: 700;
@@ -190,7 +233,7 @@
     .history-card .meta {
       font-size: 12px;
       color: #94A3B8;
-      font-family: var(--font-en);
+      font-family: var(--font-en, sans-serif);
     }
 
     .history-card .content {
@@ -248,39 +291,251 @@
       margin-top: 8px;
     }
 
-    /* Footer */
-    footer {
-      text-align: center;
-      color: #CBD5E1;
-      padding: 20px 0;
-      font-size: 12px;
-      letter-spacing: 0.05em;
+    /* 🔹 Header CSS (NEW GRID SYSTEM - Forced Priority) */
+    .main-header {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 60px;
+      background: rgba(255, 255, 255, 0.95);
+      border-bottom: 1px solid var(--color-border);
+      z-index: 1000;
+      backdrop-filter: blur(5px);
     }
 
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(10px); }
-      to { opacity: 1; transform: translateY(0); }
+    .header-inner {
+      width: 100%;
+      max-width: 1400px;
+      height: 100%;
+      margin: 0 auto;
+      padding: 0 24px;
+      display: grid !important; 
+      grid-template-columns: 1fr auto 1fr !important;
+      align-items: center !important;
+    }
+
+    .logo {
+      justify-self: start !important;
+      font-family: 'Noto Sans KR', sans-serif;
+      font-weight: 700;
+      font-size: 18px;
+      color: #111;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+    }
+
+    .menu-wrap {
+      justify-self: center !important;
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+
+    .logout-btn {
+      justify-self: end !important;
+      display: block !important;
+      background: transparent;
+      border: none;
+      color: #111;
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 0.1em;
+      cursor: pointer;
+      text-transform: uppercase;
+      padding: 4px 0;
+      transition: opacity 0.3s;
+    }
+    .logout-btn:hover { opacity: 0.6; }
+
+    .menu-toggle {
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px;
+      transition: opacity 0.3s;
+    }
+    .menu-toggle:hover { opacity: 0.6; }
+
+    .menu-label {
+      font-size: 12px;
+      font-weight: 600;
+      color: #111;
+      letter-spacing: 0.1em;
+    }
+
+    .hamburger-lines {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .line {
+      width: 18px;
+      height: 1.5px;
+      background-color: #111;
+      display: block;
+      transition: transform 0.3s ease;
+    }
+    .menu-toggle[aria-expanded="true"] .line1 { transform: rotate(45deg) translate(2px, 2px); }
+    .menu-toggle[aria-expanded="true"] .line2 { transform: rotate(-45deg) translate(2px, -2px); width: 18px; }
+
+    .menu-list {
+      display: none;
+      position: absolute;
+      top: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 220px;
+      background: #fff;
+      border: 1px solid var(--color-border);
+      padding: 12px 0;
+      flex-direction: column;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.05);
+      list-style: none;
+      z-index: 1001;
+      margin-top: 10px;
+    }
+    .menu-list.open {
+      display: flex;
+      animation: fadeInDropdown 0.2s ease-out;
+    }
+    @keyframes fadeInDropdown {
+      from { opacity: 0; transform: translate(-50%, -10px); }
+      to { opacity: 1; transform: translate(-50%, 0); }
+    }
+    .menu-list li a {
+      display: block;
+      padding: 10px 24px;
+      font-size: 13px;
+      color: #888;
+      text-decoration: none;
+      transition: all 0.2s;
+      border-left: 2px solid transparent;
+    }
+    .menu-list li a:hover {
+      background-color: #fafafa;
+      color: #111;
+      border-left-color: #111;
+      padding-left: 30px;
     }
 
     /* Mobile */
     @media (max-width: 768px) {
+      .main-header { height: 50px; }
+      .header-inner { padding: 0 16px; }
+      .logo { font-size: 16px; }
+      .menu-label { font-size: 11px; }
+      .logout-btn { font-size: 10px; }
+      
+      .menu-list {
+        position: fixed; top: 50px; left: 0; right: 0;
+        width: 100vw; transform: none; margin-top: 0;
+        border: none; border-bottom: 1px solid var(--color-border);
+        box-shadow: 0 5px 10px rgba(0,0,0,0.05);
+      }
+      .menu-list.open { animation: fadeInMobile 0.2s ease-out; }
+      @keyframes fadeInMobile {
+        from { opacity: 0; transform: translateY(-5px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+      .menu-list li a { padding: 14px 24px; font-size: 14px; }
+
+      /* ✅ 필터 섹션 모바일 최적화 */
       .filter-row {
         flex-direction: column;
-        align-items: stretch;
+        align-items: stretch; /* 전체 너비로 늘림 */
+        gap: 16px;
       }
+      
+      select, .date-range-group {
+        width: 100%;
+      }
+      
+      /* 날짜 그룹 가로 배치 유지 */
+      .date-range-group {
+        display: flex;
+        gap: 8px;
+      }
+      /* 날짜 입력창 50:50 분할 */
+      .date-range-group input[type="date"] {
+        flex: 1; 
+        min-width: 0; /* 너비 축소 허용 */
+      }
+
       .export-buttons {
         justify-content: stretch;
       }
       .export-buttons button {
         flex: 1;
       }
+      
+      /* 버튼 그룹 가로 배치 (검색/초기화) */
+      .filter-btn-group {
+        display: flex;
+        gap: 8px;
+      }
+      .filter-btn-group button {
+        flex: 1;
+      }
+    }
+
+    footer { text-align: center; color: #CBD5E1; padding: 20px 0; font-size: 12px; letter-spacing: 0.05em; border-top: 1px solid #E2E8F0; background: #fff; margin-top: 2rem; }
+    
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
     }
   </style>
 </head>
 
 <body>
-  <!-- ✅ 헤더 로드 -->
-  <div id="header-placeholder"></div>
+  <!-- 🟢 FIREBASE CONFIGURATION -->
+  <script>
+    window.__firebase_config = JSON.stringify({
+      apiKey: "AIzaSyAyD0Gn5-zqzPzdXjQzZhVlMQvqTzUmHKs",
+      authDomain: "return-linen-management.firebaseapp.com",
+      projectId: "return-linen-management",
+      storageBucket: "return-linen-management.firebasestorage.app",
+      messagingSenderId: "310421638033",
+      appId: "1:310421638033:web:280047bf93a8c780f8e830",
+      measurementId: "G-D6BDRRKD9Y"
+    });
+  </script>
+
+  <!-- 🔹 Header -->
+  <header class="main-header">
+    <div class="header-inner">
+      <div class="logo">HARU</div>
+      <div class="menu-wrap">
+        <button class="menu-toggle" aria-haspopup="true" aria-expanded="false">
+          <span class="menu-label">MENU</span>
+          <div class="hamburger-lines"><span class="line line1"></span><span class="line line2"></span></div>
+        </button>
+        <ul class="menu-list" role="menu">
+          <li><a href="board.html">게시판</a></li>
+          <li><a href="chat.html" data-menu="chat">채팅</a></li>
+          <li><a href="incoming_form.html">입고등록</a></li>
+          <li><a href="return_form.html">반품등록</a></li>
+          <li><a href="history_dashboard.html">내역관리</a></li>
+          <li><a href="inventory.html">재고관리</a></li>
+          <li><a href="admin_dashboard.html">린넨 통계</a></li>
+          <li><a href="lost_items_list.html">분실물관리</a></li>
+          <li><a href="maintenance_list.html">객실유지보수</a></li>
+          <li><a href="orders_list.html">주문요청</a></li>
+          <li><a href="worklog.html">근무기록</a></li>
+          <li><a href="notices.html">공지사항</a></li>
+          <li><a href="profile.html">내 정보</a></li>
+          <li><a href="schedule_dashboard.html">작업 스케줄러</a></li>
+          <li class="super-admin-only" style="display:none;"><a href="admin.html" class="admin-link">관리자 설정</a></li>
+          <li class="super-admin-only" style="display:none;"><a href="admin_users.html" class="admin-link">사용자 관리</a></li>
+        </ul>
+      </div>
+      <button id="logoutBtn" class="logout-btn">SIGN OUT</button>
+    </div>
+  </header>
 
   <main>
     <div class="container">
@@ -310,12 +565,17 @@
             <option value="오쿠보4">오쿠보4</option>
           </select>
           
-          <input type="date" id="startDate" />
-          <span style="color:#CBD5E1;">~</span>
-          <input type="date" id="endDate" />
+          <!-- ✅ 날짜 입력창 개선: 그룹화하여 한 줄 배치 -->
+          <div class="date-range-group">
+            <input type="date" id="startDate" required />
+            <span style="color:#CBD5E1;">~</span>
+            <input type="date" id="endDate" required />
+          </div>
           
-          <button id="filterBtn" class="btn-primary">검색</button>
-          <button id="resetBtn" class="btn-secondary">초기화</button>
+          <div class="filter-btn-group">
+            <button id="filterBtn" class="btn-primary">검색</button>
+            <button id="resetBtn" class="btn-secondary">초기화</button>
+          </div>
         </div>
       </div>
 
@@ -339,6 +599,56 @@
     © 2025 HARU SYSTEM · TOKYO
   </footer>
 
+  <!-- ✅ Header & Auth Logic -->
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const menuToggle = document.querySelector(".menu-toggle");
+      const navMenu = document.querySelector(".menu-list");
+      if(menuToggle && navMenu) {
+        menuToggle.addEventListener("click", () => {
+          const isOpen = navMenu.classList.toggle("open");
+          menuToggle.setAttribute("aria-expanded", isOpen);
+        });
+        document.addEventListener("click", (e) => {
+          if (!menuToggle.contains(e.target) && !navMenu.contains(e.target)) {
+            navMenu.classList.remove("open");
+            menuToggle.setAttribute("aria-expanded", "false");
+          }
+        });
+      }
+    });
+  </script>
+
+  <!-- Auth Script -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getAuth, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+    import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+    if (window.__firebase_config) {
+      const app = initializeApp(JSON.parse(window.__firebase_config));
+      const auth = getAuth(app);
+      const db = getFirestore(app);
+
+      const logoutBtn = document.getElementById("logoutBtn");
+      if(logoutBtn) {
+        logoutBtn.addEventListener("click", async () => {
+          if(!confirm("로그아웃 하시겠습니까?")) return;
+          try { await signOut(auth); window.location.reload(); } catch(e) { console.error(e); }
+        });
+      }
+
+      onAuthStateChanged(auth, async (user) => {
+        if(user) {
+           const superAdmin = "rlaguswns95@haru-tokyo.com";
+           if(user.email === superAdmin) {
+             document.querySelectorAll('.super-admin-only').forEach(el => el.style.display = 'block');
+           }
+        }
+      });
+    }
+  </script>
+
   <!-- ✅ 외부 라이브러리 (엑셀/PDF) -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -348,7 +658,6 @@
   <script type="module" src="history_dashboard_fast.js"></script>
   <script type="module" src="scrollTop.js"></script>
   <script type="module" src="notice_popup.js"></script>
-
 
 </body>
 </html>
