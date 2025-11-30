@@ -25,6 +25,15 @@
       --color-accent: #D4AF37;
       --color-border: #CBD5E1;
       --color-primary: #2C3E50;
+      
+      /* Header Variables */
+      --tk-black: #111111;
+      --tk-gray: #888888;
+      --tk-light-gray: #f4f4f4;
+      --tk-white: #ffffff;
+      --tk-border: #e0e0e0;
+      --tk-accent: #000000;
+      --haru-navy: #2C3E50;
     }
 
     /* Box-sizing Reset */
@@ -34,6 +43,53 @@
     body { background-color: var(--color-bg-main); color: var(--color-text-primary); font-family: 'Inter', 'Noto Sans KR', sans-serif; margin: 0; line-height: 1.5; padding-top: 60px; }
 
     #bg-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; opacity: 0.3; pointer-events: none; }
+
+    /* 🔹 HEADER CSS (강제 적용 - Grid System) */
+    .main-header {
+      position: fixed; top: 0; left: 0; width: 100%; height: 60px;
+      background: rgba(255, 255, 255, 0.95);
+      border-bottom: 1px solid var(--tk-border);
+      z-index: 1000;
+      backdrop-filter: blur(5px);
+    }
+    .header-inner {
+      width: 100%; max-width: 1400px; height: 100%; margin: 0 auto; padding: 0 24px;
+      display: grid !important;
+      grid-template-columns: 1fr auto 1fr !important;
+      align-items: center !important;
+    }
+    .logo { justify-self: start !important; font-family: 'Noto Sans KR', sans-serif; font-weight: 700; font-size: 18px; color: var(--tk-black); letter-spacing: 0.15em; text-transform: uppercase; }
+    .menu-wrap { justify-self: center !important; position: relative; display: flex; align-items: center; }
+    .logout-btn { justify-self: end !important; display: block !important; background: transparent; border: none; color: var(--tk-black); font-size: 11px; font-weight: 500; letter-spacing: 0.1em; cursor: pointer; text-transform: uppercase; padding: 4px 0; transition: opacity 0.3s; }
+    .logout-btn:hover { opacity: 0.6; }
+    
+    .menu-toggle { background: transparent; border: none; cursor: pointer; display: flex; align-items: center; gap: 8px; padding: 8px; }
+    .menu-label { font-size: 12px; font-weight: 600; color: var(--tk-black); letter-spacing: 0.1em; }
+    .hamburger-lines { display: flex; flex-direction: column; gap: 4px; }
+    .line { width: 18px; height: 1.5px; background-color: var(--tk-black); display: block; transition: transform 0.3s ease; }
+    .menu-toggle[aria-expanded="true"] .line1 { transform: rotate(45deg) translate(2px, 2px); }
+    .menu-toggle[aria-expanded="true"] .line2 { transform: rotate(-45deg) translate(2px, -2px); width: 18px; }
+
+    .menu-list {
+      display: none; position: absolute; top: 100%; left: 50%; transform: translateX(-50%);
+      width: 220px; background: #fff; border: 1px solid var(--tk-border); padding: 12px 0;
+      flex-direction: column; box-shadow: 0 10px 40px rgba(0, 0, 0, 0.05); list-style: none; z-index: 1001; margin-top: 10px;
+    }
+    .menu-list.open { display: flex; animation: fadeInDropdown 0.2s ease-out; }
+    .menu-list li a { display: block; padding: 10px 24px; font-size: 13px; color: var(--tk-gray); text-decoration: none; transition: 0.2s; border-left: 2px solid transparent; }
+    .menu-list li a:hover { background: #fafafa; color: var(--tk-black); border-left-color: var(--tk-black); padding-left: 30px; }
+    .menu-list li a.admin-link { color: #e74c3c; font-weight: 600; }
+
+    @keyframes fadeInDropdown { from { opacity: 0; transform: translate(-50%, -10px); } to { opacity: 1; transform: translate(-50%, 0); } }
+
+    @media (max-width: 768px) {
+      .main-header { height: 50px; }
+      .header-inner { padding: 0 16px; }
+      .logo { font-size: 16px; }
+      .menu-label { font-size: 11px; }
+      .logout-btn { font-size: 10px; }
+      .menu-list { position: fixed; top: 50px; left: 0; right: 0; width: 100vw; transform: none; margin-top: 0; border: none; border-bottom: 1px solid var(--tk-border); }
+    }
 
     .page-container { max-width: 1200px; margin: 0 auto; padding: 2rem 1rem; }
 
@@ -58,9 +114,7 @@
     .btn-secondary:hover { border-color: var(--color-primary); }
     .btn-accent { background: var(--color-accent); color: #fff; border-color: var(--color-accent); }
 
-    /* ✅ [핵심 수정] 통계 카드 높이 강제 고정 CSS 
-       자바스크립트가 어떤 클래스로 만들든 구조(div > div)만 같으면 적용됨
-    */
+    /* ✅ [통계 카드 높이 정렬] JS 생성 요소용 CSS */
     .stats-grid {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
@@ -68,8 +122,8 @@
       margin-bottom: 2rem;
     }
     
-    /* 1. 카드 본체 스타일 */
-    .stats-grid > div {
+    /* 1. 카드 본체 */
+    .stat-card, .stats-grid > div {
       background: #fff;
       border: 1px solid var(--color-border);
       padding: 1.5rem 0.5rem;
@@ -77,11 +131,12 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      justify-content: flex-start; /* 상단 정렬 */
+      justify-content: flex-start; /* 상단 기준 정렬 */
     }
 
-    /* 2. 제목 (첫 번째 자식 요소) - 높이 50px 고정 */
-    .stats-grid > div > div:first-child {
+    /* 2. 제목 (첫 번째 자식 요소) - 높이 48px 강제 고정 */
+    .stat-title,
+    .stat-card > div:first-child { 
       font-size: 0.8rem;
       font-weight: 700;
       color: var(--color-text-secondary);
@@ -89,28 +144,30 @@
       letter-spacing: 0.05em;
       margin-bottom: 0.5rem;
       
-      /* ✨ 여기가 핵심: 높이를 50px로 고정해버림 */
-      height: 50px !important;
-      min-height: 50px !important; 
-      max-height: 50px !important;
+      /* ✨ 여기가 핵심: 2줄이 되어도 높이 고정 */
+      height: 48px !important; 
+      min-height: 48px !important;
       
-      /* 내용 중앙 정렬 */
+      /* 텍스트 수직 중앙 정렬 */
       display: flex !important;
       align-items: center !important;
       justify-content: center !important;
       line-height: 1.2;
-      overflow: hidden; /* 혹시 넘치면 자름 */
+      overflow: hidden;
     }
 
     /* 3. 숫자 (마지막 자식 요소) */
-    .stats-grid > div > div:last-child {
+    .stat-value,
+    .stat-card > div:last-child {
       font-family: var(--font-en, sans-serif);
       font-size: 2.5rem;
       font-weight: 800;
       color: var(--color-text-primary);
       line-height: 1;
-      margin-top: auto; /* 가능한 아래쪽으로 밀기 */
+      margin-top: auto; /* 아래로 살짝 밀어줌 */
     }
+    .stat-value.done { color: #27AE60; }
+    .stat-value.overdue { color: #E74C3C; }
 
     /* Calendar Customization */
     .calendar-card { background: #fff; border: 1px solid var(--color-border); padding: 1.5rem; }
@@ -134,6 +191,11 @@
     .form-textarea { width: 100%; height: 100px; padding: 10px; margin-top: 10px; border: 1px solid var(--color-border); resize: none; }
     .photo-card img { width: 100%; display: block; border: 1px solid var(--color-border); margin-bottom: 1rem; }
     
+    /* ⭐ 별점 스타일 */
+    .rating-wrap { display: flex; justify-content: center; gap: 5px; margin-bottom: 1.5rem; }
+    .star-btn { font-size: 2rem; cursor: pointer; color: #CBD5E1; background: none; border: none; padding: 0; transition: color 0.2s; }
+    .star-btn.active { color: #F59E0B; }
+
     /* Mobile List */
     .mobile-list { display: none; margin-top: 2rem; }
     @media(max-width:768px){ 
@@ -144,52 +206,6 @@
       
       .stat-value { font-size: 2rem; }
       .stats-grid { gap: 0.5rem; }
-    }
-
-    /* 🔹 Header CSS (Grid System) */
-    .main-header {
-      position: fixed; top: 0; left: 0; width: 100%; height: 60px;
-      background: rgba(255, 255, 255, 0.95);
-      border-bottom: 1px solid var(--color-border);
-      z-index: 1000;
-      backdrop-filter: blur(5px);
-    }
-    .header-inner {
-      width: 100%; max-width: 1400px; height: 100%; margin: 0 auto; padding: 0 24px;
-      display: grid !important; grid-template-columns: 1fr auto 1fr !important; align-items: center !important;
-    }
-    .logo { justify-self: start !important; font-family: 'Noto Sans KR', sans-serif; font-weight: 700; font-size: 18px; color: #111; letter-spacing: 0.15em; text-transform: uppercase; }
-    .menu-wrap { justify-self: center !important; position: relative; display: flex; align-items: center; }
-    .logout-btn { justify-self: end !important; display: block !important; background: transparent; border: none; color: #111; font-size: 11px; font-weight: 500; letter-spacing: 0.1em; cursor: pointer; text-transform: uppercase; padding: 4px 0; transition: opacity 0.3s; }
-    .logout-btn:hover { opacity: 0.6; }
-    .menu-toggle { background: transparent; border: none; cursor: pointer; display: flex; align-items: center; gap: 8px; padding: 8px; transition: opacity 0.3s; }
-    .menu-toggle:hover { opacity: 0.6; }
-    .menu-label { font-size: 12px; font-weight: 600; color: #111; letter-spacing: 0.1em; }
-    .hamburger-lines { display: flex; flex-direction: column; gap: 4px; }
-    .line { width: 18px; height: 1.5px; background-color: #111; display: block; transition: transform 0.3s ease; }
-    .menu-toggle[aria-expanded="true"] .line1 { transform: rotate(45deg) translate(2px, 2px); }
-    .menu-toggle[aria-expanded="true"] .line2 { transform: rotate(-45deg) translate(2px, -2px); width: 18px; }
-    .menu-list {
-      display: none; position: absolute; top: 100%; left: 50%; transform: translateX(-50%); width: 220px;
-      background: #fff; border: 1px solid var(--color-border); padding: 12px 0;
-      flex-direction: column; box-shadow: 0 10px 40px rgba(0, 0, 0, 0.05); list-style: none; z-index: 1001; margin-top: 10px;
-    }
-    .menu-list.open { display: flex; animation: fadeInDropdown 0.2s ease-out; }
-    @keyframes fadeInDropdown { from { opacity: 0; transform: translate(-50%, -10px); } to { opacity: 1; transform: translate(-50%, 0); } }
-    .menu-list li a { display: block; padding: 10px 24px; font-size: 13px; color: #888; text-decoration: none; transition: all 0.2s; border-left: 2px solid transparent; }
-    .menu-list li a:hover { background-color: #fafafa; color: #111; border-left-color: #111; padding-left: 30px; }
-
-    @media (max-width: 768px) {
-      .main-header { height: 50px; }
-      .header-inner { padding: 0 16px; }
-      .logo { font-size: 16px; }
-      .menu-label { font-size: 11px; }
-      .menu-toggle { gap: 6px; }
-      .logout-btn { font-size: 10px; }
-      .menu-list { position: fixed; top: 50px; left: 0; right: 0; width: 100vw; transform: none; margin-top: 0; border: none; border-bottom: 1px solid var(--color-border); box-shadow: 0 5px 10px rgba(0,0,0,0.05); }
-      .menu-list.open { animation: fadeInMobile 0.2s ease-out; }
-      @keyframes fadeInMobile { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
-      .menu-list li a { padding: 14px 24px; font-size: 14px; }
     }
 
     footer { text-align: center; padding: 2rem; color: var(--color-text-secondary); font-size: 0.8rem; border-top: 1px solid var(--color-border); margin-top: 2rem; background: #fff; }
@@ -209,9 +225,7 @@
     });
   </script>
 
-  <canvas id="bg-canvas"></canvas>
-  
-  <!-- 🔹 Header -->
+  <!-- 🔹 Header (Inlined & Unified) -->
   <header class="main-header">
     <div class="header-inner">
       <div class="logo">HARU</div>
@@ -235,6 +249,10 @@
           <li><a href="notices.html">공지사항</a></li>
           <li><a href="profile.html">내 정보</a></li>
           <li><a href="schedule_dashboard.html">작업 스케줄러</a></li>
+          
+          <!-- ✅ CS 관리 메뉴 추가 -->
+          <li><a href="cs_dashboard.html" style="color:#e74c3c; font-weight:700;">CS 관리</a></li>
+
           <li class="super-admin-only" style="display:none;"><a href="admin.html" class="admin-link">관리자 설정</a></li>
           <li class="super-admin-only" style="display:none;"><a href="admin_users.html" class="admin-link">사용자 관리</a></li>
         </ul>
@@ -278,8 +296,8 @@
       </div>
     </section>
 
-    <!-- JS가 생성하는 통계 카드 공간 (자동 삽입됨) -->
-    <!-- CSS가 이 부분의 스타일을 제어합니다 -->
+    <!-- JS가 생성하는 통계 카드 공간 -->
+    <!-- CSS(.stat-title, .stat-card > div:first-child)가 높이를 제어합니다 -->
 
     <!-- 캘린더 -->
     <section class="calendar-card">
@@ -314,14 +332,25 @@
     </div>
   </div>
 
-  <!-- ✅ 완료 모달 -->
+  <!-- ✅ 완료 모달 (별점 추가) -->
   <div id="completeModal" class="modal-bg">
     <div class="modal-card">
       <h3>COMPLETE TASK</h3>
       <p style="margin-bottom: 1rem; font-size: 0.9rem; color: #64748B;">
-        완료 정보를 입력하세요. 다음 일정이 자동으로 생성됩니다.
+        작업 품질을 평가하고 완료 처리하세요.
       </p>
       
+      <!-- 별점 UI -->
+      <label style="font-weight: 700; font-size: 0.8rem; color: #2C3E50; display:block; text-align:center; margin-bottom:5px;">QUALITY RATING</label>
+      <div class="rating-wrap" id="ratingStars">
+        <button type="button" class="star-btn" data-val="1">★</button>
+        <button type="button" class="star-btn" data-val="2">★</button>
+        <button type="button" class="star-btn" data-val="3">★</button>
+        <button type="button" class="star-btn" data-val="4">★</button>
+        <button type="button" class="star-btn" data-val="5">★</button>
+      </div>
+      <input type="hidden" id="cRating" value="5">
+
       <label style="font-weight: 700; font-size: 0.8rem; color: #2C3E50;">NOTE (비고)</label>
       <textarea id="cNote" class="form-textarea" placeholder="Note..."></textarea>
       
@@ -350,14 +379,8 @@
     HARU SYSTEM &copy; 2025 <strong>HARU_KIM HYUN JUN</strong>. All rights reserved.
   </footer>
 
-  <script type="module" src="scripts/bg/scene.js"></script>
-  
-  <!-- Header & Auth Script -->
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import { getAuth, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-    import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-
+  <!-- Header Script -->
+  <script>
     document.addEventListener('DOMContentLoaded', () => {
       const menuToggle = document.querySelector(".menu-toggle");
       const navMenu = document.querySelector(".menu-list");
@@ -374,6 +397,13 @@
         });
       }
     });
+  </script>
+
+  <!-- Auth Script -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getAuth, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+    import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
     if (window.__firebase_config) {
       const app = initializeApp(JSON.parse(window.__firebase_config));
@@ -384,7 +414,7 @@
       if(logoutBtn) {
         logoutBtn.addEventListener("click", async () => {
           if(!confirm("로그아웃 하시겠습니까?")) return;
-          try { await signOut(auth); window.location.reload(); } catch(e) { console.error(e); }
+          try { await signOut(auth); location.href = "index.html"; } catch(e) { console.error(e); }
         });
       }
 
@@ -399,7 +429,7 @@
     }
   </script>
 
-  <script type="module" src="notice_popup.js"></script> <!-- ✅ 공지 팝업 연결 -->
+  <script type="module" src="notice_popup.js"></script>
   <script type="module" src="schedule_dashboard.js"></script>
   <script type="module" src="scrollTop.js"></script>
 </body>

@@ -22,6 +22,13 @@
       --color-accent: #D4AF37;
       --color-border: #CBD5E1;
       
+      /* Header Specific Variables */
+      --tk-black: #111111;
+      --tk-gray: #888888;
+      --tk-light-gray: #f4f4f4;
+      --tk-white: #ffffff;
+      --tk-border: #e0e0e0;
+      
       --space-2: 0.5rem;
       --space-3: 0.75rem;
       --space-4: 1rem;
@@ -37,6 +44,177 @@
     
     body { background-color: var(--color-bg-main); color: var(--color-text-primary); font-family: 'Inter', 'Noto Sans KR', sans-serif; margin: 0; line-height: 1.5; padding-top: 60px; /* 헤더 공간 확보 */ }
 
+    /* 🔹 HEADER CSS (통일된 그리드 시스템 적용) */
+    .main-header {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 60px;
+      background: rgba(255, 255, 255, 0.95);
+      border-bottom: 1px solid var(--tk-border);
+      z-index: 1000;
+      backdrop-filter: blur(5px);
+    }
+
+    .header-inner {
+      width: 100%;
+      max-width: 1400px;
+      height: 100%;
+      margin: 0 auto;
+      padding: 0 24px;
+      /* ✅ Grid로 좌-중-우 완벽 분리 */
+      display: grid !important;
+      grid-template-columns: 1fr auto 1fr !important;
+      align-items: center !important;
+    }
+
+    /* 1. 로고: 왼쪽 정렬 */
+    .logo {
+      justify-self: start !important;
+      font-family: 'Noto Sans KR', sans-serif;
+      font-weight: 700;
+      font-size: 18px;
+      color: var(--tk-black);
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+    }
+
+    /* 2. 메뉴 랩: 중앙 정렬 */
+    .menu-wrap {
+      justify-self: center !important;
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+
+    /* 3. 로그아웃: 오른쪽 정렬 */
+    .logout-btn {
+      justify-self: end !important;
+      display: block !important; /* 모바일에서도 강제 표시 */
+      background: transparent;
+      border: none;
+      color: var(--tk-black);
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 0.1em;
+      cursor: pointer;
+      text-transform: uppercase;
+      padding: 4px 0;
+      transition: opacity 0.3s;
+    }
+    .logout-btn:hover { opacity: 0.6; }
+
+    /* 메뉴 버튼 스타일 */
+    .menu-toggle {
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px;
+      transition: opacity 0.3s;
+    }
+    .menu-toggle:hover { opacity: 0.6; }
+
+    .menu-label {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--tk-black);
+      letter-spacing: 0.1em;
+    }
+
+    .hamburger-lines {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .line {
+      width: 18px;
+      height: 1.5px;
+      background-color: var(--tk-black);
+      display: block;
+      transition: transform 0.3s ease;
+    }
+    .menu-toggle[aria-expanded="true"] .line1 { transform: rotate(45deg) translate(2px, 2px); }
+    .menu-toggle[aria-expanded="true"] .line2 { transform: rotate(-45deg) translate(2px, -2px); width: 18px; }
+
+    /* 드롭다운 메뉴 */
+    .menu-list {
+      display: none;
+      position: absolute;
+      top: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 220px;
+      background: var(--tk-white);
+      border: 1px solid var(--tk-border);
+      padding: 12px 0;
+      flex-direction: column;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.05);
+      list-style: none;
+      z-index: 1001;
+      margin-top: 10px;
+    }
+    .menu-list.open {
+      display: flex;
+      animation: fadeInDropdown 0.2s ease-out;
+    }
+    @keyframes fadeInDropdown {
+      from { opacity: 0; transform: translate(-50%, -10px); }
+      to { opacity: 1; transform: translate(-50%, 0); }
+    }
+    .menu-list li a {
+      display: block;
+      padding: 10px 24px;
+      font-size: 13px;
+      color: var(--tk-gray);
+      text-decoration: none;
+      transition: all 0.2s;
+      border-left: 2px solid transparent;
+    }
+    .menu-list li a:hover {
+      background-color: #fafafa;
+      color: var(--tk-black);
+      border-left-color: var(--tk-black);
+      padding-left: 30px;
+    }
+    .menu-list li a.admin-link {
+      color: #e74c3c;
+      font-weight: 600;
+    }
+
+    /* Mobile Header Optimization */
+    @media (max-width: 768px) {
+      .main-header { height: 50px; }
+      .header-inner { padding: 0 16px; }
+      .logo { font-size: 16px; }
+      .menu-label { font-size: 11px; }
+      .menu-toggle { gap: 6px; }
+      .logout-btn { font-size: 10px; }
+      
+      .menu-list {
+        position: fixed;
+        top: 50px;
+        left: 0;
+        right: 0;
+        width: 100vw;
+        transform: none;
+        margin-top: 0;
+        border: none;
+        border-bottom: 1px solid var(--tk-border);
+        box-shadow: 0 5px 10px rgba(0,0,0,0.05);
+      }
+      .menu-list.open { animation: fadeInMobile 0.2s ease-out; }
+      @keyframes fadeInMobile {
+        from { opacity: 0; transform: translateY(-5px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+      .menu-list li a { padding: 14px 24px; font-size: 14px; }
+    }
+
+    /* --- Worklog Specific Styles --- */
     #bg-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; opacity: 0.3; pointer-events: none; }
 
     .worklog-container { max-width: 1000px; margin: 0 auto; padding: var(--space-6) var(--space-4); }
@@ -101,179 +279,6 @@
     .modal-close { width: 100%; background: white; color: var(--color-text-primary); border: none; border-top: 1px solid var(--color-border); padding: 16px; font-weight: 600; cursor: pointer; transition: background 0.2s; }
     .modal-close:hover { background: var(--color-bg-main); }
 
-    /* 🔹 Header CSS (NEW GRID SYSTEM) */
-    .main-header {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 60px;
-      background: rgba(255, 255, 255, 0.95);
-      border-bottom: 1px solid var(--color-border);
-      z-index: 1000;
-      backdrop-filter: blur(5px);
-    }
-
-    .header-inner {
-      width: 100%;
-      max-width: 1400px;
-      height: 100%;
-      margin: 0 auto;
-      padding: 0 24px;
-      /* ✅ Grid로 좌-중-우 완벽 분리 */
-      display: grid;
-      grid-template-columns: 1fr auto 1fr;
-      align-items: center;
-    }
-
-    /* 1. 로고: 왼쪽 정렬 */
-    .logo {
-      justify-self: start;
-      font-family: 'Noto Sans KR', sans-serif;
-      font-weight: 700;
-      font-size: 18px;
-      color: #111;
-      letter-spacing: 0.15em;
-      text-transform: uppercase;
-    }
-
-    /* 2. 메뉴 랩: 중앙 정렬 */
-    .menu-wrap {
-      justify-self: center;
-      position: relative;
-    }
-
-    /* 3. 로그아웃: 오른쪽 정렬 */
-    .logout-btn {
-      justify-self: end;
-      background: transparent;
-      border: none;
-      color: #111;
-      font-size: 11px;
-      font-weight: 500;
-      letter-spacing: 0.1em;
-      cursor: pointer;
-      text-transform: uppercase;
-      padding: 4px 0;
-      transition: opacity 0.3s;
-    }
-    .logout-btn:hover {
-      opacity: 0.6;
-    }
-
-    /* 메뉴 버튼 */
-    .menu-toggle {
-      background: transparent;
-      border: none;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      padding: 8px;
-      transition: opacity 0.3s;
-    }
-    .menu-toggle:hover { opacity: 0.6; }
-
-    .menu-label {
-      font-size: 12px;
-      font-weight: 600;
-      color: #111;
-      letter-spacing: 0.1em;
-    }
-
-    .hamburger-lines {
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-    }
-    .line {
-      width: 18px;
-      height: 1.5px;
-      background-color: #111;
-      display: block;
-      transition: transform 0.3s ease;
-    }
-
-    .menu-toggle[aria-expanded="true"] .line1 { transform: rotate(45deg) translate(2px, 2px); }
-    .menu-toggle[aria-expanded="true"] .line2 { transform: rotate(-45deg) translate(2px, -2px); width: 18px; }
-
-    /* 드롭다운 메뉴 */
-    .menu-list {
-      display: none;
-      position: absolute;
-      top: 100%;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 220px;
-      background: #fff;
-      border: 1px solid var(--color-border);
-      padding: 12px 0;
-      flex-direction: column;
-      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.05);
-      list-style: none;
-      z-index: 1001;
-      margin-top: 10px;
-    }
-
-    .menu-list.open {
-      display: flex;
-      animation: fadeInDropdown 0.2s ease-out;
-    }
-
-    @keyframes fadeInDropdown {
-      from { opacity: 0; transform: translate(-50%, -10px); }
-      to { opacity: 1; transform: translate(-50%, 0); }
-    }
-
-    .menu-list li a {
-      display: block;
-      padding: 10px 24px;
-      font-size: 13px;
-      color: #888;
-      text-decoration: none;
-      transition: all 0.2s;
-      border-left: 2px solid transparent;
-    }
-    .menu-list li a:hover {
-      background-color: #fafafa;
-      color: #111;
-      border-left-color: #111;
-      padding-left: 30px;
-    }
-
-    /* Mobile Header Optimization */
-    @media (max-width: 768px) {
-      .main-header { height: 50px; }
-      .header-inner { padding: 0 16px; }
-      
-      .logo { font-size: 16px; }
-      .menu-label { font-size: 11px; }
-      .menu-toggle { gap: 6px; }
-      .logout-btn { 
-        display: block; /* 모바일에서도 표시 */
-        font-size: 10px; 
-      }
-
-      .menu-list {
-        position: fixed;
-        top: 50px;
-        left: 0;
-        right: 0;
-        width: 100vw;
-        transform: none;
-        margin-top: 0;
-        border: none;
-        border-bottom: 1px solid var(--color-border);
-        box-shadow: 0 5px 10px rgba(0,0,0,0.05);
-      }
-      .menu-list.open { animation: fadeInMobile 0.2s ease-out; }
-      @keyframes fadeInMobile {
-        from { opacity: 0; transform: translateY(-5px); }
-        to { opacity: 1; transform: translateY(0); }
-      }
-      .menu-list li a { padding: 14px 24px; font-size: 14px; }
-    }
-
     @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
     @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
 
@@ -296,7 +301,7 @@
 
   <canvas id="bg-canvas"></canvas>
   
-  <!-- 🔹 Header Updated to Grid Layout -->
+  <!-- 🔹 Header Inlined (Fixed Grid Layout) -->
   <header class="main-header">
     <div class="header-inner">
       <!-- 1. 좌측 -->
@@ -325,7 +330,12 @@
           <li><a href="worklog.html">근무기록</a></li>
           <li><a href="notices.html">공지사항</a></li>
           <li><a href="profile.html">내 정보</a></li>
+          <li><a id="installHaruBtn">앱 설치</a></li>
           <li><a href="schedule_dashboard.html">작업 스케줄러</a></li>
+          
+          <!-- ✅ CS 관리 메뉴 추가 (빨간색) -->
+          <li><a href="cs_dashboard.html" style="color:#e74c3c; font-weight:700;">CS 관리</a></li>
+
           <li class="super-admin-only" style="display:none;"><a href="admin.html" class="admin-link">관리자 설정</a></li>
           <li class="super-admin-only" style="display:none;"><a href="admin_users.html" class="admin-link">사용자 관리</a></li>
         </ul>
@@ -457,13 +467,24 @@
   <!-- ✅ 관리자 전용 버튼 제어 -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+    import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
     import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
     if (window.__firebase_config) {
       const app = initializeApp(JSON.parse(window.__firebase_config));
       const auth = getAuth(app);
       const db = getFirestore(app);
+
+      // 로그아웃 로직 추가
+      const logoutBtn = document.getElementById("logoutBtn");
+      if (logoutBtn) {
+        logoutBtn.addEventListener("click", async () => {
+          if (confirm("로그아웃 하시겠습니까?")) {
+            try { await signOut(auth); location.href = "index.html"; } 
+            catch(e) { console.error("로그아웃 실패:", e); }
+          }
+        });
+      }
 
       const btnOverview = document.getElementById("btnGoWorklogOverview");
       if (btnOverview) {

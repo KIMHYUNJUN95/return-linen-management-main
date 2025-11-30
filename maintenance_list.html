@@ -31,7 +31,9 @@
       margin: 0;
     }
 
-    /* 🔹 Header CSS (NEW GRID SYSTEM - Consistent with other pages) */
+    /* =========================================
+       🔹 HEADER CSS (강제 적용 - Grid System)
+       ========================================= */
     .main-header {
       position: fixed;
       top: 0;
@@ -51,14 +53,14 @@
       margin: 0 auto;
       padding: 0 24px;
       /* ✅ Grid로 좌-중-우 완벽 분리 */
-      display: grid;
-      grid-template-columns: 1fr auto 1fr;
-      align-items: center;
+      display: grid !important;
+      grid-template-columns: 1fr auto 1fr !important;
+      align-items: center !important;
     }
 
     /* 1. 로고: 왼쪽 정렬 */
     .logo {
-      justify-self: start;
+      justify-self: start !important;
       font-family: 'Noto Sans KR', sans-serif;
       font-weight: 700;
       font-size: 18px;
@@ -69,13 +71,16 @@
 
     /* 2. 메뉴 랩: 중앙 정렬 */
     .menu-wrap {
-      justify-self: center;
+      justify-self: center !important;
       position: relative;
+      display: flex;
+      align-items: center;
     }
 
     /* 3. 로그아웃: 오른쪽 정렬 */
     .logout-btn {
-      justify-self: end;
+      justify-self: end !important;
+      display: block !important; /* 모바일에서도 강제 표시 */
       background: transparent;
       border: none;
       color: var(--tk-black);
@@ -87,11 +92,9 @@
       padding: 4px 0;
       transition: opacity 0.3s;
     }
-    .logout-btn:hover {
-      opacity: 0.6;
-    }
+    .logout-btn:hover { opacity: 0.6; }
 
-    /* 메뉴 버튼 */
+    /* 메뉴 버튼 스타일 */
     .menu-toggle {
       background: transparent;
       border: none;
@@ -123,7 +126,6 @@
       display: block;
       transition: transform 0.3s ease;
     }
-
     .menu-toggle[aria-expanded="true"] .line1 { transform: rotate(45deg) translate(2px, 2px); }
     .menu-toggle[aria-expanded="true"] .line2 { transform: rotate(-45deg) translate(2px, -2px); width: 18px; }
 
@@ -135,7 +137,7 @@
       left: 50%;
       transform: translateX(-50%);
       width: 220px;
-      background: var(--tk-white);
+      background: #fff;
       border: 1px solid var(--tk-border);
       padding: 12px 0;
       flex-direction: column;
@@ -144,17 +146,14 @@
       z-index: 1001;
       margin-top: 10px;
     }
-
     .menu-list.open {
       display: flex;
       animation: fadeInDropdown 0.2s ease-out;
     }
-
     @keyframes fadeInDropdown {
       from { opacity: 0; transform: translate(-50%, -10px); }
       to { opacity: 1; transform: translate(-50%, 0); }
     }
-
     .menu-list li a {
       display: block;
       padding: 10px 24px;
@@ -183,10 +182,7 @@
       .logo { font-size: 16px; }
       .menu-label { font-size: 11px; }
       .menu-toggle { gap: 6px; }
-      .logout-btn { 
-        display: block; /* 모바일에서도 표시 */
-        font-size: 10px; 
-      }
+      .logout-btn { font-size: 10px; }
 
       .menu-list {
         position: fixed;
@@ -207,13 +203,8 @@
       }
       .menu-list li a { padding: 14px 24px; font-size: 14px; }
     }
-  </style>
 
-  <!-- =============================
-       maintenance_list 원본 스타일
-       ============================= -->
-  <style>
-    body { background-color:#F8FAFC; color:#2C3E50; }
+    /* maintenance_list 본문 스타일 */
     main { max-width:1200px; margin:0 auto; padding:40px 24px; }
 
     .page-header {
@@ -222,7 +213,7 @@
       border-bottom:1px solid #E2E8F0;
     }
 
-    h2 { margin:0; font-size:28px; font-weight:800; }
+    h2 { margin:0; font-size:28px; font-weight:800; color: #2C3E50; }
 
     .btn-add {
       background:#2C3E50; color:#fff; padding:12px 24px;
@@ -321,7 +312,7 @@
     .modal-card{background:transparent;} 
     #modalImg{width:100%; max-height:80vh; object-fit:contain;}
     
-    /* 📘 보수 방법 모달을 위한 추가 스타일 (텍스트 모달은 흰색 배경 필요) */
+    /* 📘 보수 방법 모달 */
     #methodModal .modal-card {
         background: #fff;
         border-radius: 0;
@@ -357,7 +348,6 @@
         cursor: pointer;
     }
     
-    /* 보수 방법 버튼 스타일 (리스트용) */
     .method-btn {
         display: block;
         width: 100%;
@@ -383,6 +373,8 @@
       .btn-add{width:100%; justify-content:center;}
       .building-tabs button{flex:1 1 45%;}
     }
+
+    footer { text-align: center; padding: 2rem; color: #94A3B8; font-size: 0.8rem; border-top: 1px solid #E2E8F0; margin-top: 2rem; background: #fff; }
   </style>
 </head>
 
@@ -402,7 +394,7 @@
   </script>
 
   <!-- =============================
-       🔥 헤더 HTML (New Grid System)
+       🔥 헤더 HTML (Inlined & Unified)
        ============================= -->
   <header class="main-header">
     <div class="header-inner">
@@ -421,7 +413,7 @@
 
         <ul class="menu-list" role="menu">
           <li><a href="board.html">게시판</a></li>
-          <li><a href="chat.html">채팅</a></li>
+          <li><a href="chat.html" data-menu="chat">채팅</a></li>
           <li><a href="incoming_form.html">입고등록</a></li>
           <li><a href="return_form.html">반품등록</a></li>
           <li><a href="history_dashboard.html">내역관리</a></li>
@@ -433,7 +425,11 @@
           <li><a href="worklog.html">근무기록</a></li>
           <li><a href="notices.html">공지사항</a></li>
           <li><a href="profile.html">내 정보</a></li>
+          <li><a id="installHaruBtn">앱 설치</a></li>
           <li><a href="schedule_dashboard.html">작업 스케줄러</a></li>
+          
+          <!-- ✅ CS 관리 메뉴 추가 (강조) -->
+          <li><a href="cs_dashboard.html" style="color:#e74c3c; font-weight:700;">CS 관리</a></li>
 
           <li class="super-admin-only" style="display:none;"><a href="admin.html" class="admin-link">관리자 설정</a></li>
           <li class="super-admin-only" style="display:none;"><a href="admin_users.html" class="admin-link">사용자 관리</a></li>
@@ -508,7 +504,7 @@
     </div>
   </div>
 
-  <!-- 📘 보수 방법 모달 (추가됨) -->
+  <!-- 📘 보수 방법 모달 -->
   <div id="methodModal" class="modal-bg" style="z-index: 10000;">
     <div class="modal-card">
       <h3>REPAIR METHOD (보수 방법)</h3>
@@ -524,7 +520,7 @@
   </footer>
 
   <!-- =============================
-       메뉴 토글 스크립트
+       🔥 헤더 JS (Toggle)
        ============================= -->
   <script>
     document.addEventListener('DOMContentLoaded', () => {
@@ -562,21 +558,16 @@
 
       const SUPER_ADMIN_EMAIL = "rlaguswns95@haru-tokyo.com";
 
-      // 로그아웃 confirm 기능
       const logoutBtn = document.getElementById("logoutBtn");
       if (logoutBtn) {
-        logoutBtn.addEventListener("click", () => {
+        logoutBtn.addEventListener("click", async () => {
           if (confirm("로그아웃 하시겠습니까?")) {
-            signOut(auth).then(() => {
-              location.href = "index.html";
-            }).catch(err => {
-              console.error("로그아웃 실패:", err);
-            });
+            try { await signOut(auth); location.href = "index.html"; } 
+            catch(e) { console.error("로그아웃 실패:", e); }
           }
         });
       }
 
-      // 관리자 페이지 표시
       onAuthStateChanged(auth, (user) => {
         if (user && user.email === SUPER_ADMIN_EMAIL) {
           document.querySelectorAll(".super-admin-only").forEach(el => {

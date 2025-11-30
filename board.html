@@ -8,17 +8,90 @@
   <!-- 공통 스타일 -->
   <link rel="stylesheet" href="common.css">
 
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+
   <style>
     /* -------------------------------
        🎨 Page Specific Styles
        Theme: Tokyo Day Bright (Minimal)
        ------------------------------- */
+    :root {
+      --tk-black: #111111;
+      --tk-gray: #888888;
+      --tk-light-gray: #f4f4f4;
+      --tk-white: #ffffff;
+      --tk-border: #e0e0e0;
+      --haru-navy: #2C3E50;
+      --haru-gold: #D4AF37;
+      --bg-base: #F8FAFC;
+    }
     
+    * { box-sizing: border-box; border-radius: 0px !important; }
+
     body {
-      background-color: var(--bg-base); /* Soft Gray (#F8FAFC) */
+      background-color: var(--bg-base);
       color: var(--haru-navy);
+      font-family: 'Noto Sans KR', sans-serif;
+      margin: 0;
+      padding-top: 60px; /* 헤더 공간 확보 */
     }
 
+    /* 🔹 Header CSS (Unified Grid System) */
+    .main-header {
+      position: fixed; top: 0; left: 0; width: 100%; height: 60px;
+      background: rgba(255, 255, 255, 0.95);
+      border-bottom: 1px solid var(--tk-border);
+      z-index: 1000;
+      backdrop-filter: blur(5px);
+    }
+
+    .header-inner {
+      width: 100%; max-width: 1400px; height: 100%; margin: 0 auto; padding: 0 24px;
+      display: grid !important;
+      grid-template-columns: 1fr auto 1fr !important;
+      align-items: center !important;
+    }
+
+    .logo { justify-self: start !important; font-family: 'Noto Sans KR', sans-serif; font-weight: 700; font-size: 18px; color: var(--tk-black); letter-spacing: 0.15em; text-transform: uppercase; }
+    .menu-wrap { justify-self: center !important; position: relative; display: flex; align-items: center; }
+    .logout-btn { justify-self: end !important; display: block !important; background: transparent; border: none; color: var(--tk-black); font-size: 11px; font-weight: 500; letter-spacing: 0.1em; cursor: pointer; text-transform: uppercase; padding: 4px 0; transition: opacity 0.3s; }
+    .logout-btn:hover { opacity: 0.6; }
+
+    .menu-toggle { background: transparent; border: none; cursor: pointer; display: flex; align-items: center; gap: 8px; padding: 8px; transition: opacity 0.3s; }
+    .menu-toggle:hover { opacity: 0.6; }
+    .menu-label { font-size: 12px; font-weight: 600; color: var(--tk-black); letter-spacing: 0.1em; }
+    .hamburger-lines { display: flex; flex-direction: column; gap: 4px; }
+    .line { width: 18px; height: 1.5px; background-color: var(--tk-black); display: block; transition: transform 0.3s ease; }
+    .menu-toggle[aria-expanded="true"] .line1 { transform: rotate(45deg) translate(2px, 2px); }
+    .menu-toggle[aria-expanded="true"] .line2 { transform: rotate(-45deg) translate(2px, -2px); width: 18px; }
+
+    .menu-list {
+      display: none; position: absolute; top: 100%; left: 50%; transform: translateX(-50%); width: 220px;
+      background: var(--tk-white); border: 1px solid var(--tk-border); padding: 12px 0;
+      flex-direction: column; box-shadow: 0 10px 40px rgba(0, 0, 0, 0.05); list-style: none; z-index: 1001; margin-top: 10px;
+    }
+    .menu-list.open { display: flex; animation: fadeInDropdown 0.2s ease-out; }
+    @keyframes fadeInDropdown { from { opacity: 0; transform: translate(-50%, -10px); } to { opacity: 1; transform: translate(-50%, 0); } }
+    .menu-list li a { display: block; padding: 10px 24px; font-size: 13px; color: var(--tk-gray); text-decoration: none; transition: all 0.2s; border-left: 2px solid transparent; }
+    .menu-list li a:hover { background-color: #fafafa; color: var(--tk-black); border-left-color: var(--tk-black); padding-left: 30px; }
+    .menu-list li a.admin-link { color: #e74c3c; font-weight: 600; }
+
+    @media (max-width: 768px) {
+      .main-header { height: 50px; }
+      .header-inner { padding: 0 16px; }
+      .logo { font-size: 16px; }
+      .menu-label { font-size: 11px; }
+      .logout-btn { font-size: 10px; }
+      .menu-list { position: fixed; top: 50px; left: 0; right: 0; width: 100vw; transform: none; margin-top: 0; border: none; border-bottom: 1px solid var(--tk-border); box-shadow: 0 5px 10px rgba(0,0,0,0.05); }
+      .menu-list.open { animation: fadeInMobile 0.2s ease-out; }
+      @keyframes fadeInMobile { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
+      .menu-list li a { padding: 14px 24px; font-size: 14px; }
+    }
+
+    /* 🔹 Board Main Styles */
     main {
       display: flex;
       justify-content: center;
@@ -31,8 +104,8 @@
       max-width: 1000px;
       margin: 0 auto 60px;
       background: #FFFFFF;
-      border: 1px solid #E2E8F0;
-      border-radius: 0; /* 건축적 미니멀리즘 */
+      border: 1px solid var(--tk-border);
+      border-radius: 0;
       padding: 40px;
       box-shadow: 0 10px 30px rgba(0,0,0,0.03);
       animation: fadeIn 0.5s ease-out;
@@ -41,7 +114,7 @@
     /* 타이틀 섹션 */
     .board-header {
       margin-bottom: 40px;
-      border-bottom: 1px solid #E2E8F0;
+      border-bottom: 1px solid var(--tk-border);
       padding-bottom: 20px;
       display: flex;
       justify-content: space-between;
@@ -60,23 +133,18 @@
     .board-subtitle {
       font-size: 13px;
       color: #94A3B8;
-      font-family: var(--font-en);
+      font-family: 'Inter', sans-serif;
       letter-spacing: 0.05em;
       text-transform: uppercase;
     }
 
-    /* ================================
-       📊 테이블 스타일 (Modern Minimal)
-       ================================ */
-    .table-wrap {
-      overflow-x: auto;
-    }
-
+    /* 테이블 스타일 */
+    .table-wrap { overflow-x: auto; }
     table.board-table {
       width: 100%;
       border-collapse: collapse;
       font-size: 14px;
-      table-layout: fixed; /* 컬럼 너비 고정 */
+      table-layout: fixed;
     }
 
     .board-table thead th {
@@ -86,7 +154,7 @@
       font-size: 12px;
       padding: 16px 12px;
       text-align: center;
-      border-bottom: 2px solid #E2E8F0;
+      border-bottom: 2px solid var(--tk-border);
       text-transform: uppercase;
       letter-spacing: 0.05em;
     }
@@ -99,73 +167,28 @@
       word-break: break-word;
     }
 
-    .board-table tbody tr:hover td {
-      background: #FAFAFA;
-    }
+    .board-table tbody tr:hover td { background: #FAFAFA; }
 
-    /* 컬럼 별 스타일 */
-    .board-no {
-      width: 60px;
-      text-align: center;
-      color: #94A3B8;
-      font-family: var(--font-en);
-      font-size: 12px;
-    }
+    .board-no { width: 60px; text-align: center; color: #94A3B8; font-size: 12px; }
+    .board-title { text-align: left; cursor: pointer; font-weight: 500; color: var(--haru-navy); transition: color 0.2s; }
+    .board-title:hover { color: var(--haru-gold); text-decoration: underline; text-underline-offset: 4px; }
+    .board-date { width: 120px; text-align: center; color: #94A3B8; font-size: 12px; }
 
-    .board-title {
-      text-align: left;
-      cursor: pointer;
-      font-weight: 500;
-      color: var(--haru-navy);
-      transition: color 0.2s;
-    }
-    .board-title:hover {
-      color: var(--haru-gold);
-      text-decoration: underline;
-      text-underline-offset: 4px;
-    }
+    /* 공지사항 강조 */
+    .pinned-row td { background: #FFFEF2; }
+    .pinned-row:hover td { background: #FFFBE0; }
+    .pinned-row .board-title { font-weight: 700; }
+    .pinned-badge { display: inline-block; padding: 2px 6px; background: var(--haru-navy); color: #fff; font-size: 10px; margin-right: 6px; border-radius: 2px; font-weight: 700; }
 
-    .board-date {
-      width: 120px;
-      text-align: center;
-      color: #94A3B8;
-      font-size: 12px;
-      font-family: var(--font-en);
-    }
-
-    /* 공지사항 강조 (Soft Yellow Background) */
-    .pinned-row td {
-      background: #FFFEF2;
-    }
-    .pinned-row:hover td {
-      background: #FFFBE0;
-    }
-    .pinned-row .board-title {
-      font-weight: 700;
-    }
-    .pinned-badge {
-      display: inline-block;
-      padding: 2px 6px;
-      background: var(--haru-navy);
-      color: #fff;
-      font-size: 10px;
-      margin-right: 6px;
-      border-radius: 2px;
-      font-weight: 700;
-    }
-
-    /* ================================
-       📝 글쓰기 폼 & 버튼
-       ================================ */
+    /* 글쓰기 버튼 및 폼 */
     .board-bottom-bar {
       display: flex;
       justify-content: flex-end;
       margin-top: 30px;
       padding-top: 20px;
-      border-top: 1px solid #E2E8F0;
+      border-top: 1px solid var(--tk-border);
     }
 
-    /* 버튼 스타일 (Sharp & Minimal) */
     .board-write-btn {
       display: inline-flex;
       align-items: center;
@@ -182,135 +205,47 @@
       border-radius: 0;
       letter-spacing: 0.05em;
     }
+    .board-write-btn:hover { background: #000000; border-color: #000000; }
 
-    .board-write-btn:hover {
-      background: #000000;
-      border-color: #000000;
-    }
-
-    /* 글쓰기 폼 영역 */
     .post-form {
       background: #F8FAFC;
       padding: 30px;
       margin-top: 20px;
-      border: 1px solid #E2E8F0;
-      display: none; /* 토글 */
+      border: 1px solid var(--tk-border);
+      display: none;
       animation: slideDown 0.3s ease-out;
     }
     .post-form.is-open { display: block; }
-
     .post-form-row { margin-bottom: 20px; }
+    .post-form label { display: block; font-size: 12px; font-weight: 700; color: #64748B; margin-bottom: 8px; text-transform: uppercase; }
+    .post-form input[type="text"], .post-form textarea {
+      width: 100%; padding: 12px; border: 1px solid #CBD5E1; background: #FFFFFF; border-radius: 0; font-size: 14px; color: var(--haru-navy); transition: all 0.2s;
+    }
+    .post-form input[type="text"]:focus, .post-form textarea:focus { outline: none; border-color: var(--haru-navy); }
+    .post-form textarea { min-height: 180px; resize: vertical; }
 
-    .post-form label {
-      display: block;
-      font-size: 12px;
-      font-weight: 700;
-      color: #64748B;
-      margin-bottom: 8px;
-      text-transform: uppercase;
-    }
+    .pinned-label { display: flex; align-items: center; gap: 8px; cursor: pointer; margin-top: 10px; }
+    .pinned-label input { width: 16px; height: 16px; accent-color: var(--haru-navy); }
+    .post-form button[type="submit"] { width: 100%; height: 48px; margin-top: 20px; background: var(--haru-navy); color: #FFF; font-weight: 700; font-size: 14px; border: none; cursor: pointer; transition: background 0.2s; }
+    .post-form button[type="submit"]:hover { background: var(--haru-gold); }
 
-    .post-form input[type="text"],
-    .post-form textarea {
-      width: 100%;
-      padding: 12px;
-      border: 1px solid #CBD5E1;
-      background: #FFFFFF;
-      border-radius: 0;
-      font-size: 14px;
-      color: var(--haru-navy);
-      transition: all 0.2s;
-    }
-
-    .post-form input[type="text"]:focus,
-    .post-form textarea:focus {
-      outline: none;
-      border-color: var(--haru-navy);
-    }
-
-    .post-form textarea {
-      min-height: 180px;
-      resize: vertical;
-    }
-
-    /* 체크박스 커스텀 */
-    .pinned-label {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      cursor: pointer;
-      margin-top: 10px;
-    }
-    .pinned-label input {
-      width: 16px;
-      height: 16px;
-      accent-color: var(--haru-navy);
-    }
-
-    /* 폼 내부 버튼 */
-    .post-form button[type="submit"] {
-      width: 100%;
-      height: 48px;
-      margin-top: 20px;
-      background: var(--haru-navy);
-      color: #FFF;
-      font-weight: 700;
-      font-size: 14px;
-      border: none;
-      cursor: pointer;
-      transition: background 0.2s;
-    }
-    .post-form button[type="submit"]:hover {
-      background: var(--haru-gold);
-    }
-
-    /* ================================
-       🛠️ 모달 스타일 (버그 수정됨)
-       ================================ */
+    /* 모달 */
     .modal-bg {
-      position: fixed; /* 화면 고정 (필수) */
-      top: 0;
-      left: 0;
-      width: 100vw;
-      height: 100vh;
-      background: rgba(44, 62, 80, 0.6); /* 배경 어둡게 */
-      backdrop-filter: blur(4px); /* 블러 효과 */
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      z-index: 9999; /* 최상단 */
+      position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+      background: rgba(44, 62, 80, 0.6); backdrop-filter: blur(4px);
+      display: none; justify-content: center; align-items: center; z-index: 9999;
     }
-
     .modal {
-      background: #FFFFFF;
-      width: 90%;
-      max-width: 600px;
-      max-height: 85vh;
-      overflow-y: auto; /* 내용 길면 스크롤 */
-      border-radius: 0; /* 각진 모서리 */
-      border: 1px solid #E2E8F0;
-      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
-      padding: 40px;
-      position: relative;
-      animation: fadeIn 0.2s ease-out;
+      background: #FFFFFF; width: 90%; max-width: 600px; max-height: 85vh; overflow-y: auto;
+      border: 1px solid var(--tk-border); box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+      padding: 40px; position: relative; animation: fadeIn 0.2s ease-out;
     }
 
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(10px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-    @keyframes slideDown {
-      from { opacity: 0; transform: translateY(-10px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
 
-    /* Mobile */
     @media (max-width: 768px) {
-      .board-container {
-        padding: 20px;
-        border: none;
-        box-shadow: none;
-      }
+      .board-container { padding: 20px; border: none; box-shadow: none; }
       .board-header { flex-direction: column; align-items: flex-start; gap: 8px; }
       .board-no { display: none; }
       .board-date { width: 90px; font-size: 11px; }
@@ -322,8 +257,55 @@
 </head>
 
 <body>
-  <!-- ✅ 헤더 로드 -->
-  <div id="header-placeholder"></div>
+  <!-- 🟢 FIREBASE CONFIGURATION -->
+  <script>
+    window.__firebase_config = JSON.stringify({
+      apiKey: "AIzaSyAyD0Gn5-zqzPzdXjQzZhVlMQvqTzUmHKs",
+      authDomain: "return-linen-management.firebaseapp.com",
+      projectId: "return-linen-management",
+      storageBucket: "return-linen-management.firebasestorage.app",
+      messagingSenderId: "310421638033",
+      appId: "1:310421638033:web:280047bf93a8c780f8e830",
+      measurementId: "G-D6BDRRKD9Y"
+    });
+  </script>
+
+  <!-- 🔹 Header (Inlined & Unified) -->
+  <header class="main-header">
+    <div class="header-inner">
+      <div class="logo">HARU</div>
+      <div class="menu-wrap">
+        <button class="menu-toggle" aria-haspopup="true" aria-expanded="false">
+          <span class="menu-label">MENU</span>
+          <div class="hamburger-lines"><span class="line line1"></span><span class="line line2"></span></div>
+        </button>
+        <ul class="menu-list" role="menu">
+          <li><a href="board.html">게시판</a></li>
+          <li><a href="chat.html" data-menu="chat">채팅</a></li>
+          <li><a href="incoming_form.html">입고등록</a></li>
+          <li><a href="return_form.html">반품등록</a></li>
+          <li><a href="history_dashboard.html">내역관리</a></li>
+          <li><a href="inventory.html">재고관리</a></li>
+          <li><a href="admin_dashboard.html">린넨 통계</a></li>
+          <li><a href="lost_items_list.html">분실물관리</a></li>
+          <li><a href="maintenance_list.html">객실유지보수</a></li>
+          <li><a href="orders_list.html">주문요청</a></li>
+          <li><a href="worklog.html">근무기록</a></li>
+          <li><a href="notices.html">공지사항</a></li>
+          <li><a href="profile.html">내 정보</a></li>
+          <li><a id="installHaruBtn">앱 설치</a></li>
+          <li><a href="schedule_dashboard.html">작업 스케줄러</a></li>
+          
+          <!-- ✅ CS 관리 메뉴 추가 -->
+          <li><a href="cs_dashboard.html" style="color:#e74c3c; font-weight:700;">CS 관리</a></li>
+
+          <li class="super-admin-only" style="display:none;"><a href="admin.html" class="admin-link">관리자 설정</a></li>
+          <li class="super-admin-only" style="display:none;"><a href="admin_users.html" class="admin-link">사용자 관리</a></li>
+        </ul>
+      </div>
+      <button id="logoutBtn" class="logout-btn">SIGN OUT</button>
+    </div>
+  </header>
 
   <main>
     <div class="board-container">
@@ -383,11 +365,61 @@
     © 2025 HARU SYSTEM · TOKYO
   </footer>
 
-  <!-- ✅ 기능 스크립트 -->
+  <!-- =============================
+       🔥 헤더 & 인증 & 로직 스크립트
+       ============================= -->
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      // 메뉴 토글
+      const toggleBtn = document.querySelector('.menu-toggle');
+      const menuList = document.querySelector('.menu-list');
+      if (toggleBtn && menuList) {
+        toggleBtn.addEventListener("click", () => {
+          const open = menuList.classList.toggle("open");
+          toggleBtn.setAttribute("aria-expanded", open);
+        });
+        document.addEventListener("click", (e) => {
+          if (!menuList.contains(e.target) && !toggleBtn.contains(e.target)) {
+            menuList.classList.remove("open");
+            toggleBtn.setAttribute("aria-expanded", "false");
+          }
+        });
+      }
+    });
+  </script>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getAuth, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+    import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+    if (window.__firebase_config) {
+      const app = initializeApp(JSON.parse(window.__firebase_config));
+      const auth = getAuth(app);
+      const db = getFirestore(app);
+      const SUPER_ADMIN_EMAIL = "rlaguswns95@haru-tokyo.com";
+
+      // 로그아웃
+      const logoutBtn = document.getElementById("logoutBtn");
+      if(logoutBtn) {
+        logoutBtn.addEventListener("click", async () => {
+          if(!confirm("로그아웃 하시겠습니까?")) return;
+          try { await signOut(auth); location.href = "index.html"; } catch(e) { console.error(e); }
+        });
+      }
+
+      // 관리자 체크
+      onAuthStateChanged(auth, (user) => {
+        if (user && user.email === SUPER_ADMIN_EMAIL) {
+          document.querySelectorAll(".super-admin-only").forEach(el => el.style.display = 'block');
+        }
+      });
+    }
+  </script>
+
   <script type="module" src="board.js"></script>
   <script type="module" src="scrollTop.js"></script>
   <script type="module" src="notice_popup.js"></script>
-
 
 </body>
 </html>
