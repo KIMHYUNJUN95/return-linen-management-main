@@ -40,7 +40,7 @@
     /* Typography */
     h1 { font-size: 1.75rem; font-weight: 800; letter-spacing: -0.02em; color: var(--color-text-primary); margin-bottom: 2rem; text-transform: uppercase; border-left: 4px solid var(--color-accent); padding-left: 1rem; line-height: 1; }
 
-    /* Filters */
+    /* Filters (Architectural Bar) */
     .filters { display: flex; gap: 1rem; align-items: flex-end; flex-wrap: wrap; background: #fff; border: 1px solid var(--color-border); padding: 1.5rem; margin-bottom: 2rem; }
     .filters .group { display: flex; flex-direction: column; gap: 0.5rem; flex: 1; min-width: 140px; }
     .filters label { font-weight: 700; font-size: 0.85rem; color: var(--color-text-primary); text-transform: uppercase; }
@@ -58,27 +58,30 @@
     .btn-secondary:hover { border-color: var(--color-primary); }
     .btn-accent { background: var(--color-accent); color: #fff; border-color: var(--color-accent); }
 
-    /* ✅ [수정] 통계 카드 스타일 (JS 생성 요소 대응 강화) */
+    /* ✅ [핵심 수정] 통계 카드 높이 강제 고정 CSS 
+       자바스크립트가 어떤 클래스로 만들든 구조(div > div)만 같으면 적용됨
+    */
     .stats-grid {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
       gap: 1rem;
       margin-bottom: 2rem;
     }
-    .stat-card {
+    
+    /* 1. 카드 본체 스타일 */
+    .stats-grid > div {
       background: #fff;
       border: 1px solid var(--color-border);
-      padding: 1.5rem 1rem;
+      padding: 1.5rem 0.5rem;
       text-align: center;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: flex-start; /* 상단 정렬 */
     }
-    
-    /* ✨ 핵심: 제목 높이 강제 고정 (JS가 생성하는 요소에도 적용되도록 선택자 추가) */
-    .stat-title,
-    .stat-card > div:first-child { 
+
+    /* 2. 제목 (첫 번째 자식 요소) - 높이 50px 고정 */
+    .stats-grid > div > div:first-child {
       font-size: 0.8rem;
       font-weight: 700;
       color: var(--color-text-secondary);
@@ -86,26 +89,28 @@
       letter-spacing: 0.05em;
       margin-bottom: 0.5rem;
       
-      /* 높이 40px 고정 -> 두 줄이어도, 한 줄이어도 똑같은 공간 차지 */
-      height: 40px !important; 
-      width: 100%;
-      display: flex;
-      align-items: center; /* 수직 중앙 정렬 */
-      justify-content: center;
+      /* ✨ 여기가 핵심: 높이를 50px로 고정해버림 */
+      height: 50px !important;
+      min-height: 50px !important; 
+      max-height: 50px !important;
+      
+      /* 내용 중앙 정렬 */
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
       line-height: 1.2;
+      overflow: hidden; /* 혹시 넘치면 자름 */
     }
 
-    /* 숫자 스타일 */
-    .stat-value,
-    .stat-card > div:last-child {
+    /* 3. 숫자 (마지막 자식 요소) */
+    .stats-grid > div > div:last-child {
       font-family: var(--font-en, sans-serif);
       font-size: 2.5rem;
       font-weight: 800;
       color: var(--color-text-primary);
       line-height: 1;
+      margin-top: auto; /* 가능한 아래쪽으로 밀기 */
     }
-    .stat-value.done { color: #27AE60; }
-    .stat-value.overdue { color: #E74C3C; }
 
     /* Calendar Customization */
     .calendar-card { background: #fff; border: 1px solid var(--color-border); padding: 1.5rem; }
@@ -136,6 +141,7 @@
       .filters { flex-direction: column; align-items: stretch; gap: 1rem; }
       .actions { margin-left: 0; display: grid; grid-template-columns: 1fr 1fr 1fr; width: 100%; }
       .btn { padding: 0 0.5rem; font-size: 0.8rem; width: 100%; }
+      
       .stat-value { font-size: 2rem; }
       .stats-grid { gap: 0.5rem; }
     }
@@ -272,12 +278,8 @@
       </div>
     </section>
 
-    <!-- 
-      ✅ [수정 완료] 
-      HTML 통계 카드 섹션 삭제됨.
-      이제 자바스크립트가 생성하는 카드만 나오며, 
-      CSS가 그 카드들의 높이(40px)를 강제로 맞춰줍니다.
-    -->
+    <!-- JS가 생성하는 통계 카드 공간 (자동 삽입됨) -->
+    <!-- CSS가 이 부분의 스타일을 제어합니다 -->
 
     <!-- 캘린더 -->
     <section class="calendar-card">

@@ -47,7 +47,7 @@ const mobileListEl = document.getElementById('mobileList');
 // Filters
 const fBuilding = document.getElementById('fBuilding');
 const fStatus = document.getElementById('fStatus');
-const fMonth = document.getElementById('fMonth'); // Monthly Summary Filter
+// const fMonth = document.getElementById('fMonth'); // Removed based on HTML
 const btnRefresh = document.getElementById('btnRefresh');
 const btnGoOverview = document.getElementById('btnGoOverview');
 
@@ -163,8 +163,8 @@ function renderMobileList(data) {
         </div>
         
         <div style="font-size:0.85rem; color:#64748B; margin-top:0.8rem; display:flex; justify-content:space-between;">
-           <span>DUE: <strong style="color:#2C3E50;">${dueDate || '-'}</strong></span>
-           <span>CYCLE: ${d.cycleMonths || 0} MON</span>
+            <span>DUE: <strong style="color:#2C3E50;">${dueDate || '-'}</strong></span>
+            <span>CYCLE: ${d.cycleMonths || 0} MON</span>
         </div>
       </div>
     `;
@@ -205,7 +205,7 @@ async function loadSchedules() {
 function applyFiltersAndRender() {
   const buildingVal = fBuilding ? fBuilding.value : "";
   const statusVal = fStatus ? fStatus.value : "";
-  const monthVal = fMonth ? fMonth.value : ""; // YYYY-MM
+  // const monthVal = fMonth ? fMonth.value : ""; // Removed based on HTML
 
   const today = todayISO();
 
@@ -227,13 +227,6 @@ function applyFiltersAndRender() {
         if (statusVal === 'upcoming' && !isUpcoming) return false;
     }
 
-    // 3. Month Filter (Check both due date and start date)
-    if (monthVal) {
-        const dueMatch = dueDate && dueDate.startsWith(monthVal);
-        const startMatch = startDate && startDate.startsWith(monthVal);
-        if (!dueMatch && !startMatch) return false;
-    }
-
     return true;
   });
 
@@ -243,9 +236,7 @@ function applyFiltersAndRender() {
     if (!dueDate) return null;
     
     const statusInfo = getStatusInfo(d.status, dueDate);
-    // Optional: Hide 'done' tasks from calendar to reduce clutter
-    // if (d.status === 'done') return null;
-
+    
     return {
       id: d.id,
       title: `${d.room ? d.room : ''} ${d.taskName}`,
@@ -264,20 +255,26 @@ function applyFiltersAndRender() {
 }
 
 // ========================================
-// 📊 Monthly Summary
+// 📊 Monthly Summary (디자인 수정됨: CSS 클래스 사용)
 // ========================================
 function renderMonthlySummary(items) {
-    const container = document.createElement('div');
-    // Ensure container exists
+    // 1. 통계 섹션 찾기 또는 생성
     let summarySection = document.getElementById('monthlySummarySection');
+    
     if (!summarySection) {
         summarySection = document.createElement('section');
         summarySection.id = 'monthlySummarySection';
-        summarySection.style.marginBottom = '20px';
+        // ✅ 여기서 'stats-grid' 클래스를 주어서 CSS가 먹히게 함
+        summarySection.className = 'stats-grid'; 
+        
         const calCard = document.querySelector('.calendar-card');
         if(calCard) calCard.parentNode.insertBefore(summarySection, calCard);
+    } else {
+        // 혹시 클래스가 없으면 추가
+        summarySection.className = 'stats-grid';
     }
 
+    // 2. 데이터 계산
     const ym = yyyymmOf(new Date()); // Current Month
     const currentMonthItems = items.filter(it => {
         const next = toISODate(it.nextDueDate || it.nextDue);
@@ -289,22 +286,22 @@ function renderMonthlySummary(items) {
     const overdue = currentMonthItems.filter(it => {
         const d = toISODate(it.nextDueDate || it.nextDue);
         return it.status !== 'done' && d < todayISO();
-    }).length;
+    }); // length는 아래 HTML에서 .length로 사용
 
+    // 3. HTML 생성 (CSS 클래스 'stat-card', 'stat-title', 'stat-value' 사용)
+    // ✅ CSS에서 .stat-title에 높이 50px를 고정해뒀으므로, 줄바꿈이 생겨도 숫자는 밀리지 않음
     summarySection.innerHTML = `
-        <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:1rem;">
-            <div style="background:#fff; border:1px solid #CBD5E1; padding:1.5rem; text-align:center;">
-                <div style="font-weight:700; color:#64748B; font-size:0.8rem;">TOTAL TASKS</div>
-                <div style="font-size:1.8rem; font-weight:800; color:#2C3E50;">${total}</div>
-            </div>
-            <div style="background:#fff; border:1px solid #CBD5E1; padding:1.5rem; text-align:center;">
-                <div style="font-weight:700; color:#64748B; font-size:0.8rem;">DONE</div>
-                <div style="font-size:1.8rem; font-weight:800; color:#166534;">${done}</div>
-            </div>
-            <div style="background:#fff; border:1px solid #CBD5E1; padding:1.5rem; text-align:center;">
-                <div style="font-weight:700; color:#64748B; font-size:0.8rem;">OVERDUE</div>
-                <div style="font-size:1.8rem; font-weight:800; color:#991B1B;">${overdue}</div>
-            </div>
+        <div class="stat-card">
+            <div class="stat-title">TOTAL TASKS</div>
+            <div class="stat-value">${total}</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-title">DONE</div>
+            <div class="stat-value done">${done}</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-title">OVERDUE</div>
+            <div class="stat-value overdue">${overdue.length}</div>
         </div>
     `;
 }
@@ -445,14 +442,20 @@ function openPhotoModal(url) {
   if (!photoModal) return;
   const img = document.getElementById("photoImg");
   const link = document.getElementById("btnPhotoOpen");
+  const btnClose = document.getElementById("btnPhotoClose"); // 버튼 참조 추가
   
   if (img) img.src = url;
   if (link) link.href = url;
   
   photoModal.style.display = "flex";
-}
 
-if (btnPhotoClose) btnPhotoClose.onclick = () => (photoModal.style.display = "none");
+  // 닫기 버튼 이벤트 연결 (안전장치)
+  if (btnClose) {
+      btnClose.onclick = () => {
+          photoModal.style.display = "none";
+      };
+  }
+}
 
 // Close Buttons
 const btnDetailClose = document.getElementById('btnDetailClose');
@@ -479,6 +482,6 @@ if (auth) {
 
 if (fBuilding) fBuilding.addEventListener('change', applyFiltersAndRender);
 if (fStatus) fStatus.addEventListener('change', applyFiltersAndRender);
-if (fMonth) fMonth.addEventListener('change', applyFiltersAndRender);
+// if (fMonth) fMonth.addEventListener('change', applyFiltersAndRender);
 if (btnRefresh) btnRefresh.addEventListener('click', loadSchedules);
 if (btnGoOverview) btnGoOverview.addEventListener('click', () => location.href = 'schedule_overview.html');
