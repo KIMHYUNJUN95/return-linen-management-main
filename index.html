@@ -1,68 +1,55 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ko">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>HARU - Tokyo Winter Edition</title>
-  <meta name="description" content="린넨, 시설 유지보수, 분실물, 주문, 근무기록을 통합 관리합니다." />
-  
-  <!-- PWA -->
-  <link rel="manifest" href="manifest.json">
-  <meta name="theme-color" content="#0a0e14" />
-  <link rel="icon" href="icons/icon-192.png" />
+  <title>HARU - Tokyo Winter Glass</title>
   
   <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Inter:wght@300;400;600&family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
 
-  <!-- Styles -->
-  <link rel="stylesheet" href="common.css" />
-
   <style>
-    /* -------------------------------
-       ❄️ Tokyo Winter Glass Theme
-       ------------------------------- */
     :root {
-      --glass-bg: rgba(255, 255, 255, 0.1);
-      --glass-border: rgba(255, 255, 255, 0.15);
-      --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
-      --accent-gold: #FFD700;
-      --accent-red: #D42E2E;
+      --glass-bg: rgba(255, 255, 255, 0.15);
+      --glass-border: rgba(255, 255, 255, 0.2);
+      --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+      --input-bg: rgba(0, 0, 0, 0.2);
       --text-white: #FFFFFF;
-      --font-display: 'Cinzel', serif;
-      --font-body: 'Inter', 'Noto Sans KR', sans-serif;
+      --accent-red: #D42E2E;
+      --accent-gold: #FFD700;
     }
+
+    * { box-sizing: border-box; }
 
     body {
       margin: 0;
+      height: 100vh;
+      overflow: hidden;
+      font-family: 'Inter', 'Noto Sans KR', sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      /* 배경: 도쿄 타워가 중심에 있는 화려한 야경 */
       background: url('https://images.unsplash.com/photo-1503899036084-c55cdd92da26?q=80&w=1974&auto=format&fit=crop') no-repeat center center/cover;
-      background-attachment: fixed; /* 스크롤 시 배경 고정 */
-      color: var(--text-white);
-      font-family: var(--font-body);
-      overflow-x: hidden;
     }
 
     /* 배경 오버레이 */
     body::before {
       content: '';
-      position: fixed;
+      position: absolute;
       inset: 0;
-      background: radial-gradient(circle at center, rgba(10, 10, 20, 0.4), rgba(0, 0, 0, 0.85));
-      z-index: -1;
+      background: radial-gradient(circle at center, rgba(10, 10, 20, 0.3), rgba(0, 0, 0, 0.8));
+      z-index: 0;
     }
 
-    /* 기존 3D 캔버스 숨김 (새 디자인 적용을 위해) */
-    #bg-canvas {
-      display: none !important;
-    }
-
-    /* ❄️ 눈 내리는 효과 컨테이너 */
+    /* ❄️ 눈 내리는 배경 애니메이션 */
     .snow-container {
-      position: fixed;
+      position: absolute;
       inset: 0;
       pointer-events: none;
-      z-index: 0;
+      z-index: 1;
       overflow: hidden;
     }
     
@@ -79,323 +66,277 @@
       to { transform: translateY(110vh); }
     }
 
-    /* --- Hero Section --- */
-    .hero-section {
-      min-height: 70vh;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      text-align: center;
-      padding: 100px 20px 60px;
+    /* 💎 메인 글래스 카드 */
+    .glass-card {
       position: relative;
       z-index: 10;
-    }
-
-    .hero-glass-card {
-      background: var(--glass-bg);
-      backdrop-filter: blur(8px);
-      -webkit-backdrop-filter: blur(8px);
-      border: 1px solid var(--glass-border);
-      padding: 40px;
-      border-radius: 20px;
-      box-shadow: var(--glass-shadow);
-      max-width: 800px;
-      width: 100%;
-      animation: floatHero 6s ease-in-out infinite;
-    }
-
-    @keyframes floatHero {
-      0%, 100% { transform: translateY(0); }
-      50% { transform: translateY(-10px); }
-    }
-
-    .hero-title {
-      font-family: var(--font-display);
-      font-size: 3.5rem;
-      font-weight: 700;
-      margin-bottom: 20px;
-      /* Gold Gradient Text */
-      background: linear-gradient(to right, #fff, var(--accent-gold));
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      text-shadow: 0 0 20px rgba(255, 215, 0, 0.3);
-    }
-
-    .hero-subtitle {
-      font-size: 1.1rem;
-      color: rgba(255, 255, 255, 0.8);
-      margin-bottom: 40px;
-      line-height: 1.6;
-      font-weight: 300;
-    }
-
-    .hero-cta {
-      display: flex;
-      gap: 20px;
-      justify-content: center;
-      flex-wrap: wrap;
-    }
-
-    /* Buttons */
-    .btn {
-      padding: 14px 32px;
-      border-radius: 50px;
-      font-weight: 600;
-      text-decoration: none;
-      transition: all 0.3s;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-    }
-
-    .btn-primary {
-      background: linear-gradient(135deg, var(--accent-red), #8e0e0e);
-      color: white;
-      box-shadow: 0 4px 15px rgba(212, 46, 46, 0.4);
-      border: none;
-    }
-    .btn-primary:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 6px 20px rgba(212, 46, 46, 0.6);
-    }
-
-    .btn-secondary {
-      background: transparent;
-      color: var(--accent-gold);
-      border: 1px solid var(--accent-gold);
-    }
-    .btn-secondary:hover {
-      background: rgba(255, 215, 0, 0.1);
-      box-shadow: 0 0 15px rgba(255, 215, 0, 0.2);
-    }
-
-    /* --- Features Grid --- */
-    .features {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-      gap: 30px;
-      padding: 20px 40px 80px;
-      max-width: 1200px;
-      margin: 0 auto;
-      position: relative;
-      z-index: 10;
-    }
-
-    .feature-card {
+      width: 420px;
+      padding: 50px 40px;
+      border-radius: 20px !important;
+      
+      /* Glassmorphism Effect */
       background: var(--glass-bg);
       backdrop-filter: blur(12px);
       -webkit-backdrop-filter: blur(12px);
       border: 1px solid var(--glass-border);
-      border-radius: 16px;
-      padding: 30px;
+      box-shadow: var(--glass-shadow);
+      
       text-align: center;
-      transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-      cursor: pointer;
-      position: relative;
-      overflow: hidden;
+      color: var(--text-white);
+      
+      animation: float 6s ease-in-out infinite;
     }
 
-    .feature-card::before {
+    @keyframes float {
+      0% { transform: translateY(0px); }
+      50% { transform: translateY(-15px); }
+      100% { transform: translateY(0px); }
+    }
+
+    /* 장식 요소 (카드 상단 금색 띠) */
+    .glass-card::after {
       content: '';
       position: absolute;
-      top: 0; left: 0; right: 0; height: 3px;
-      background: linear-gradient(90deg, transparent, var(--accent-gold), transparent);
-      opacity: 0.5;
+      top: 0; left: 50%;
+      transform: translateX(-50%);
+      width: 60px;
+      height: 4px;
+      background: var(--accent-gold);
+      border-radius: 0 0 4px 4px !important;
+      box-shadow: 0 0 15px var(--accent-gold);
     }
 
-    .feature-card:hover {
-      transform: translateY(-10px) scale(1.02);
-      background: rgba(255, 255, 255, 0.15);
-      box-shadow: 0 15px 30px rgba(0,0,0,0.4);
-      border-color: var(--accent-gold);
+    .logo-area {
+      margin-bottom: 40px;
     }
 
-    .feature-icon {
-      font-size: 3rem;
-      margin-bottom: 20px;
-      filter: drop-shadow(0 0 10px rgba(255,255,255,0.3));
-    }
-
-    .feature-title {
-      font-family: var(--font-display);
-      font-size: 1.25rem;
+    .logo {
+      font-family: 'Cinzel', serif;
+      font-size: 42px;
       font-weight: 700;
-      margin-bottom: 10px;
-      color: var(--accent-gold);
+      background: linear-gradient(to right, #fff, #ffd700);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 5px;
+      letter-spacing: 0.1em;
     }
 
-    .feature-desc {
+    .subtitle {
+      font-size: 12px;
       color: rgba(255, 255, 255, 0.7);
-      font-size: 0.9rem;
-      line-height: 1.5;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
     }
 
-    /* Footer */
-    footer {
-      text-align: center;
-      padding: 40px;
-      color: rgba(255, 255, 255, 0.4);
-      font-size: 0.8rem;
+    /* 폼 스타일 */
+    h2 {
+      font-size: 18px;
+      font-weight: 400;
+      margin-bottom: 25px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      border-bottom: 1px solid rgba(255,255,255,0.2);
+      display: inline-block;
+      padding-bottom: 5px;
+    }
+
+    .input-group {
+      margin-bottom: 20px;
       position: relative;
-      z-index: 10;
     }
 
-    @media (max-width: 768px) {
-      .hero-title { font-size: 2.2rem; }
-      .hero-section { padding: 120px 20px 40px; } /* 헤더 공간 확보 */
-      .features { padding: 0 20px 60px; gap: 20px; }
-      .hero-glass-card { padding: 30px 20px; }
+    .form-input {
+      width: 100%;
+      padding: 15px 20px;
+      background: var(--input-bg);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 10px !important;
+      color: white;
+      font-size: 15px;
+      transition: all 0.3s;
+    }
+
+    .form-input::placeholder {
+      color: rgba(255, 255, 255, 0.5);
+    }
+
+    .form-input:focus {
+      outline: none;
+      background: rgba(0, 0, 0, 0.4);
+      border-color: var(--accent-gold);
+      box-shadow: 0 0 15px rgba(255, 215, 0, 0.2);
+    }
+
+    .btn-submit {
+      width: 100%;
+      padding: 16px;
+      margin-top: 10px;
+      background: linear-gradient(135deg, var(--accent-red), #8e0e0e);
+      color: white;
+      border: none;
+      border-radius: 10px !important;
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: all 0.3s;
+      box-shadow: 0 4px 15px rgba(212, 46, 46, 0.4);
+    }
+
+    .btn-submit:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(212, 46, 46, 0.6);
+      background: linear-gradient(135deg, #ff4d4d, var(--accent-red));
+    }
+
+    .toggle-text {
+      margin-top: 30px;
+      font-size: 13px;
+      color: rgba(255, 255, 255, 0.6);
+    }
+
+    .toggle-link {
+      color: var(--accent-gold);
+      font-weight: 600;
+      cursor: pointer;
+      margin-left: 5px;
+      text-decoration: underline;
+      text-underline-offset: 4px;
+      transition: color 0.3s;
+    }
+    .toggle-link:hover {
+      color: #fff;
+      text-shadow: 0 0 10px var(--accent-gold);
+    }
+
+    /* 모바일 대응 */
+    @media (max-width: 500px) {
+      .glass-card {
+        width: 90%;
+        padding: 40px 20px;
+      }
+      .logo { font-size: 32px; }
     }
   </style>
 </head>
 <body>
-  
-  <!-- ❄️ 눈 내리는 효과 컨테이너 -->
+
+  <!-- Firebase Config (storage.js가 처리하지만 안전장치로 유지) -->
+  <script>
+    window.__firebase_config = JSON.stringify({
+      apiKey: "AIzaSyAyD0Gn5-zqzPzdXjQzZhVlMQvqTzUmHKs",
+      authDomain: "return-linen-management.firebaseapp.com",
+      projectId: "return-linen-management",
+      storageBucket: "return-linen-management.firebasestorage.app",
+      messagingSenderId: "310421638033",
+      appId: "1:310421638033:web:280047bf93a8c780f8e830",
+      measurementId: "G-D6BDRRKD9Y"
+    });
+  </script>
+
+  <!-- ❄️ 눈 내리는 효과 -->
   <div class="snow-container" id="snowContainer"></div>
-
-  <!-- 3D Background Canvas (기존 코드 유지하되 CSS로 숨김) -->
-  <canvas id="bg-canvas"></canvas>
-
-  <!-- Header -->
-  <div id="header-placeholder"></div>
-
-  <!-- Main Content -->
-  <main>
-    <!-- Hero Section -->
-    <section class="hero-section">
-      <div class="hero-glass-card">
-        <h1 class="hero-title">HARU SYSTEM</h1>
-        <p class="hero-subtitle">
-          Tokyo Winter Edition<br>
-          린넨, 시설 유지보수, 분실물, 주문, 근무기록 통합 관리
-        </p>
-        <div class="hero-cta">
-          <a href="signup.html" class="btn btn-primary" data-testid="button-get-started">
-            Get Started
-          </a>
-          <a href="board.html" class="btn btn-secondary" data-testid="button-dashboard">
-            Dashboard
-          </a>
-        </div>
-      </div>
-    </section>
-
-    <!-- Features -->
-    <section class="features">
-      <div class="feature-card" data-testid="feature-linen">
-        <div class="feature-icon">📦</div>
-        <h3 class="feature-title">Linen</h3>
-        <p class="feature-desc">입고/재고/출고 흐름 관리</p>
-      </div>
-
-      <div class="feature-card" data-testid="feature-maintenance">
-        <div class="feature-icon">🔧</div>
-        <h3 class="feature-title">Maintenance</h3>
-        <p class="feature-desc">객실 설비 점검 및 수리 요청</p>
-      </div>
-
-      <div class="feature-card" data-testid="feature-lost-items">
-        <div class="feature-icon">🔍</div>
-        <h3 class="feature-title">Lost & Found</h3>
-        <p class="feature-desc">분실물 등록 및 인수인계</p>
-      </div>
-
-      <div class="feature-card" data-testid="feature-orders">
-        <div class="feature-icon">🛒</div>
-        <h3 class="feature-title">Orders</h3>
-        <p class="feature-desc">소모품 발주 및 승인 관리</p>
-      </div>
-
-      <div class="feature-card" data-testid="feature-worklog">
-        <div class="feature-icon">⏰</div>
-        <h3 class="feature-title">Work Log</h3>
-        <p class="feature-desc">근무시간 및 작업 내역 기록</p>
-      </div>
-
-      <div class="feature-card" data-testid="feature-notices">
-        <div class="feature-icon">📢</div>
-        <h3 class="feature-title">Notice</h3>
-        <p class="feature-desc">업무 공지 및 주요 알림</p>
-      </div>
-    </section>
-  </main>
-
-  <!-- Footer -->
-  <footer>
-    © 2025 <strong>HARU_KIM HYUN JUN</strong> | TOKYO WINTER EDITION
-  </footer>
-
-  <!-- ❄️ 눈 내리는 효과 스크립트 (UI 전용) -->
   <script>
     const snowContainer = document.getElementById('snowContainer');
-    const snowCount = 40; // 성능을 위해 개수 적절히 조절
+    const snowCount = 50;
     
     for(let i=0; i<snowCount; i++) {
       const snow = document.createElement('div');
       snow.className = 'snow';
-      const size = Math.random() * 4 + 2;
+      const size = Math.random() * 5 + 2;
       snow.style.width = `${size}px`;
       snow.style.height = `${size}px`;
       snow.style.left = `${Math.random() * 100}vw`;
-      snow.style.animationDuration = `${Math.random() * 10 + 5}s`;
+      snow.style.animationDuration = `${Math.random() * 5 + 5}s`; 
       snow.style.animationDelay = `${Math.random() * 5}s`;
       snow.style.opacity = Math.random() * 0.5 + 0.3;
       snowContainer.appendChild(snow);
     }
   </script>
 
-  <!-- PWA Service Worker (오류 수정됨) -->
+  <!-- 💎 메인 글래스 카드 -->
+  <div class="glass-card">
+    <div class="logo-area">
+      <div class="logo">HARU</div>
+      <div class="subtitle">Tokyo Christmas Edition</div>
+    </div>
+
+    <!-- 로그인 폼 -->
+    <div id="loginSection">
+      <h2 id="formTitle">Welcome Back</h2>
+      <form id="loginForm" autocomplete="on">
+        <div class="input-group">
+          <input type="email" id="email" class="form-input" placeholder="Email Address" required autocomplete="username" />
+        </div>
+        <div class="input-group">
+          <input type="password" id="password" class="form-input" placeholder="Password" required autocomplete="current-password" />
+        </div>
+        <button type="submit" class="btn-submit">Sign In</button>
+      </form>
+      <div class="toggle-text">
+        New to HARU? <span class="toggle-link" id="toSignup">Create Account</span>
+      </div>
+    </div>
+
+    <!-- 회원가입 폼 -->
+    <div id="signupSection" style="display:none;">
+      <h2 id="formTitle">Join Membership</h2>
+      <form id="signupForm" autocomplete="on">
+        <div class="input-group">
+          <input type="text" id="name" class="form-input" placeholder="Full Name" required autocomplete="name" />
+        </div>
+        <div class="input-group">
+          <input type="email" id="signupEmail" class="form-input" placeholder="Email Address" required autocomplete="email" />
+        </div>
+        <div class="input-group">
+          <input type="password" id="signupPw" class="form-input" placeholder="Password" required autocomplete="new-password" />
+        </div>
+        <button type="submit" class="btn-submit">Register</button>
+      </form>
+      <div class="toggle-text">
+        Already a member? <span class="toggle-link" id="toLogin">Login Here</span>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- UI Logic Script (화면 전환) -->
   <script>
-    // 프로토콜이 http 또는 https일 때만 실행 (blob: 오류 방지)
-    if ("serviceWorker" in navigator && (window.location.protocol === 'http:' || window.location.protocol === 'https:')) {
-      navigator.serviceWorker
-        .register("service-worker.js")
-        .then(() => console.log("✅ Service Worker Registered"))
-        .catch(err => console.warn("⚠️ Service Worker Registration Failed (Expected in preview):", err));
+    const loginSec = document.getElementById('loginSection');
+    const signupSec = document.getElementById('signupSection');
+    const toSignup = document.getElementById('toSignup');
+    const toLogin = document.getElementById('toLogin');
+
+    // 간단한 페이드인 키프레임 추가
+    const style = document.createElement('style');
+    style.innerHTML = `
+      @keyframes fadeIn {
+        to { opacity: 1; transform: translateY(0); }
+      }
+    `;
+    document.head.appendChild(style);
+
+    // UI 전환 효과
+    if(toSignup) {
+      toSignup.addEventListener('click', () => {
+        loginSec.style.display = 'none';
+        signupSec.style.display = 'block';
+        signupSec.style.animation = 'fadeIn 0.5s';
+      });
+    }
+    if(toLogin) {
+      toLogin.addEventListener('click', () => {
+        signupSec.style.display = 'none';
+        loginSec.style.display = 'block';
+        loginSec.style.animation = 'fadeIn 0.5s';
+      });
     }
   </script>
 
-  <!-- Install Prompt -->
-  <script src="install.js"></script>
-
-  <!-- Scripts Loading (오류 수정됨: Dynamic Import 사용) -->
-  <script type="module">
-    // 3D Background
-    try {
-      await import("./scripts/bg/scene.js");
-    } catch (e) {
-      console.warn("Skipping 3D Scene load (module missing in preview)");
-    }
-
-    // Header Load
-    try {
-      const { initHeaderMenu } = await import("./header.js");
-      fetch("header.html")
-        .then(res => res.text())
-        .then(html => {
-          const headerEl = document.getElementById("header-placeholder");
-          if(headerEl) {
-            headerEl.innerHTML = html;
-            initHeaderMenu();
-          }
-        })
-        .catch(err => console.log("Header HTML fetch skipped"));
-    } catch (e) {
-      console.warn("Skipping Header load (module missing in preview)");
-      // Fallback: Show simple text if needed, or leave empty for clean design
-    }
-
-    // Global Notice Popup
-    try {
-      await import("./notice_popup.js");
-    } catch (e) { console.log("Notice Popup module skipped"); }
-
-    // Text normalization & ScrollTop
-    try {
-      await import("./index_text_fix.js");
-      await import("./scrollTop.js");
-    } catch (e) { console.log("Utility modules skipped"); }
-  </script>
+  <!-- ✅ [수정됨] Header는 삭제하고 Auth 로직만 연결 -->
+  <!-- signup.js를 auth.js로 변경하여 로그인 로직 연결 -->
+  <script type="module" src="auth.js"></script>
 
 </body>
 </html>
