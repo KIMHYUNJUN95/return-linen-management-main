@@ -3,7 +3,8 @@
 // ========================================
 
 import { initHeaderMenu } from "./header.js";
-import { db, auth } from "./storage.js"; // auth.js -> storage.js로 통일
+// ✅ [수정됨] storage.js에서 통합된 객체 가져오기 (중복 초기화 방지)
+import { db, auth } from "./storage.js"; 
 import {
   collection,
   addDoc,
@@ -13,18 +14,19 @@ import {
   doc,
   serverTimestamp,
   orderBy,
-  query
+  query,
+  getDoc
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
-// ✅ 1. 헤더 로드 (필수 추가)
+// ✅ 1. 헤더 로드
 document.addEventListener("DOMContentLoaded", () => {
   fetch("header.html")
     .then(r => r.text())
     .then(h => {
-      const headerPlaceholder = document.getElementById("header-placeholder");
-      if (headerPlaceholder) {
-        headerPlaceholder.innerHTML = h;
+      const placeholder = document.getElementById("header-placeholder");
+      if (placeholder) {
+        placeholder.innerHTML = h;
         initHeaderMenu();
       }
     })
@@ -54,12 +56,10 @@ if (togglePostFormBtn && postForm) {
   togglePostFormBtn.addEventListener("click", () => {
     if (!currentUser) {
       alert("로그인이 필요합니다.");
-      // location.href = "signup.html"; // 필요 시 주석 해제
       return;
     }
     postForm.classList.toggle("is-open");
     
-    // 버튼 텍스트 변경 (선택 사항)
     if (postForm.classList.contains("is-open")) {
       togglePostFormBtn.textContent = "닫기";
       postForm.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -73,18 +73,15 @@ if (togglePostFormBtn && postForm) {
    🧑 사용자 인증 체크
 =========================================== */
 onAuthStateChanged(auth, (user) => {
-  // 비로그인 상태라도 목록은 볼 수 있게 하려면 아래 리턴 제거 가능
-  // 현재 로직 유지: 로그인 필수
   if (!user) {
-    // alert("로그인이 필요합니다.");
-    // location.href = "signup.html";
+    // 비로그인 시 처리 (필요하면 리다이렉트)
     return;
   }
   currentUser = user;
   
   // 관리자가 아니면 공지 체크박스 숨김
   if (pinnedBox && user.email !== SUPER_ADMIN_EMAIL) {
-    pinnedBox.parentElement.style.display = "none";
+    if(pinnedBox.parentElement) pinnedBox.parentElement.style.display = "none";
   }
 
   loadPosts();
@@ -96,6 +93,8 @@ onAuthStateChanged(auth, (user) => {
 if (postForm) {
   postForm.addEventListener("submit", async (e) => {
     e.preventDefault();
+
+    if (!currentUser) return alert("로그인이 필요합니다.");
 
     const title = document.getElementById("title").value.trim();
     const content = document.getElementById("content").value.trim();
@@ -112,7 +111,9 @@ if (postForm) {
         content,
         pinned,
         author: currentUser.displayName || currentUser.email,
+        // ✅ [추가됨] 보안 규칙 통과를 위한 필수 정보
         uid: currentUser.uid,
+        authorEmail: currentUser.email,
         createdAt: serverTimestamp(),
       });
 
@@ -129,7 +130,7 @@ if (postForm) {
 }
 
 /* ===========================================
-   📜 게시글 목록 렌더링 (UI 리뉴얼)
+   📜 게시글 목록 렌더링
 =========================================== */
 async function loadPosts() {
   if (!postList) return;
@@ -142,69 +143,71 @@ async function loadPosts() {
     </tr>
   `;
 
-  const qy = query(
-    collection(db, "board"),
-    orderBy("pinned", "desc"),
-    orderBy("createdAt", "desc")
-  );
+  try {
+    const qy = query(
+        collection(db, "board"),
+        orderBy("pinned", "desc"),
+        orderBy("createdAt", "desc")
+    );
 
-  const snap = await getDocs(qy);
-  postList.innerHTML = "";
-  postsCache = [];
+    const snap = await getDocs(qy);
+    postList.innerHTML = "";
+    postsCache = [];
 
-  if (snap.empty) {
-    postList.innerHTML = `
-      <tr>
-        <td colspan="3" style="text-align:center; padding:60px; color:#CBD5E1;">
-          등록된 게시글이 없습니다.
+    if (snap.empty) {
+        postList.innerHTML = `
+        <tr>
+            <td colspan="3" style="text-align:center; padding:60px; color:#CBD5E1;">
+            등록된 게시글이 없습니다.
+            </td>
+        </tr>
+        `;
+        return;
+    }
+
+    let no = 0;
+
+    snap.forEach((docSnap) => {
+        const data = docSnap.data();
+        const id = docSnap.id;
+
+        postsCache.push({ id, ...data });
+
+        const date = data.createdAt?.toDate?.().toLocaleDateString("ko-KR", {
+        year: "numeric", month: "2-digit", day: "2-digit"
+        }) || "-";
+
+        const isPinned = !!data.pinned;
+        
+        if (!isPinned) no += 1;
+
+        const tr = document.createElement("tr");
+        if (isPinned) tr.classList.add("pinned-row");
+
+        const titleHtml = isPinned 
+        ? `<span class="pinned-badge">공지</span> ${data.title || "(제목 없음)"}`
+        : data.title || "(제목 없음)";
+
+        const noHtml = isPinned ? '<span style="font-weight:bold; color:var(--haru-navy)">-</span>' : no;
+
+        tr.innerHTML = `
+        <td class="board-no">${noHtml}</td>
+        <td class="board-title" data-id="${id}">
+            ${titleHtml}
         </td>
-      </tr>
-    `;
-    return;
+        <td class="board-date">${date}</td>
+        `;
+
+        postList.appendChild(tr);
+    });
+  } catch (err) {
+      console.error("로드 오류:", err);
+      postList.innerHTML = `<tr><td colspan="3" style="text-align:center; padding:20px;">데이터 로드 실패</td></tr>`;
   }
-
-  let no = 0;
-
-  snap.forEach((docSnap) => {
-    const data = docSnap.data();
-    const id = docSnap.id;
-
-    postsCache.push({ id, ...data });
-
-    const date = data.createdAt?.toDate?.().toLocaleDateString("ko-KR", {
-      year: "numeric", month: "2-digit", day: "2-digit"
-    }) || "-";
-
-    const isPinned = !!data.pinned;
-    
-    // 공지사항이 아닐 때만 번호 증가
-    if (!isPinned) no += 1;
-
-    const tr = document.createElement("tr");
-    if (isPinned) tr.classList.add("pinned-row");
-
-    // 디자인: 이모지 제거하고 뱃지 사용
-    const titleHtml = isPinned 
-      ? `<span class="pinned-badge">공지</span> ${data.title || "(제목 없음)"}`
-      : data.title || "(제목 없음)";
-
-    // 번호 컬럼: 공지면 '공지', 아니면 숫자
-    const noHtml = isPinned ? '<span style="font-weight:bold; color:var(--haru-navy)">-</span>' : no;
-
-    tr.innerHTML = `
-      <td class="board-no">${noHtml}</td>
-      <td class="board-title" data-id="${id}">
-        ${titleHtml}
-      </td>
-      <td class="board-date">${date}</td>
-    `;
-
-    postList.appendChild(tr);
-  });
 }
 
 /* ===========================================
-   💬 댓글 불러오기 (디자인 개선)
+   💬 댓글 불러오기
 =========================================== */
 async function loadComments(postId, containerEl) {
   if (!containerEl) return;
@@ -214,55 +217,59 @@ async function loadComments(postId, containerEl) {
     collection(db, `board/${postId}/comments`),
     orderBy("createdAt", "asc")
   );
-  const snap = await getDocs(qy);
+  
+  try {
+      const snap = await getDocs(qy);
 
-  if (snap.empty) {
-    containerEl.innerHTML =
-      `<div style="font-size:13px; color:#94A3B8; padding:10px 0;">아직 작성된 댓글이 없습니다.</div>`;
-    return;
+      if (snap.empty) {
+        containerEl.innerHTML =
+          `<div style="font-size:13px; color:#94A3B8; padding:10px 0;">아직 작성된 댓글이 없습니다.</div>`;
+        return;
+      }
+
+      snap.forEach((cmtDoc) => {
+        const c = cmtDoc.data();
+        const cId = cmtDoc.id;
+        const date = c.createdAt?.toDate?.().toLocaleString("ko-KR", {
+            month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit"
+        }) || "-";
+
+        const canDelete = currentUser && (
+          c.uid === currentUser.uid ||
+          currentUser.email === SUPER_ADMIN_EMAIL
+        );
+
+        const body = (c.text || "").replace(/\n/g, "<br>");
+
+        const item = document.createElement("div");
+        item.className = "comment";
+        item.style.borderBottom = "1px solid #F1F5F9";
+        item.style.padding = "12px 0";
+
+        item.innerHTML = `
+          <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:4px;">
+            <span style="font-weight:700; font-size:13px; color:#2C3E50;">${c.author || "익명"}</span>
+            <span style="font-size:11px; color:#94A3B8;">${date}</span>
+          </div>
+          <div style="font-size:13px; color:#334155; line-height:1.5;">${body}</div>
+          <div class="cmt-actions" style="text-align:right; margin-top:4px;">
+            ${
+              canDelete
+                ? `<button class="cmt-del" data-post="${postId}" data-id="${cId}" 
+                    style="background:none; border:none; color:#E74C3C; font-size:11px; cursor:pointer; font-weight:600;">삭제</button>`
+                : ""
+            }
+          </div>
+        `;
+        containerEl.appendChild(item);
+      });
+  } catch (err) {
+      console.error("댓글 로드 실패:", err);
   }
-
-  snap.forEach((cmtDoc) => {
-    const c = cmtDoc.data();
-    const cId = cmtDoc.id;
-    const date = c.createdAt?.toDate?.().toLocaleString("ko-KR", {
-        month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit"
-    }) || "-";
-
-    const canDelete = currentUser && (
-      c.uid === currentUser.uid ||
-      currentUser.email === SUPER_ADMIN_EMAIL
-    );
-
-    const body = (c.text || "").replace(/\n/g, "<br>");
-
-    const item = document.createElement("div");
-    item.className = "comment";
-    // 댓글 스타일 인라인 적용 (CSS로 빼도 됨)
-    item.style.borderBottom = "1px solid #F1F5F9";
-    item.style.padding = "12px 0";
-
-    item.innerHTML = `
-      <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:4px;">
-        <span style="font-weight:700; font-size:13px; color:#2C3E50;">${c.author || "익명"}</span>
-        <span style="font-size:11px; color:#94A3B8;">${date}</span>
-      </div>
-      <div style="font-size:13px; color:#334155; line-height:1.5;">${body}</div>
-      <div class="cmt-actions" style="text-align:right; margin-top:4px;">
-        ${
-          canDelete
-            ? `<button class="cmt-del" data-post="${postId}" data-id="${cId}" 
-                style="background:none; border:none; color:#E74C3C; font-size:11px; cursor:pointer; font-weight:600;">삭제</button>`
-            : ""
-        }
-      </div>
-    `;
-    containerEl.appendChild(item);
-  });
 }
 
 /* ===========================================
-   🔍 상세 모달 (디자인 리뉴얼)
+   🔍 상세 모달
 =========================================== */
 function openViewModal(id) {
   const post = postsCache.find((p) => p.id === id);
@@ -286,7 +293,6 @@ function openViewModal(id) {
 
   const modal = document.createElement("div");
   modal.className = "modal";
-  // 모달 스타일 직접 주입 (CSS 클래스 활용 권장)
   modal.style.maxWidth = "600px";
   modal.style.width = "90%";
 
@@ -345,30 +351,52 @@ function openViewModal(id) {
   // 이벤트 바인딩
   closeBtn.addEventListener("click", () => bg.remove());
 
+  // 댓글 등록
   addBtn.addEventListener("click", async () => {
+    if (!currentUser) return alert("로그인이 필요합니다.");
     if (!inputEl) return;
     const text = inputEl.value.trim();
     if (!text) return;
-    await addDoc(collection(db, `board/${post.id}/comments`), {
-      text,
-      author: currentUser.displayName || currentUser.email,
-      uid: currentUser.uid,
-      createdAt: serverTimestamp(),
-    });
-    inputEl.value = "";
-    await loadComments(post.id, listEl);
+
+    try {
+        await addDoc(collection(db, `board/${post.id}/comments`), {
+            text,
+            author: currentUser.displayName || currentUser.email,
+            // ✅ [추가됨] 댓글 작성자 정보
+            uid: currentUser.uid,
+            authorEmail: currentUser.email,
+            createdAt: serverTimestamp(),
+        });
+        inputEl.value = "";
+        await loadComments(post.id, listEl);
+    } catch (err) {
+        console.error("댓글 등록 오류:", err);
+        alert("댓글 등록 중 오류가 발생했습니다.");
+    }
   });
 
+  // 댓글 삭제 (이벤트 위임)
   modal.addEventListener("click", async (e) => {
     if (e.target.classList.contains("cmt-del")) {
       const postId = e.target.dataset.post;
       const cId = e.target.dataset.id;
       if (!confirm("댓글을 삭제하시겠습니까?")) return;
-      await deleteDoc(doc(db, `board/${postId}/comments`, cId));
-      await loadComments(postId, listEl);
+      
+      try {
+          await deleteDoc(doc(db, `board/${postId}/comments`, cId));
+          await loadComments(postId, listEl);
+      } catch (err) {
+          console.error("댓글 삭제 실패:", err);
+          if (err.code === 'permission-denied') {
+              alert("권한이 없습니다. (본인의 댓글만 삭제 가능)");
+          } else {
+              alert("삭제 중 오류가 발생했습니다.");
+          }
+      }
     }
   });
 
+  // 게시글 수정 버튼
   if (editBtn) {
     editBtn.addEventListener("click", () => {
       bg.remove();
@@ -376,12 +404,24 @@ function openViewModal(id) {
     });
   }
 
+  // 게시글 삭제 버튼
   if (deleteBtn) {
     deleteBtn.addEventListener("click", async () => {
       if (!confirm("정말 삭제하시겠습니까?\n삭제 후에는 복구할 수 없습니다.")) return;
-      await deleteDoc(doc(db, "board", post.id));
-      bg.remove();
-      loadPosts();
+      
+      try {
+          await deleteDoc(doc(db, "board", post.id));
+          alert("삭제되었습니다.");
+          bg.remove();
+          loadPosts();
+      } catch (err) {
+          console.error("게시글 삭제 실패:", err);
+          if (err.code === 'permission-denied') {
+              alert("권한이 없습니다. (본인 또는 관리자만 삭제 가능)");
+          } else {
+              alert("삭제 중 오류가 발생했습니다.");
+          }
+      }
     });
   }
 }
@@ -450,14 +490,24 @@ async function openEditModal(id) {
       return;
     }
 
-    await updateDoc(doc(db, "board", id), {
-      title,
-      content,
-      pinned,
-    });
+    try {
+        await updateDoc(doc(db, "board", id), {
+            title,
+            content,
+            pinned,
+        });
 
-    bg.remove();
-    loadPosts();
+        alert("수정되었습니다.");
+        bg.remove();
+        loadPosts();
+    } catch (err) {
+        console.error("수정 실패:", err);
+        if (err.code === 'permission-denied') {
+            alert("권한이 없습니다. (본인이 작성한 글만 수정 가능)");
+        } else {
+            alert("수정 중 오류가 발생했습니다.");
+        }
+    }
   });
 }
 

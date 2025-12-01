@@ -4,10 +4,10 @@
 // Logic: Firestore Persistence, Cleaning Task, Daily Reset
 // ========================================
 
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+// ✅ [수정됨] storage.js에서 통합된 객체 가져오기 (중복 초기화 방지)
+import { db, auth } from "./storage.js";
+import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 import {
-  getFirestore,
   collection,
   doc,
   getDoc,
@@ -17,34 +17,8 @@ import {
   getDocs,
   query,
   where,
-  serverTimestamp,
-  orderBy
+  serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-
-// 🔴 1. Firebase Initialization (Safe Handling)
-let firebaseConfig = {};
-// window 객체를 통해 접근하여 ReferenceError 방지
-if (window.__firebase_config) {
-  try {
-    firebaseConfig = JSON.parse(window.__firebase_config);
-  } catch (e) {
-    console.error("Firebase config parsing error:", e);
-  }
-} else {
-  console.error("❌ __firebase_config is missing. Please check the script in worklog.html.");
-}
-
-// Config가 유효할 때만 초기화 진행
-let app, auth, db;
-if (firebaseConfig.apiKey) {
-    app = initializeApp(firebaseConfig);
-    auth = getAuth(app);
-    db = getFirestore(app);
-} else {
-    console.warn("Initializing with dummy Firebase instance to prevent crash.");
-    auth = { onAuthStateChanged: () => {} };
-    db = {};
-}
 
 // 2. DOM Elements
 const $ = (id) => document.getElementById(id);
@@ -121,12 +95,12 @@ function setButtonsByStatus(status) {
       // 휴식 중에는 퇴근/청소 불가
       break;
     case "청소중":
-      if(clockOutBtn) clockOutBtn.disabled = false; // 청소 중 퇴근 가능? 보통은 완료 후 퇴근
+      if(clockOutBtn) clockOutBtn.disabled = false; 
       if(cleanEndBtn) cleanEndBtn.disabled = false;
       break;
     case "청소완료":
       if(clockOutBtn) clockOutBtn.disabled = false;
-      if(breakStartBtn) breakStartBtn.disabled = false; // 청소 후 다시 휴식 가능?
+      if(breakStartBtn) breakStartBtn.disabled = false; 
       break;
     case "퇴근":
       // All disabled except reset
@@ -251,8 +225,6 @@ function renderTodayAttendance(rows) {
 
 // 상태 로드 및 화면 갱신
 async function loadStateAndRender() {
-  if (!firebaseConfig.apiKey) return; // DB 연결 불가 시 중단
-
   const user = auth.currentUser;
   if (!user) {
     setButtonsByStatus("출근전");
@@ -318,8 +290,6 @@ async function loadStateAndRender() {
 
 // DB에서 금일 현황 가져오기
 async function renderTodayAttendanceFromDB() {
-  if (!firebaseConfig.apiKey) return;
-
   const key = todayKey();
   const qy = query(collection(db, "worklogState"), where("dateKey", "==", key));
   const snap = await getDocs(qy);
@@ -345,6 +315,9 @@ async function ensureStateExists() {
       cleanStart: null,
       cleanEnd: null,
       updatedAt: serverTimestamp(),
+      
+      // ✅ [추가됨] 작성자 정보 (보안 규칙용)
+      authorEmail: user.email
     };
     await setDoc(ref, base);
     return base;
@@ -374,7 +347,10 @@ async function handleClockIn() {
     user: user.displayName || user.email, 
     type: "출근", 
     dateKey: todayKey(),
-    time: serverTimestamp() 
+    time: serverTimestamp(),
+    // ✅ [추가됨] 작성자 정보
+    uid: user.uid,
+    authorEmail: user.email
   });
   
   await loadStateAndRender();
@@ -403,7 +379,10 @@ async function handleClockOut() {
     type: "퇴근", 
     dateKey: todayKey(),
     time: serverTimestamp(), 
-    breakMinutes: st.breakMinutes || 0 
+    breakMinutes: st.breakMinutes || 0,
+    // ✅ [추가됨] 작성자 정보
+    uid: user.uid,
+    authorEmail: user.email
   });
   
   await loadStateAndRender();
@@ -454,7 +433,10 @@ async function handleBreakEnd() {
     duration: elapsedMin,
     dateKey: todayKey(),
     time: serverTimestamp(), 
-    breakMinutes: next 
+    breakMinutes: next,
+    // ✅ [추가됨] 작성자 정보
+    uid: user.uid,
+    authorEmail: user.email
   });
   
   await loadStateAndRender();
@@ -474,8 +456,11 @@ async function handleCleanStart() {
   await addDoc(collection(db, "worklog"), { 
       user: user.displayName || user.email, 
       type: "청소시작", 
-      dateKey: todayKey(),
-      time: serverTimestamp() 
+      dateKey: todayKey(), 
+      time: serverTimestamp(),
+      // ✅ [추가됨] 작성자 정보
+      uid: user.uid,
+      authorEmail: user.email
   });
   
   await loadStateAndRender();
@@ -494,8 +479,11 @@ async function handleCleanEnd() {
   await addDoc(collection(db, "worklog"), { 
       user: user.displayName || user.email, 
       type: "청소완료", 
-      dateKey: todayKey(),
-      time: serverTimestamp() 
+      dateKey: todayKey(), 
+      time: serverTimestamp(),
+      // ✅ [추가됨] 작성자 정보
+      uid: user.uid,
+      authorEmail: user.email
   });
   
   await loadStateAndRender();
@@ -520,6 +508,8 @@ async function handleResetWorkState() {
     cleanStart: null,
     cleanEnd: null,
     updatedAt: serverTimestamp(),
+    // ✅ [추가됨] 작성자 정보
+    authorEmail: user.email
   });
 
   breakStartLocal = null;
@@ -591,6 +581,5 @@ if (auth && typeof auth.onAuthStateChanged === 'function') {
       await loadStateAndRender();
     });
 } else {
-    // Config missing fallback
     console.log("Firebase not initialized correctly. Please check API Key.");
 }

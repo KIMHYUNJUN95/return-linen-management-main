@@ -1,9 +1,18 @@
 // ========================================
-// 🛒 HARU Orders (건물 선택 + 이름 기입 추가)
+// 🛒 HARU Orders Logic (Finalized)
+// Design System: Tokyo Day Bright
 // ========================================
 
 import { db, auth } from "./storage.js";
-import { collection, addDoc, doc, updateDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { 
+  collection, 
+  addDoc, 
+  doc, 
+  getDoc,
+  updateDoc, 
+  serverTimestamp 
+} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
 document.addEventListener("DOMContentLoaded", () => {
   const form = document.getElementById("orderForm");
@@ -21,71 +30,90 @@ document.addEventListener("DOMContentLoaded", () => {
   const editIndicator = document.getElementById("editIndicator");
   const submitBtn = document.getElementById("submitBtn");
 
-  // ========== 건물 + 요청자 이름 요소 생성 ==========
-  const buildingEl = document.createElement("select");
-  buildingEl.id = "buildingSelect";
-  buildingEl.className = "form-select";
-  buildingEl.innerHTML = `
-    <option value="">건물 선택</option>
-    <option value="아라키초A">아라키초A</option>
-    <option value="아라키초B">아라키초B</option>
-    <option value="다이쿄초">다이쿄초</option>
-    <option value="가부키초">가부키초</option>
-    <option value="다카다노바바">다카다노바바</option>
-    <option value="오쿠보1">오쿠보1</option>
-    <option value="오쿠보2">오쿠보2</option>
-    <option value="오쿠보4">오쿠보4</option>
-  `;
+  // ========== 건물 + 요청자 이름 요소 동적 생성 (HTML에 없다면) ==========
+  // 만약 HTML에 이미 있다면 getElementById로 가져와야 함
+  let buildingEl = document.getElementById("buildingSelect");
+  let requesterEl = document.getElementById("requesterName");
 
-  const requesterEl = document.createElement("input");
-  requesterEl.type = "text";
-  requesterEl.id = "requesterName";
-  requesterEl.className = "form-input";
-  requesterEl.placeholder = "요청자 이름 입력 (예: 김현준)";
+  if (!buildingEl) {
+      buildingEl = document.createElement("select");
+      buildingEl.id = "buildingSelect";
+      buildingEl.className = "form-select";
+      buildingEl.innerHTML = `
+        <option value="">건물 선택</option>
+        <option value="아라키초A">아라키초A</option>
+        <option value="아라키초B">아라키초B</option>
+        <option value="다이쿄초">다이쿄초</option>
+        <option value="가부키초">가부키초</option>
+        <option value="다카다노바바">다카다노바바</option>
+        <option value="오쿠보1">오쿠보1</option>
+        <option value="오쿠보2">오쿠보2</option>
+        <option value="오쿠보4">오쿠보4</option>
+      `;
+      const urgencyGroup = urgencyEl.closest(".form-group");
+      if (urgencyGroup) {
+        const buildingWrap = document.createElement("div");
+        buildingWrap.className = "form-group";
+        buildingWrap.innerHTML = `<label class="form-label" for="buildingSelect">건물</label>`;
+        buildingWrap.appendChild(buildingEl);
+        urgencyGroup.parentElement.insertBefore(buildingWrap, urgencyGroup);
+      }
+  }
 
-  const urgencyGroup = urgencyEl.closest(".form-group");
-  if (urgencyGroup) {
-    const buildingWrap = document.createElement("div");
-    buildingWrap.className = "form-group";
-    buildingWrap.innerHTML = `<label class="form-label" for="buildingSelect">건물</label>`;
-    buildingWrap.appendChild(buildingEl);
-
-    const nameWrap = document.createElement("div");
-    nameWrap.className = "form-group";
-    nameWrap.innerHTML = `<label class="form-label" for="requesterName">이름</label>`;
-    nameWrap.appendChild(requesterEl);
-
-    urgencyGroup.parentElement.insertBefore(nameWrap, urgencyGroup);
-    urgencyGroup.parentElement.insertBefore(buildingWrap, nameWrap);
+  if (!requesterEl) {
+      requesterEl = document.createElement("input");
+      requesterEl.type = "text";
+      requesterEl.id = "requesterName";
+      requesterEl.className = "form-input";
+      requesterEl.placeholder = "요청자 이름 입력 (예: 김현준)";
+      
+      const urgencyGroup = urgencyEl.closest(".form-group");
+      if (urgencyGroup) {
+        const nameWrap = document.createElement("div");
+        nameWrap.className = "form-group";
+        nameWrap.innerHTML = `<label class="form-label" for="requesterName">이름</label>`;
+        nameWrap.appendChild(requesterEl);
+        urgencyGroup.parentElement.insertBefore(nameWrap, urgencyGroup);
+      }
   }
 
   // =============================
-  // ✨ 수정 모드 감지
+  // ✨ 수정 모드 감지 (URL 파라미터 방식)
   // =============================
-  let editMode = false;
-  let editOrderId = null;
+  const urlParams = new URLSearchParams(location.search);
+  const editOrderId = urlParams.get("id");
   let items = [];
 
-  const savedOrderData = localStorage.getItem("editOrderData");
-  if (savedOrderData) {
-    try {
-      const orderData = JSON.parse(savedOrderData);
-      editMode = true;
-      editOrderId = orderData.id;
+  if (editOrderId) {
+    // Firestore에서 데이터 로드
+    (async () => {
+        try {
+            const docRef = doc(db, "orders", editOrderId);
+            const snap = await getDoc(docRef);
+            
+            if (snap.exists()) {
+                const data = snap.data();
+                
+                editIndicator.style.display = "flex";
+                editIndicator.innerHTML = "📝 현재 <strong>수정 모드</strong>입니다.";
+                submitBtn.textContent = "주문 수정하기";
 
-      editIndicator.style.display = "block";
-      submitBtn.textContent = "주문 수정하기";
+                // 폼 채우기
+                items = data.items || [];
+                urgencyEl.value = data.urgency || "일반";
+                notesEl.value = data.notes || "";
+                if(buildingEl) buildingEl.value = data.building || "";
+                if(requesterEl) requesterEl.value = data.requesterName || "";
 
-      items = orderData.items || [];
-      urgencyEl.value = orderData.urgency || "일반";
-      notesEl.value = orderData.notes || "";
-      buildingEl.value = orderData.building || "";
-      requesterEl.value = orderData.requesterName || "";
-
-      renderItems();
-    } catch (err) {
-      console.error("❌ editOrderData 파싱 오류:", err);
-    }
+                renderItems();
+            } else {
+                alert("존재하지 않는 주문입니다.");
+                location.href = "orders_list.html";
+            }
+        } catch (e) {
+            console.error("데이터 로드 실패:", e);
+        }
+    })();
   }
 
   // =============================
@@ -113,7 +141,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
     renderItems();
     amazonSearchEl.value = "";
-    alert(`"${searchTerm}" 항목이 추가되었습니다.`);
+    // alert(`"${searchTerm}" 항목이 추가되었습니다.`); // 사용자 경험상 알림 끄는게 나을 수 있음
   });
 
   amazonSearchEl.addEventListener("keydown", (e) => {
@@ -135,7 +163,7 @@ document.addEventListener("DOMContentLoaded", () => {
     itemList.innerHTML = items
       .map((item, idx) => {
         const linkHtml = item.link
-          ? `<a href="${item.link}" target="_blank" style="color:hsl(var(--color-primary));font-size:var(--font-size-xs);margin-top:var(--space-1);display:inline-block;">🔗 링크 보기</a>`
+          ? `<a href="${item.link}" target="_blank" style="color:#D4AF37;font-size:0.8rem;margin-top:4px;display:inline-block;text-decoration:none;">🔗 링크 보기</a>`
           : "";
         return `
           <div class="item-row">
@@ -144,7 +172,7 @@ document.addEventListener("DOMContentLoaded", () => {
               <div class="item-qty">${item.category} · ${item.quantity}개</div>
               ${linkHtml}
             </div>
-            <button type="button" class="btn btn-sm btn-ghost" onclick="removeItem(${idx})">
+            <button type="button" class="btn btn-sm btn-secondary" onclick="window.removeItem(${idx})" style="height:32px; font-size:0.8rem;">
               삭제
             </button>
           </div>
@@ -178,9 +206,7 @@ document.addEventListener("DOMContentLoaded", () => {
     itemNameEl.focus();
   });
 
-  // =============================
-  // 🗑️ 항목 삭제
-  // =============================
+  // 전역 함수로 노출 (onclick에서 접근 가능하도록)
   window.removeItem = (idx) => {
     items.splice(idx, 1);
     renderItems();
@@ -192,6 +218,13 @@ document.addEventListener("DOMContentLoaded", () => {
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
 
+    // 🔒 로그인 체크 (보안 규칙 필수)
+    const currentUser = auth.currentUser;
+    if (!currentUser) {
+        alert("로그인이 필요합니다.");
+        return;
+    }
+
     if (!items || items.length === 0)
       return alert("주문할 물품을 최소 1개 이상 추가하세요.");
 
@@ -202,38 +235,36 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const urgency = urgencyEl.value;
     const notes = notesEl.value.trim();
-    const userEmail = auth?.currentUser?.email || null;
 
     // ------------------------------
-    // 🔥 핵심 수정 (uid 추가)
+    // 🔥 데이터 구성 (uid 포함)
     // ------------------------------
-    const uid = auth?.currentUser?.uid || null;
-
     const orderData = {
-      uid,                   // 🔥 Firestore Rules 통과에 필수
       building,
       requesterName,
       items: [...items],
       urgency,
       notes,
       status: "pending",
-      createdBy: requesterName,
-      userEmail,
       updatedAt: serverTimestamp(),
+      
+      // ✅ 작성자 정보 (수정 시에도 유지하거나 갱신)
+      uid: currentUser.uid,
+      authorEmail: currentUser.email,
+      createdBy: requesterName // 표시용 이름
     };
 
+    submitBtn.disabled = true;
+    submitBtn.textContent = "처리 중...";
+
     try {
-      if (editMode && editOrderId) {
+      if (editOrderId) {
+        // [수정]
         const orderRef = doc(db, "orders", editOrderId);
-
-        await updateDoc(orderRef, {
-          ...orderData,
-          updatedAt: serverTimestamp(),
-        });
-
-        localStorage.removeItem("editOrderData");
+        await updateDoc(orderRef, orderData);
         alert("주문이 성공적으로 수정되었습니다!");
       } else {
+        // [등록] createdAt 추가
         orderData.createdAt = serverTimestamp();
         await addDoc(collection(db, "orders"), orderData);
         alert("주문 요청이 완료되었습니다!");
@@ -243,9 +274,24 @@ document.addEventListener("DOMContentLoaded", () => {
       location.href = "orders_list.html";
     } catch (err) {
       console.error("❌ 주문 처리 오류 발생:", err);
-      alert("주문 처리 중 오류가 발생했습니다: " + err.message);
+      if (err.code === 'permission-denied') {
+          alert("권한이 없습니다. (본인이 작성한 글만 수정 가능)");
+      } else {
+          alert("주문 처리 중 오류가 발생했습니다: " + err.message);
+      }
+      submitBtn.disabled = false;
+      submitBtn.textContent = editOrderId ? "주문 수정하기" : "SUBMIT ORDER REQUEST";
     }
   });
 
+  // 초기 렌더링
   renderItems();
+  
+  // 로그인 상태 체크 (UI 업데이트용)
+  onAuthStateChanged(auth, (user) => {
+      if(user && requesterEl && !requesterEl.value) {
+          // 이메일 앞부분 등을 기본값으로 넣어줄 수 있음
+          // requesterEl.value = user.displayName || "";
+      }
+  });
 });

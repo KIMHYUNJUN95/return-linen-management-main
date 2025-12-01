@@ -1,9 +1,10 @@
 // ===============================
-// 🧺 HARU 입고 등록 로직 (Tokyo Day Bright)
+// 🧺 HARU 입고 등록 로직 (Finalized)
 // ===============================
 
-import { initHeaderMenu } from "./header.js";
+// ✅ [수정됨] storage.js에서 통합된 객체 가져오기
 import { db, auth, storage } from "./storage.js";
+import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 import {
   collection,
   addDoc,
@@ -17,15 +18,18 @@ import {
   getDownloadURL
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
 
-// ✅ 1. 헤더 로드 (HTML 인라인 스크립트 대체)
+// ✅ 1. 헤더 로드
 document.addEventListener("DOMContentLoaded", () => {
   fetch("header.html")
     .then(r => r.text())
     .then(h => {
-      const headerPlaceholder = document.getElementById("header-placeholder");
-      if (headerPlaceholder) {
-        headerPlaceholder.innerHTML = h;
-        initHeaderMenu();
+      const placeholder = document.getElementById("header-placeholder");
+      if (placeholder) {
+        placeholder.innerHTML = h;
+        // 동적 임포트로 헤더 기능 활성화 (안전장치)
+        import("./header.js").then(module => {
+            if(module.initHeaderMenu) module.initHeaderMenu();
+        });
       }
     })
     .catch(err => console.error("헤더 로드 실패:", err));
@@ -53,6 +57,9 @@ const linenQty = $("#linenQty");
 const btnAddLinen = $("#btnAddLinen");
 const linenListWrap = $("#linenList");
 const linenPayloadEl = $("#linenPayload");
+
+// 버튼 타입 보정 (폼 제출 방지)
+if (btnAddLinen) btnAddLinen.type = "button";
 
 // ===============================
 // 📌 공식 린넨 목록 & 정규화 함수
@@ -185,6 +192,13 @@ if (form) {
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
 
+    // 🔒 로그인 체크 (필수)
+    const currentUser = auth.currentUser;
+    if (!currentUser) {
+        alert("로그인이 필요합니다.");
+        return;
+    }
+
     const buildingId = buildingEl.value.trim();
     const date = dateEl.value.trim();
     const staffName = staffEl.value.trim();
@@ -193,7 +207,6 @@ if (form) {
     // 🧺 린넨 항목 파싱
     let items = [];
     try {
-      // 인풋에 값이 있으면 파싱, 없으면 로컬 배열 사용
       const sourceData = linenPayloadEl && linenPayloadEl.value ? JSON.parse(linenPayloadEl.value) : linens;
       
       items = sourceData.map(x => ({
@@ -210,9 +223,6 @@ if (form) {
     if (!staffName) return alert("담당자 이름을 입력해주세요.");
     if (!items.length) return alert("린넨을 최소 1개 이상 추가해주세요.");
 
-    // 🔥 이메일 정보
-    const userEmail = auth?.currentUser?.email || null;
-
     const payload = {
       buildingId,
       staffName,
@@ -224,11 +234,10 @@ if (form) {
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
 
-      // ⭐ 기존 필드 유지
-      userEmail,
-
-      // ⭐ 신규 필드 추가 (내역관리 권한 핵심)
-      authorEmail: userEmail
+      // ✅ [추가됨] 보안 규칙(isOwner) 통과를 위한 작성자 정보
+      uid: currentUser.uid,
+      authorEmail: currentUser.email,
+      userEmail: currentUser.email // 기존 호환성 유지
     };
 
     try {
@@ -249,7 +258,18 @@ if (form) {
       location.href = "history_dashboard.html";
     } catch (err) {
       console.error(err);
-      alert("등록 중 오류가 발생했습니다: " + (err.message || err));
+      if (err.code === 'permission-denied') {
+          alert("권한이 없습니다. (로그인 상태를 확인해주세요)");
+      } else {
+          alert("등록 중 오류가 발생했습니다: " + (err.message || err));
+      }
     }
   });
 }
+
+// 로그인 체크 (UI용)
+onAuthStateChanged(auth, (user) => {
+    if(user && staffEl && !staffEl.value) {
+        // staffEl.value = user.displayName || ""; // 편의기능 (선택사항)
+    }
+});

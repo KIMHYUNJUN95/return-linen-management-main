@@ -244,39 +244,58 @@ if(filterUrgency) filterUrgency.addEventListener("change", applyFilters);
 if(btnDateSearch) btnDateSearch.addEventListener("click", applyFilters);
 
 // ========================================
-// 🌐 Window Actions
+// 🌐 Window Actions (User Action Handlers)
 // ========================================
 
+// 공통 에러 핸들러
+function handleActionError(error, actionName) {
+    console.error(`${actionName} 오류:`, error);
+    if (error.code === 'permission-denied') {
+        alert("권한이 없습니다.\n(본인이 작성한 주문만 처리하거나, 관리자 권한이 필요합니다.)");
+    } else {
+        alert(`${actionName} 중 오류가 발생했습니다: ${error.message}`);
+    }
+}
+
 window.approveOrder = async (id) => {
+  if (!auth.currentUser) return alert("로그인이 필요합니다.");
   if (!confirm("Approve this order?")) return;
+  
   try {
     await updateDoc(doc(db, "orders", id), { status: "approved", updatedAt: serverTimestamp() });
     await loadOrders();
-  } catch(e) { console.error(e); alert("Failed to approve"); }
+  } catch(e) { handleActionError(e, "승인"); }
 };
 
 window.rejectOrder = async (id) => {
+  if (!auth.currentUser) return alert("로그인이 필요합니다.");
   if (!confirm("Reject this order?")) return;
+  
   try {
     await updateDoc(doc(db, "orders", id), { status: "rejected", updatedAt: serverTimestamp() });
     await loadOrders();
-  } catch(e) { console.error(e); alert("Failed to reject"); }
+  } catch(e) { handleActionError(e, "반려"); }
 };
 
 window.completeOrder = async (id) => {
+  if (!auth.currentUser) return alert("로그인이 필요합니다.");
   if (!confirm("Mark as completed?")) return;
+  
   try {
     await updateDoc(doc(db, "orders", id), { status: "completed", updatedAt: serverTimestamp() });
     await loadOrders();
-  } catch(e) { console.error(e); alert("Failed to complete"); }
+  } catch(e) { handleActionError(e, "완료 처리"); }
 };
 
 window.deleteOrder = async (id) => {
+  if (!auth.currentUser) return alert("로그인이 필요합니다.");
   if (!confirm("Permanently delete this order?")) return;
+  
   try {
     await deleteDoc(doc(db, "orders", id));
     await loadOrders();
-  } catch(e) { console.error(e); alert("Failed to delete"); }
+    alert("삭제되었습니다.");
+  } catch(e) { handleActionError(e, "삭제"); }
 };
 
 window.editOrder = (id) => {

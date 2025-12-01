@@ -229,6 +229,7 @@ window.addEventListener("DOMContentLoaded", () => {
 
       const batch = writeBatch(db);
       let count = 0;
+      const currentUser = auth.currentUser;
       
       for (const name of allowed) {
         if (exist.includes(name)) continue;
@@ -241,6 +242,9 @@ window.addEventListener("DOMContentLoaded", () => {
           minQuantity: 0,
           note: "",
           lastUpdated: new Date().toISOString().split("T")[0],
+          // ✅ 일괄 등록 시 작성자 정보 추가
+          uid: currentUser ? currentUser.uid : null,
+          authorEmail: currentUser ? currentUser.email : null
         });
         count++;
       }
@@ -370,6 +374,13 @@ window.addEventListener("DOMContentLoaded", () => {
       return alert(`'${building}'에서는 허용되지 않는 품목입니다.\n(오쿠보2 린넨/비품 구분 확인 필요)`);
     }
 
+    // ✅ [중요] 현재 로그인 사용자 정보 가져오기
+    const currentUser = auth.currentUser;
+    if (!currentUser) {
+        alert("로그인이 필요합니다.");
+        return;
+    }
+
     const payload = {
       building,
       itemName,
@@ -377,6 +388,8 @@ window.addEventListener("DOMContentLoaded", () => {
       minQuantity,
       note,
       lastUpdated: new Date().toISOString().split("T")[0],
+      // ✅ [추가됨] 수정자 정보 (이력 추적용)
+      lastUpdatedBy: currentUser.email
     };
 
     try {
@@ -398,6 +411,9 @@ window.addEventListener("DOMContentLoaded", () => {
         await updateDoc(doc(db, "inventory", currentDocId), payload);
         alert("수정되었습니다.");
       } else {
+        // ✅ [추가됨] 신규 등록 시 생성자 정보 추가
+        payload.uid = currentUser.uid;
+        payload.authorEmail = currentUser.email;
         await addDoc(collection(db, "inventory"), payload);
         alert("등록되었습니다.");
       }
@@ -406,7 +422,12 @@ window.addEventListener("DOMContentLoaded", () => {
       modalOverlay.style.display = "none";
       document.body.style.overflow = "";
     } catch (err) {
-      alert("저장 중 오류가 발생했습니다.");
+      // 권한 에러 명시
+      if (err.code === 'permission-denied') {
+          alert("권한이 없습니다. (관리자만 가능)");
+      } else {
+          alert("저장 중 오류가 발생했습니다.");
+      }
       console.error(err);
     }
   });
@@ -453,8 +474,17 @@ window.addEventListener("DOMContentLoaded", () => {
       if (userRole !== "admin") return alert("관리자만 가능합니다.");
       if (!confirm("정말 삭제하시겠습니까?")) return;
 
-      await deleteDoc(doc(db, "inventory", id));
-      alert("삭제되었습니다.");
+      try {
+        await deleteDoc(doc(db, "inventory", id));
+        alert("삭제되었습니다.");
+      } catch (err) {
+        if (err.code === 'permission-denied') {
+            alert("삭제 권한이 없습니다. (슈퍼 관리자만 가능)");
+        } else {
+            alert("삭제 중 오류가 발생했습니다.");
+        }
+        console.error(err);
+      }
     }
   });
 
@@ -505,7 +535,11 @@ window.addEventListener("DOMContentLoaded", () => {
         alert("삭제 완료되었습니다.");
       } catch (err) {
         console.error("전체 삭제 오류:", err);
-        alert("삭제 중 오류가 발생했습니다.");
+        if (err.code === 'permission-denied') {
+            alert("전체 삭제 권한이 없습니다.");
+        } else {
+            alert("삭제 중 오류가 발생했습니다.");
+        }
       }
     });
   }

@@ -1,17 +1,17 @@
 // ===============================
-// 🧺 HARU 반품 등록 로직 (공통 헤더 구조)
+// 🧺 HARU 반품 등록 로직 (Finalized)
 // ===============================
 
 // 중복 실행 방지
 if (window.__RETURN_FORM_LOADED__) {
-  console.warn("⚠️ return_form.js 중복 실행");
+  console.warn("⚠️ return_form.js 중복 실행 방지");
 } else {
   window.__RETURN_FORM_LOADED__ = true;
   loadModule();
 }
 
 // ================================
-// 🔥 공통 헤더 로드 (수정됨)
+// 🔥 공통 헤더 로드
 // ================================
 (async () => {
   try {
@@ -21,10 +21,9 @@ if (window.__RETURN_FORM_LOADED__) {
     if (placeholder) {
       placeholder.innerHTML = html;
 
-      // 🛑 [수정됨] innerHTML로 삽입된 <script>는 실행되지 않습니다.
-      // 따라서 화면이 그려진 후, 여기서 명시적으로 header.js 기능을 활성화해야 합니다.
+      // 🛑 동적 임포트로 헤더 스크립트 실행 (innerHTML 스크립트 미실행 문제 해결)
       const { initHeaderMenu } = await import("./header.js");
-      initHeaderMenu(); 
+      if(initHeaderMenu) initHeaderMenu(); 
     }
 
   } catch (err) {
@@ -38,6 +37,7 @@ if (window.__RETURN_FORM_LOADED__) {
 // ===============================
 async function loadModule() {
 
+  // ✅ [수정됨] storage.js에서 통합된 객체 가져오기
   const { db, auth, storage } = await import("./storage.js");
   const {
     collection, addDoc, updateDoc, serverTimestamp, doc
@@ -175,6 +175,13 @@ async function loadModule() {
     form.onsubmit = async (e) => {
       e.preventDefault();
 
+      // 🔒 로그인 체크 (필수)
+      const currentUser = auth.currentUser;
+      if (!currentUser) {
+          alert("로그인이 필요합니다.");
+          return;
+      }
+
       const buildingId = buildingEl.value;
       const date = dateEl.value;
       const staffName = staffEl.value;
@@ -191,8 +198,6 @@ async function loadModule() {
       if (!staffName) return alert("담당자 입력");
       if (!items.length) return alert("린넨 추가 필요");
 
-      const userEmail = auth?.currentUser?.email || null;
-
       const payload = {
         buildingId,
         staffName,
@@ -203,8 +208,11 @@ async function loadModule() {
         imageUrls: [],
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
-        userEmail,
-        authorEmail: userEmail
+        
+        // ✅ [추가됨] 보안 규칙(isOwner) 통과를 위한 필수 필드
+        uid: currentUser.uid,
+        authorEmail: currentUser.email,
+        userEmail: currentUser.email
       };
 
       try {
@@ -224,7 +232,11 @@ async function loadModule() {
 
       } catch (err) {
         console.error(err);
-        alert("오류: " + err.message);
+        if (err.code === 'permission-denied') {
+            alert("권한이 없습니다. (로그인 상태 확인)");
+        } else {
+            alert("오류: " + err.message);
+        }
       }
     };
   }

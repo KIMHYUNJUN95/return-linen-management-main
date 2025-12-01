@@ -3,6 +3,7 @@
 // ========================================
 
 import { initHeaderMenu } from "./header.js";
+// ✅ [수정됨] storage.js에서 통합된 객체 가져오기
 import { db, auth, storage } from "./storage.js";
 import {
   collection,
@@ -17,14 +18,14 @@ import {
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 import { ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
 
-/* ✅ 1. 헤더 로드 (HTML 인라인 스크립트 대체) */
+/* ✅ 1. 헤더 로드 */
 document.addEventListener("DOMContentLoaded", () => {
   fetch("header.html")
     .then(r => r.text())
     .then(h => {
-      const headerPlaceholder = document.getElementById("header-placeholder");
-      if (headerPlaceholder) {
-        headerPlaceholder.innerHTML = h;
+      const placeholder = document.getElementById("header-placeholder");
+      if (placeholder) {
+        placeholder.innerHTML = h;
         initHeaderMenu();
       }
     })
@@ -44,8 +45,8 @@ let currentUser = null;
 let isAdmin = false;
 let lastMessageTimestamp = 0;
 
-/* ✅ 관리자 UID 설정 (기존 유지) */
-const ADMIN_UIDS = ["YOUR_ADMIN_UID_HERE"];
+/* ✅ 관리자 이메일 설정 (프로젝트 통일) */
+const SUPER_ADMIN_EMAIL = "rlaguswns95@haru-tokyo.com";
 
 /* ===========================================
    🧑 로그인 상태 체크
@@ -54,54 +55,65 @@ onAuthStateChanged(auth, (user) => {
   if (user) {
     currentUser = user;
     // 영문 대신 한국어 표기
-    meName.textContent = user.displayName || "익명 사용자";
-    isAdmin = ADMIN_UIDS.includes(user.uid);
+    if(meName) meName.textContent = user.displayName || "익명 사용자";
+    
+    // ✅ 이메일 기반 관리자 확인
+    isAdmin = (user.email === SUPER_ADMIN_EMAIL);
+    
     loadMessages();
   } else {
-    // 디자인 컨셉에 맞게 경고 메시지는 유지하되 톤앤매너 고려
     alert("로그인이 필요한 서비스입니다.");
-    location.href = "login.html";
+    // location.href = "login.html"; // 필요 시 주석 해제
   }
 });
 
 /* ===========================================
    ✉️ 메시지 전송
 =========================================== */
-chatForm.addEventListener("submit", async (e) => {
-  e.preventDefault();
+if (chatForm) {
+  chatForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
 
-  const text = chatInput.value.trim();
-  const file = imageInput.files[0];
-  
-  // 내용이 없으면 리턴
-  if (!text && !file) return;
-
-  let imageUrl = null;
-
-  try {
-    // 이미지 업로드 로직
-    if (file) {
-      const storageRef = ref(storage, `chat_images/${Date.now()}_${file.name}`);
-      const snapshot = await uploadBytes(storageRef, file);
-      imageUrl = await getDownloadURL(snapshot.ref);
-      imageInput.value = ""; // 입력 초기화
+    if (!currentUser) {
+        alert("로그인이 필요합니다.");
+        return;
     }
 
-    // Firestore 저장
-    await addDoc(collection(db, "chat"), {
-      text,
-      imageUrl,
-      uid: currentUser.uid,
-      userName: currentUser.displayName || "익명",
-      createdAt: serverTimestamp()
-    });
+    const text = chatInput.value.trim();
+    const file = imageInput.files[0];
+    
+    // 내용이 없으면 리턴
+    if (!text && !file) return;
 
-    chatInput.value = "";
-  } catch (err) {
-    console.error("메시지 전송 오류:", err);
-    alert("메시지 전송에 실패했습니다.");
-  }
-});
+    let imageUrl = null;
+
+    try {
+      // 이미지 업로드 로직
+      if (file) {
+        const storageRef = ref(storage, `chat_images/${Date.now()}_${file.name}`);
+        const snapshot = await uploadBytes(storageRef, file);
+        imageUrl = await getDownloadURL(snapshot.ref);
+        imageInput.value = ""; // 입력 초기화
+      }
+
+      // Firestore 저장
+      // ✅ [추가됨] 이메일 정보 추가 저장
+      await addDoc(collection(db, "chat"), {
+        text,
+        imageUrl,
+        uid: currentUser.uid,
+        email: currentUser.email,
+        userName: currentUser.displayName || "익명",
+        createdAt: serverTimestamp()
+      });
+
+      chatInput.value = "";
+    } catch (err) {
+      console.error("메시지 전송 오류:", err);
+      alert("메시지 전송에 실패했습니다.");
+    }
+  });
+}
 
 /* ===========================================
    📥 메시지 불러오기 (실시간 & 디자인 적용)
@@ -127,14 +139,15 @@ function loadMessages() {
         ? createdAt.toLocaleString("ko-KR", {
             hour: "2-digit",
             minute: "2-digit",
-            hour12: false // 24시간제 (깔끔함)
+            hour12: false // 24시간제
           })
         : "";
 
       // 메시지 렌더링 요소 생성
       const div = document.createElement("div");
       div.classList.add("message");
-      // 내 메시지인지 확인하여 클래스 추가 (CSS에서 색상 처리)
+      
+      // 내 메시지인지 확인하여 클래스 추가
       const isSelf = msg.uid === currentUser?.uid;
       div.classList.add(isSelf ? "self" : "other");
 
@@ -149,17 +162,17 @@ function loadMessages() {
       if (msg.imageUrl) {
         contentHtml += `
           <div style="margin-top:8px;">
-            <img src="${msg.imageUrl}" alt="첨부 이미지" loading="lazy">
+            <img src="${msg.imageUrl}" alt="첨부 이미지" loading="lazy" style="max-width:200px; border-radius:8px; border:1px solid #eee;">
           </div>`;
       }
 
-      // 삭제 권한 체크
+      // 삭제 권한 체크 (본인 또는 관리자)
       const canDelete = isAdmin || isSelf;
       const deleteBtn = canDelete
-        ? `<button class="delete-btn" data-id="${id}">삭제</button>`
+        ? `<button class="delete-btn" data-id="${id}" style="border:none; background:none; color:#E74C3C; font-size:10px; margin-left:5px; cursor:pointer;">삭제</button>`
         : "";
 
-      // HTML 구조 조립 (CSS 클래스 매칭: sender-name, meta)
+      // HTML 구조 조립
       div.innerHTML = `
         <span class="sender-name">${msg.userName}</span>
         ${contentHtml}
@@ -207,14 +220,19 @@ function attachDeleteHandlers() {
         await deleteDoc(doc(db, "chat", id));
       } catch (err) {
         console.error("삭제 오류:", err);
-        alert("삭제 중 문제가 발생했습니다.");
+        // ✅ 권한 에러 명시
+        if (err.code === 'permission-denied') {
+            alert("삭제 권한이 없습니다.");
+        } else {
+            alert("삭제 중 문제가 발생했습니다.");
+        }
       }
     });
   });
 }
 
 /* ===========================================
-   🔔 채팅 뱃지 기능 (UI Minimal Update)
+   🔔 채팅 뱃지 기능
 =========================================== */
 function showChatBadge() {
   const chatMenu = document.querySelector('[data-menu="chat"]');
@@ -224,7 +242,6 @@ function showChatBadge() {
   if (!badge) {
     badge = document.createElement("span");
     badge.className = "chat-badge";
-    // 이모지 대신 깔끔한 점(Dot)으로 표시
     badge.style.display = "inline-block";
     badge.style.width = "6px";
     badge.style.height = "6px";

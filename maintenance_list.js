@@ -2,10 +2,10 @@
 // 🛠️ HARU Maintenance List Logic (Fixed & Integrated)
 // ========================================
 
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+// ✅ [수정됨] storage.js에서 통합된 db, auth 가져오기 (중복 초기화 방지)
+import { db, auth } from "./storage.js";
+import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 import {
-  getFirestore,
   collection,
   getDocs,
   deleteDoc,
@@ -14,39 +14,9 @@ import {
   orderBy
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-// 🔴 1. Firebase Initialization (Safe Handling)
-let firebaseConfig = {};
-if (window.__firebase_config) {
-  try {
-    firebaseConfig = JSON.parse(window.__firebase_config);
-  } catch (e) {
-    console.error("Firebase config parsing error:", e);
-  }
-}
-
-let app, auth, db;
-if (firebaseConfig.apiKey) {
-    app = initializeApp(firebaseConfig);
-    auth = getAuth(app);
-    db = getFirestore(app);
-} else {
-    auth = { onAuthStateChanged: () => {} };
-    db = {};
-}
-
-// 🔴 2. Role Check Fallback
-// 외부 roles.js 파일 의존성을 제거하고 내부 로직으로 대체
-const getUserRoleByEmail = async (email) => {
-    const superAdmin = "rlaguswns95@haru-tokyo.com";
-    if (email === superAdmin) return "admin";
-    // Firestore에서 역할 확인 (필요 시)
-    return "user";
-};
-
-// ✅ 3. Header Logic (HTML에 이미 내장되어 있으므로 여기선 초기화만 보조)
+// ✅ 3. Header Logic (기존 로직 유지)
 document.addEventListener("DOMContentLoaded", () => {
-    // HTML 파일 내의 스크립트가 처리하므로 별도 fetch 불필요
-    console.log("Page Loaded");
+   console.log("Maintenance List Page Loaded");
 });
 
 // 전역 변수
@@ -54,31 +24,38 @@ let currentUser = null;
 let currentRole = "user";
 let allData = []; // 전체 데이터 캐싱
 
+// 🔴 Role Check (내부 함수 유지)
+const getUserRoleByEmail = async (email) => {
+   const superAdmin = "rlaguswns95@haru-tokyo.com";
+   if (email === superAdmin) return "admin";
+   return "user";
+};
+
 /* ========================================
    🔧 보수방법 모달 제어 (HTML 모달 사용)
 ======================================== */
 function openRepairModal(text) {
-    const modal = document.getElementById("methodModal");
-    const content = document.getElementById("methodContent");
-    const closeBtn = document.getElementById("btnMethodClose");
+   const modal = document.getElementById("methodModal");
+   const content = document.getElementById("methodContent");
+   const closeBtn = document.getElementById("btnMethodClose");
 
-    if (!modal || !content) {
-        console.error("Method modal elements not found in HTML.");
-        return;
-    }
+   if (!modal || !content) {
+       console.error("Method modal elements not found in HTML.");
+       return;
+   }
 
-    // 텍스트 설정
-    const value = (text || "").trim();
-    content.textContent = value || "등록된 보수 방법이 없습니다.\n(수정 버튼을 눌러 내용을 등록해주세요)";
+   // 텍스트 설정
+   const value = (text || "").trim();
+   content.textContent = value || "등록된 보수 방법이 없습니다.\n(수정 버튼을 눌러 내용을 등록해주세요)";
 
-    // 보여주기
-    modal.style.display = "flex";
+   // 보여주기
+   modal.style.display = "flex";
 
-    // 닫기 이벤트 연결 (중복 방지)
-    closeBtn.onclick = () => modal.style.display = "none";
-    modal.onclick = (e) => {
-        if (e.target === modal) modal.style.display = "none";
-    };
+   // 닫기 이벤트 연결 (중복 방지)
+   closeBtn.onclick = () => modal.style.display = "none";
+   modal.onclick = (e) => {
+       if (e.target === modal) modal.style.display = "none";
+   };
 }
 
 /* ========================================
@@ -319,7 +296,12 @@ function attachEvents() {
         loadMaintenanceList();
       } catch (err) {
         console.error("삭제 실패:", err);
-        alert("삭제 중 오류가 발생했습니다.");
+        // ✅ [추가됨] 권한 에러 처리 명시
+        if (err.code === 'permission-denied') {
+            alert("권한이 없습니다. (관리자만 삭제 가능)");
+        } else {
+            alert("삭제 중 오류가 발생했습니다.");
+        }
       }
     });
   });

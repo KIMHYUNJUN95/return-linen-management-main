@@ -3,11 +3,11 @@
 // Design System: Tokyo Day Bright
 // ========================================
 
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
+// ✅ [수정됨] storage.js에서 통합된 객체 가져오기 (중복 초기화 방지)
+import { db, auth, storage } from "./storage.js";
+import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
 import {
-  getFirestore,
   collection,
   addDoc,
   serverTimestamp,
@@ -16,21 +16,11 @@ import {
   updateDoc,
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-// 🔴 1. Firebase Initialization
-let firebaseConfig = {};
-if (window.__firebase_config) {
-  try { firebaseConfig = JSON.parse(window.__firebase_config); } catch (e) { console.error(e); }
-}
-
-let app, auth, db, storage;
-if (firebaseConfig.apiKey) {
-    app = initializeApp(firebaseConfig);
-    auth = getAuth(app);
-    db = getFirestore(app);
-    storage = getStorage(app);
-} else {
-    auth = { onAuthStateChanged: () => {} };
-}
+// ✅ 1. 헤더 로드 (보조)
+document.addEventListener("DOMContentLoaded", () => {
+    // HTML 내의 스크립트가 헤더를 로드하므로 여기서는 콘솔 로그만
+    console.log("Maintenance Form Loaded");
+});
 
 /* ========== DOM Elements ========== */
 const form = document.getElementById("maintenanceForm");
@@ -50,7 +40,7 @@ const editId = urlParams.get("edit");
 let existingPhotos = [];
 
 /* ========== Load Data for Edit ========== */
-if (editId && db) {
+if (editId) {
     (async function loadForEdit() {
         if (titleEl) titleEl.textContent = "EDIT MAINTENANCE (유지보수 수정)";
         if (submitBtn) submitBtn.textContent = "UPDATE (수정 저장)";
@@ -106,8 +96,10 @@ if (form) {
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
     
-    if (!db) {
-        alert("Database not connected.");
+    // 🔒 로그인 체크
+    const currentUser = auth.currentUser;
+    if (!currentUser) {
+        alert("로그인이 필요합니다.");
         return;
     }
 
@@ -128,10 +120,8 @@ if (form) {
     }
 
     try {
-      const user = auth.currentUser;
-      const staff = user ? user.displayName || user.email : "Admin";
-      const createdByEmail = user ? user.email : "Admin";
-
+      const staff = currentUser.displayName || currentUser.email;
+      
       // New Photo Upload
       const newFiles = Array.from(photoInput.files || []);
       const newUrls = newFiles.length ? await uploadPhotos(newFiles) : [];
@@ -145,16 +135,22 @@ if (form) {
         room,
         issue: desc,
         staff,
-        createdByEmail,
         status,
         repairMethod, // 🔧 Save to DB
         imageUrls,
         photoURL,
         updatedAt: serverTimestamp(),
+        
+        // ✅ [추가됨] 보안 규칙(isOwner) 통과를 위한 필수 필드
+        uid: currentUser.uid,
+        authorEmail: currentUser.email,
+        createdByEmail: currentUser.email // 기존 호환용 유지
       };
 
       if (editId) {
         // Update
+        // 수정 시에는 uid를 덮어쓰지 않아도 됨 (기존 uid 유지)
+        // 하지만 관리자가 수정하는 경우를 대비해 lastUpdatedBy 등을 남길 수도 있음
         await updateDoc(doc(db, "maintenance", editId), data);
         alert("Updated successfully.");
       } else {
@@ -168,7 +164,11 @@ if (form) {
 
     } catch (err) {
       console.error("Save Error:", err);
-      alert("Error saving data.");
+      if (err.code === 'permission-denied') {
+          alert("권한이 없습니다. (본인이 작성한 글만 수정 가능)");
+      } else {
+          alert("Error saving data.");
+      }
       submitBtn.disabled = false;
       submitBtn.textContent = editId ? "UPDATE" : "SUBMIT REQUEST";
     }
@@ -192,11 +192,10 @@ if (photoInput) {
 }
 
 // Auth Check
-if (auth) {
-    onAuthStateChanged(auth, (user) => {
-        if (!user) {
-             alert("Please login.");
-             location.href = "index.html";
-        }
-    });
-}
+onAuthStateChanged(auth, (user) => {
+    if (!user) {
+         // alert("Please login.");
+         // location.href = "index.html";
+         // 필요 시 활성화
+    }
+});

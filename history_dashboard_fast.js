@@ -4,7 +4,7 @@
 // ===============================
 
 import { initHeaderMenu } from "./header.js";
-import { db, auth } from "./storage.js";
+import { db, auth } from "./storage.js"; // storage.js 통합 사용
 import {
   collection,
   getDocs,
@@ -16,14 +16,14 @@ import {
   deleteDoc,
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-// ✅ 1. 헤더 로드 (HTML 인라인 스크립트 대체)
+// ✅ 1. 헤더 로드
 document.addEventListener("DOMContentLoaded", () => {
   fetch("header.html")
     .then(r => r.text())
     .then(h => {
-      const headerPlaceholder = document.getElementById("header-placeholder");
-      if (headerPlaceholder) {
-        headerPlaceholder.innerHTML = h;
+      const placeholder = document.getElementById("header-placeholder");
+      if (placeholder) {
+        placeholder.innerHTML = h;
         initHeaderMenu();
       }
     })
@@ -50,7 +50,7 @@ let allData = [];
 
 /* ✅ 로딩 UI */
 function showLoading() {
-  cardBody.innerHTML = `<div style="text-align:center; padding:40px; color:#94A3B8;">데이터를 불러오는 중입니다...</div>`;
+  if(cardBody) cardBody.innerHTML = `<div style="text-align:center; padding:40px; color:#94A3B8;">데이터를 불러오는 중입니다...</div>`;
 }
 
 /* ✅ 카드 렌더링 (디자인 리뉴얼) */
@@ -68,15 +68,15 @@ function renderCards(list) {
   list.sort((a, b) => new Date(b.date) - new Date(a.date));
 
   cardBody.innerHTML = list.map(d => {
-    // 권한 체크
-    const isOwner = currentEmail && d.authorEmail === currentEmail;
+    // 권한 체크 (UI 표시용 - 실제 차단은 Firestore Rules)
+    const isOwner = currentEmail && (d.authorEmail === currentEmail || d.userEmail === currentEmail);
     const isAdmin = currentEmail === adminEmail;
     const isEditable = isOwner || isAdmin;
 
     // 타입별 텍스트
     const typeText = d.type === "입고" ? "INCOMING" : "RETURN";
 
-    // HTML 구조 생성 (CSS 클래스 활용)
+    // HTML 구조 생성
     return `
     <div class="history-card" data-type="${d.type}">
       <header>
@@ -144,7 +144,7 @@ function parseSnap(snap, type) {
       building: x.buildingId || x.building || "-",
       staff: x.staffName || x.staff || "-",
       desc: x.desc || "-",
-      authorEmail: x.authorEmail || null,
+      authorEmail: x.authorEmail || x.userEmail || null,
       items: (x.items || []).map(i => ({
         linenType: normalizeLinenName(i.linenType || i.type || ""),
         count: i.receivedCount ?? i.defectCount ?? 0,
@@ -156,6 +156,7 @@ function parseSnap(snap, type) {
 
 /* ✅ 병렬 로드 및 필터링 */
 async function loadHistory() {
+  if(!cardBody) return;
   showLoading();
   allData = [];
 
@@ -211,7 +212,8 @@ async function openEditModal(id, col) {
 
   if (!docData) return alert("데이터를 찾을 수 없습니다.");
 
-  const isOwner = docData.authorEmail === user.email;
+  // 소유권 확인 (이메일 기준)
+  const isOwner = (docData.authorEmail === user.email) || (docData.userEmail === user.email);
   const isAdmin = user.email === adminEmail;
 
   if (!isOwner && !isAdmin) {
@@ -220,7 +222,7 @@ async function openEditModal(id, col) {
   }
 
   const bg = document.createElement("div");
-  // 모달 배경 스타일 (Tokyo Theme)
+  // 모달 배경 스타일
   Object.assign(bg.style, {
     position: "fixed", top: 0, left: 0, width: "100%", height: "100%",
     background: "rgba(44, 62, 80, 0.6)", backdropFilter: "blur(4px)",
@@ -228,7 +230,7 @@ async function openEditModal(id, col) {
   });
 
   const modal = document.createElement("div");
-  // 모달 창 스타일 (Sharp & Clean)
+  // 모달 창 스타일
   Object.assign(modal.style, {
     background: "#fff", padding: "30px", width: "90%", maxWidth: "450px",
     boxShadow: "0 20px 40px rgba(0,0,0,0.2)", border: "1px solid #E2E8F0",
@@ -279,27 +281,44 @@ async function openEditModal(id, col) {
 
   modal.querySelector("#btnClose").addEventListener("click", () => bg.remove());
 
+  // ✅ [수정됨] 저장 로직에 에러 핸들링 추가
   modal.querySelector("#btnSave").addEventListener("click", async () => {
-    const newStaff = modal.querySelector("#editStaff").value.trim();
-    const newDesc = modal.querySelector("#editDesc").value.trim();
+    const btnSave = modal.querySelector("#btnSave");
+    btnSave.textContent = "저장 중...";
+    btnSave.disabled = true;
 
-    const updatedItems = (docData.items || []).map((i, idx) => {
-      const updated = { ...i };
-      const newValue = Number(modal.querySelector(`#editQty${idx}`).value);
-      if (i.receivedCount !== undefined) updated.receivedCount = newValue;
-      if (i.defectCount !== undefined) updated.defectCount = newValue;
-      return updated;
-    });
+    try {
+        const newStaff = modal.querySelector("#editStaff").value.trim();
+        const newDesc = modal.querySelector("#editDesc").value.trim();
 
-    await updateDoc(doc(db, col, id), {
-      staffName: newStaff,
-      desc: newDesc,
-      items: updatedItems,
-    });
+        const updatedItems = (docData.items || []).map((i, idx) => {
+          const updated = { ...i };
+          const newValue = Number(modal.querySelector(`#editQty${idx}`).value);
+          if (i.receivedCount !== undefined) updated.receivedCount = newValue;
+          if (i.defectCount !== undefined) updated.defectCount = newValue;
+          return updated;
+        });
 
-    alert("성공적으로 수정되었습니다.");
-    bg.remove();
-    loadHistory();
+        await updateDoc(doc(db, col, id), {
+          staffName: newStaff,
+          desc: newDesc,
+          items: updatedItems,
+        });
+
+        alert("성공적으로 수정되었습니다.");
+        bg.remove();
+        loadHistory();
+    } catch (err) {
+        console.error("수정 실패:", err);
+        if (err.code === 'permission-denied') {
+            alert("권한이 없습니다. (본인이 작성한 글만 수정 가능)");
+        } else {
+            alert("저장 중 오류가 발생했습니다.");
+        }
+    } finally {
+        btnSave.textContent = "저장하기";
+        btnSave.disabled = false;
+    }
   });
 }
 
@@ -312,24 +331,21 @@ async function deleteRecord(id, col) {
 
   if (!user) return alert("로그인이 필요합니다.");
 
-  const snap = await getDocs(collection(db, col));
-  const docData = snap.docs.find(d => d.id === id)?.data();
-
-  if (!docData) return alert("데이터를 찾을 수 없습니다.");
-
-  const isOwner = docData.authorEmail === user.email;
-  const isAdmin = user.email === adminEmail;
-
-  if (!isOwner && !isAdmin) {
-    alert("삭제 권한이 없습니다.");
-    return;
-  }
-
+  // 문서 확인 없이 바로 삭제 시도 (보안 규칙에 맡김) 또는 확인 후 삭제
   if (!confirm("정말로 이 내역을 삭제하시겠습니까?")) return;
 
-  await deleteDoc(doc(db, col, id));
-  alert("삭제되었습니다.");
-  loadHistory();
+  try {
+    await deleteDoc(doc(db, col, id));
+    alert("삭제되었습니다.");
+    loadHistory();
+  } catch (err) {
+    console.error("삭제 실패:", err);
+    if (err.code === 'permission-denied') {
+        alert("삭제 권한이 없습니다. (본인이 작성한 글만 삭제 가능)");
+    } else {
+        alert("삭제 중 오류가 발생했습니다.");
+    }
+  }
 }
 
 /* ======================================
@@ -344,10 +360,16 @@ window.addEventListener("DOMContentLoaded", () => {
   
   if (resetBtn) {
     resetBtn.addEventListener("click", () => {
-      document.getElementById("filterType").value = "";
-      document.getElementById("filterBuilding").value = "";
-      document.getElementById("startDate").value = "";
-      document.getElementById("endDate").value = "";
+      const fType = document.getElementById("filterType");
+      const fBuild = document.getElementById("filterBuilding");
+      const fStart = document.getElementById("startDate");
+      const fEnd = document.getElementById("endDate");
+      
+      if(fType) fType.value = "";
+      if(fBuild) fBuild.value = "";
+      if(fStart) fStart.value = "";
+      if(fEnd) fEnd.value = "";
+      
       loadHistory();
     });
   }

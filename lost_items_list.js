@@ -13,8 +13,11 @@ document.addEventListener("DOMContentLoaded", () => {
   fetch("header.html")
     .then(res => res.text())
     .then(html => {
-      document.getElementById("header-placeholder").innerHTML = html;
-      initHeaderMenu();
+      const placeholder = document.getElementById("header-placeholder");
+      if (placeholder) {
+        placeholder.innerHTML = html;
+        initHeaderMenu();
+      }
     })
     .catch(err => console.error("헤더 로드 실패:", err));
 });
@@ -59,7 +62,7 @@ onSnapshot(q, (snapshot) => {
       status: d.status || "-",
       imageUrls: images,
       memo: d.memo || "",
-      uid: d.uid || null   // ⭐ 새 규칙에 맞도록 포함되어야 함
+      uid: d.uid || null   // ⭐ 작성자 확인용
     });
   });
 
@@ -157,7 +160,7 @@ function attachEventListeners() {
     });
   });
 
-  // 수정 버튼
+  // 수정 버튼 (페이지 이동)
   document.querySelectorAll(".edit-btn").forEach(btn => {
     btn.addEventListener("click", (e) => {
       e.stopPropagation();
@@ -166,7 +169,7 @@ function attachEventListeners() {
     });
   });
 
-  // 삭제 버튼
+  // 삭제 버튼 (직접 삭제)
   document.querySelectorAll(".delete-btn").forEach(btn => {
     btn.addEventListener("click", async (e) => {
       e.stopPropagation();
@@ -184,7 +187,12 @@ function attachEventListeners() {
         alert("삭제되었습니다.");
       } catch (err) {
         console.error("삭제 실패:", err);
-        alert("삭제 중 오류가 발생했습니다.");
+        // ✅ [추가됨] 권한 에러 처리
+        if (err.code === 'permission-denied') {
+            alert("삭제 권한이 없습니다. (본인이 작성한 글 또는 관리자만 삭제 가능)");
+        } else {
+            alert("삭제 중 오류가 발생했습니다.");
+        }
       }
     });
   });
@@ -250,7 +258,12 @@ function openDetailModal(id) {
         detailModal.style.display = "none";
       } catch (err) {
         console.error("저장 실패:", err);
-        alert("저장 중 오류가 발생했습니다.");
+        // ✅ [추가됨] 권한 에러 처리
+        if (err.code === 'permission-denied') {
+            alert("수정 권한이 없습니다. (본인이 작성한 글 또는 관리자만 수정 가능)");
+        } else {
+            alert("저장 중 오류가 발생했습니다.");
+        }
       }
     });
   }
@@ -260,32 +273,47 @@ function openDetailModal(id) {
 
 /* 🔍 사진 확대 */
 window.openPhoto = (url) => {
-  modalImg.src = url;
-  photoModal.style.display = "flex";
+  const modalImg = document.getElementById("modalImg");
+  const photoModal = document.getElementById("photoModal");
+  
+  if (modalImg && photoModal) {
+    modalImg.src = url;
+    photoModal.style.display = "flex";
+  }
 };
 
 /* 모달 닫기 */
-closeDetailModalBtn.addEventListener("click", () => {
-  detailModal.style.display = "none";
-});
+if(closeDetailModalBtn) {
+    closeDetailModalBtn.addEventListener("click", () => {
+        detailModal.style.display = "none";
+    });
+}
 
-photoModal.addEventListener("click", () => {
-  photoModal.style.display = "none";
-});
+if(photoModal) {
+    photoModal.addEventListener("click", () => {
+        photoModal.style.display = "none";
+    });
+}
 
-detailModal.addEventListener("click", (e) => {
-  if (e.target === detailModal) detailModal.style.display = "none";
-});
+if(detailModal) {
+    detailModal.addEventListener("click", (e) => {
+        if (e.target === detailModal) detailModal.style.display = "none";
+    });
+}
 
 /* 필터 */
-filterBtn.addEventListener("click", renderList);
-searchInput.addEventListener("keyup", (e) => {
-  if (e.key === "Enter") renderList();
-});
+if(filterBtn) filterBtn.addEventListener("click", renderList);
+if(searchInput) {
+    searchInput.addEventListener("keyup", (e) => {
+        if (e.key === "Enter") renderList();
+    });
+}
 
-resetBtn.addEventListener("click", () => {
-  filterBuilding.value = "";
-  filterStatus.value = "";
-  searchInput.value = "";
-  renderList();
-});
+if(resetBtn) {
+    resetBtn.addEventListener("click", () => {
+        filterBuilding.value = "";
+        filterStatus.value = "";
+        searchInput.value = "";
+        renderList();
+    });
+}

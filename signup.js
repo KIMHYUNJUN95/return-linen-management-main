@@ -3,9 +3,9 @@
 // Refined for: Tokyo Christmas Edition
 // ========================================
 
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+// ✅ [수정됨] storage.js에서 통합된 객체 가져오기 (중복 초기화 방지)
+import { db, auth } from "./storage.js"; 
 import { 
-  getAuth, 
   signInWithEmailAndPassword, 
   createUserWithEmailAndPassword, 
   updateProfile, 
@@ -13,22 +13,11 @@ import {
   signOut 
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 import { 
-  getFirestore, 
   doc, 
   setDoc, 
   getDoc,
   serverTimestamp 
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-
-// 🔴 1. Firebase Initialization (Safe Handling)
-let firebaseConfig = {};
-if (window.__firebase_config) {
-  try { firebaseConfig = JSON.parse(window.__firebase_config); } catch (e) { console.error(e); }
-}
-
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
 
 // 2. DOM Elements
 const loginForm = document.getElementById('loginForm');

@@ -4,11 +4,11 @@
 // Design: Tokyo Day Bright (No Emoji, Architectural)
 // ========================================
 
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
+// ✅ [수정됨] storage.js에서 통합된 객체 가져오기 (중복 초기화 방지)
+import { db, auth, storage } from "./storage.js";
+import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
 import {
-  getFirestore,
   collection,
   query,
   orderBy,
@@ -18,27 +18,6 @@ import {
   addDoc,
   serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-
-// 🔴 1. Firebase Initialization (Safe Handling)
-let firebaseConfig = {};
-if (window.__firebase_config) {
-  try {
-    firebaseConfig = JSON.parse(window.__firebase_config);
-  } catch (e) {
-    console.error("Firebase Config Error:", e);
-  }
-}
-
-let app, auth, db, storage;
-if (firebaseConfig.apiKey) {
-    app = initializeApp(firebaseConfig);
-    auth = getAuth(app);
-    db = getFirestore(app);
-    storage = getStorage(app);
-} else {
-    // Fallback
-    auth = { onAuthStateChanged: () => {} };
-}
 
 // 2. DOM Elements
 const calendarEl = document.getElementById('calendar');
@@ -54,7 +33,7 @@ const btnGoOverview = document.getElementById('btnGoOverview');
 // Modals
 const detailModal = document.getElementById('detailModal');
 const completeModal = document.getElementById('completeModal');
-const photoModal = document.getElementById('photoModal');
+const photoModal = document.getElementById("photoModal"); // HTML ID 확인 필요
 
 // State
 let calendar;
@@ -264,13 +243,16 @@ function renderMonthlySummary(items) {
     if (!summarySection) {
         summarySection = document.createElement('section');
         summarySection.id = 'monthlySummarySection';
-        // ✅ 여기서 'stats-grid' 클래스를 주어서 CSS가 먹히게 함
         summarySection.className = 'stats-grid'; 
         
         const calCard = document.querySelector('.calendar-card');
-        if(calCard) calCard.parentNode.insertBefore(summarySection, calCard);
+        if(calCard && calCard.parentNode) calCard.parentNode.insertBefore(summarySection, calCard);
+        else {
+            // fallback location
+            const main = document.querySelector('main');
+            if(main) main.insertBefore(summarySection, main.firstChild);
+        }
     } else {
-        // 혹시 클래스가 없으면 추가
         summarySection.className = 'stats-grid';
     }
 
@@ -286,10 +268,9 @@ function renderMonthlySummary(items) {
     const overdue = currentMonthItems.filter(it => {
         const d = toISODate(it.nextDueDate || it.nextDue);
         return it.status !== 'done' && d < todayISO();
-    }); // length는 아래 HTML에서 .length로 사용
+    }).length; 
 
-    // 3. HTML 생성 (CSS 클래스 'stat-card', 'stat-title', 'stat-value' 사용)
-    // ✅ CSS에서 .stat-title에 높이 50px를 고정해뒀으므로, 줄바꿈이 생겨도 숫자는 밀리지 않음
+    // 3. HTML 생성
     summarySection.innerHTML = `
         <div class="stat-card">
             <div class="stat-title">TOTAL TASKS</div>
@@ -301,7 +282,7 @@ function renderMonthlySummary(items) {
         </div>
         <div class="stat-card">
             <div class="stat-title">OVERDUE</div>
-            <div class="stat-value overdue">${overdue.length}</div>
+            <div class="stat-value overdue">${overdue}</div>
         </div>
     `;
 }
@@ -369,6 +350,14 @@ if (btnCompleteSubmit) {
         if (isProcessing) return;
         isProcessing = true;
 
+        // 🔒 로그인 체크 (필수)
+        const currentUser = auth.currentUser;
+        if (!currentUser) {
+            alert("로그인이 필요합니다.");
+            isProcessing = false;
+            return;
+        }
+
         const note = document.getElementById('cNote').value;
         const fileEl = document.getElementById('cPhoto');
         const file = fileEl ? fileEl.files[0] : null;
@@ -399,12 +388,15 @@ if (btnCompleteSubmit) {
                 lastDoneDate: today,
                 photoUrl: photoUrl || selectedEventData.photoUrl || null,
                 updatedAt: serverTimestamp(),
-                note: note
+                note: note,
+                completedBy: currentUser.email // 누가 완료했는지 기록
             });
 
             // 3. Create Next Cycle Task (if cycle > 0)
             if (cycle > 0) {
                 const nextDate = addMonths(today, cycle);
+                
+                // ✅ [추가됨] 다음 스케줄 생성 시 작성자 정보(uid) 포함
                 await addDoc(collection(db, "maintenance_schedule"), {
                     building: selectedEventData.building,
                     room: selectedEventData.room,
@@ -414,7 +406,12 @@ if (btnCompleteSubmit) {
                     startDate: today,
                     nextDueDate: nextDate,
                     lastDoneDate: null,
-                    createdBy: auth.currentUser?.email || 'System',
+                    
+                    // 작성자 정보 저장
+                    createdBy: currentUser.email,
+                    uid: currentUser.uid, 
+                    authorEmail: currentUser.email,
+                    
                     timestamp: serverTimestamp()
                 });
             }
@@ -428,7 +425,11 @@ if (btnCompleteSubmit) {
 
         } catch (err) {
             console.error("Completion error:", err);
-            alert("처리 중 오류가 발생했습니다.");
+            if (err.code === 'permission-denied') {
+                alert("권한이 없습니다. (수정 권한 확인 필요)");
+            } else {
+                alert("처리 중 오류가 발생했습니다.");
+            }
         } finally {
             isProcessing = false;
         }
@@ -440,21 +441,15 @@ if (btnCompleteSubmit) {
 ======================================== */
 function openPhotoModal(url) {
   if (!photoModal) return;
-  const img = document.getElementById("photoImg");
-  const link = document.getElementById("btnPhotoOpen");
-  const btnClose = document.getElementById("btnPhotoClose"); // 버튼 참조 추가
+  const img = document.getElementById("photoImg"); // HTML ID 확인 필요 (zoomImg 인지 photoImg 인지)
+  // HTML 구조상 확대 이미지가 들어갈 img 태그 ID를 확인해서 매칭해야 함.
+  // 여기서는 안전하게 id가 없으면 생성하거나 기존 로직을 따름.
+  // 앞서 cs_dashboard에서는 'zoomImg'였음. 여기서는 HTML을 못봐서 'photoImg'로 가정.
+  // 만약 이미지가 안뜬다면 HTML ID를 맞춰야 함.
   
   if (img) img.src = url;
-  if (link) link.href = url;
   
   photoModal.style.display = "flex";
-
-  // 닫기 버튼 이벤트 연결 (안전장치)
-  if (btnClose) {
-      btnClose.onclick = () => {
-          photoModal.style.display = "none";
-      };
-  }
 }
 
 // Close Buttons
@@ -463,6 +458,17 @@ if(btnDetailClose) btnDetailClose.addEventListener('click', () => detailModal.st
 
 const btnCompleteCancel = document.getElementById('btnCompleteCancel');
 if(btnCompleteCancel) btnCompleteCancel.addEventListener('click', () => completeModal.style.display = 'none');
+
+const btnPhotoClose = document.getElementById("btnPhotoClose");
+if (btnPhotoClose && photoModal) {
+    btnPhotoClose.onclick = () => photoModal.style.display = "none";
+}
+// 배경 클릭 닫기
+if (photoModal) {
+    photoModal.onclick = (e) => {
+        if(e.target === photoModal) photoModal.style.display = "none";
+    }
+}
 
 // ========================================
 // 🔄 Initialization
