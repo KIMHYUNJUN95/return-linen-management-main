@@ -1,20 +1,43 @@
 // ===============================
-// 🧺 HARU 반품 등록 로직 (Tokyo Day Bright)
+// 🧺 HARU 반품 등록 로직 (공통 헤더 구조)
 // ===============================
 
-// 🚨 [핵심 수정 1] 스크립트 중복 실행 방지 (이중 로드 시 강제 종료)
+// 중복 실행 방지
 if (window.__RETURN_FORM_LOADED__) {
-  console.warn("⚠️ return_form.js가 중복 로드되었습니다. 중복 실행을 방지합니다.");
+  console.warn("⚠️ return_form.js 중복 실행");
 } else {
   window.__RETURN_FORM_LOADED__ = true;
-
-  // --- 기존 Import 및 로직 시작 ---
   loadModule();
 }
 
+// ================================
+// 🔥 공통 헤더 로드 (수정됨)
+// ================================
+(async () => {
+  try {
+    const html = await fetch("header.html").then(r => r.text());
+    const placeholder = document.getElementById("header-placeholder");
+
+    if (placeholder) {
+      placeholder.innerHTML = html;
+
+      // 🛑 [수정됨] innerHTML로 삽입된 <script>는 실행되지 않습니다.
+      // 따라서 화면이 그려진 후, 여기서 명시적으로 header.js 기능을 활성화해야 합니다.
+      const { initHeaderMenu } = await import("./header.js");
+      initHeaderMenu(); 
+    }
+
+  } catch (err) {
+    console.error("헤더 로드 실패:", err);
+  }
+})();
+
+
+// ===============================
+// 메인 모듈
+// ===============================
 async function loadModule() {
-  // 모듈을 동적으로 import하여 스코프 문제 방지
-  const { initHeaderMenu } = await import("./header.js");
+
   const { db, auth, storage } = await import("./storage.js");
   const {
     collection, addDoc, updateDoc, serverTimestamp, doc
@@ -23,27 +46,8 @@ async function loadModule() {
     ref, uploadBytes, getDownloadURL
   } = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js");
 
-  // ✅ 1. 헤더 로드
-  document.addEventListener("DOMContentLoaded", () => {
-    fetch("header.html")
-      .then(r => r.text())
-      .then(h => {
-        const headerPlaceholder = document.getElementById("header-placeholder");
-        if (headerPlaceholder) {
-          headerPlaceholder.innerHTML = h;
-          initHeaderMenu();
-        }
-      })
-      .catch(err => console.error("헤더 로드 실패:", err));
-    
-    // 초기 렌더링
-    renderLinens();
-  });
-
-  /* ===========================================
-     📌 DOM 요소 참조
-  =========================================== */
-  function $(sel){ return document.querySelector(sel); }
+  /* DOM 요소 */
+  function $(s){ return document.querySelector(s); }
 
   const form = $("#returnForm");
   const buildingEl = $("#building");
@@ -53,19 +57,14 @@ async function loadModule() {
   const photoInput = $("#photo");
   const photoPreview = $("#photoPreview");
 
-  // 린넨 추가 관련 요소
   const linenSelect = $("#linenSelect");
   const linenQty = $("#linenQty");
   const btnAddLinen = $("#btnAddLinen");
   const linenListWrap = $("#linenList");
   const linenPayloadEl = $("#linenPayload");
 
-  // 🚨 [핵심 수정 2] 버튼 타입을 강제로 'button'으로 변경 (HTML 실수 방지)
-  if (btnAddLinen) {
-    btnAddLinen.type = "button"; 
-  }
+  if (btnAddLinen) btnAddLinen.type = "button";
 
-  // ✅ 공식 린넨 목록
   const OFFICIAL_LINENS = [
     "싱글 이불 커버",
     "싱글 매트 커버",
@@ -77,154 +76,120 @@ async function loadModule() {
     "발매트"
   ];
 
-  /* ===========================================
-     📸 UI 로직
-  =========================================== */
+
+  /* 사진 미리보기 */
   if (photoInput) {
     photoInput.addEventListener("change", () => {
       photoPreview.innerHTML = "";
-      [...photoInput.files].forEach(file => {
+      [...photoInput.files].forEach(f => {
         const img = document.createElement("img");
-        img.src = URL.createObjectURL(file);
+        img.src = URL.createObjectURL(f);
         photoPreview.appendChild(img);
       });
     });
   }
 
-  /* ===========================================
-     🧺 UI 로직: 린넨 목록 관리
-  =========================================== */
-  const linens = []; 
+
+  /* 린넨 목록 */
+  const linens = [];
 
   function renderLinens() {
     if (!linenListWrap) return;
 
     if (linens.length === 0) {
-      linenListWrap.innerHTML = '<div class="linen-empty">목록이 비어있습니다.</div>';
-      if(linenPayloadEl) linenPayloadEl.value = "";
+      linenListWrap.innerHTML = '<div class="linen-empty">추가된 린넨이 없습니다.</div>';
+      linenPayloadEl.value = "";
       return;
     }
 
-    const rows = linens.map((ln, idx) => `
-      <tr>
-        <td style="font-weight:600;">${ln.type}</td>
-        <td>${ln.qty}</td>
-        <td style="text-align:right;">
-          <button type="button" class="btn btn-del" data-index="${idx}">삭제</button>
-        </td>
-      </tr>`).join("");
-    
     linenListWrap.innerHTML = `
       <table>
-        <thead><tr><th>품목명</th><th>수량</th><th></th></tr></thead>
-        <tbody>${rows}</tbody>
-      </table>`;
-    
+        <thead><tr><th>린넨</th><th>수량</th><th></th></tr></thead>
+        <tbody>
+          ${linens.map((l,i)=>`
+            <tr>
+              <td>${l.type}</td>
+              <td>${l.qty}</td>
+              <td class="actions-cell">
+                <button type="button" class="btn btn-del" data-i="${i}">삭제</button>
+              </td>
+            </tr>`).join("")}
+        </tbody>
+      </table>
+    `;
+
     linenListWrap.querySelectorAll(".btn-del").forEach(btn => {
-      btn.addEventListener("click", () => {
-        const i = Number(btn.dataset.index);
-        linens.splice(i, 1);
+      btn.onclick = () => {
+        linens.splice(Number(btn.dataset.i),1);
         renderLinens();
-      });
+      };
     });
 
-    if(linenPayloadEl) linenPayloadEl.value = JSON.stringify(linens);
+    linenPayloadEl.value = JSON.stringify(linens);
   }
 
-  // ✅ [수정 완료] 이벤트 핸들러
+
   if (btnAddLinen) {
-    // 기존 리스너 제거가 불가능하므로, 새 리스너 내에서 중복 실행 방지 플래그 사용이 아닌,
-    // 위쪽의 window.__RETURN_FORM_LOADED__가 근본적인 해결책입니다.
-    
-    btnAddLinen.onclick = (e) => { // addEventListener 대신 onclick을 사용하여 기존 이벤트 덮어쓰기 시도 (안전장치)
-      e.preventDefault();
-      e.stopPropagation();
-
+    btnAddLinen.onclick = () => {
       const type = linenSelect.value;
-      const qty = parseInt(linenQty.value);
+      const qty = Number(linenQty.value);
 
-      if (!type) {
-        alert("린넨 종류를 선택하세요.");
-        return;
-      }
-      if (!qty || qty < 1) {
-        alert("수량은 1 이상이어야 합니다.");
-        return;
-      }
-      
+      if (!type) return alert("린넨 종류 선택");
+      if (!qty || qty < 1) return alert("수량 오류");
+
       const exist = linens.find(l => l.type === type);
-      if (exist) {
-        exist.qty += qty;
-      } else {
-        linens.push({ type, qty });
-      }
+      if (exist) exist.qty += qty;
+      else linens.push({ type, qty });
 
       renderLinens();
-      
-      // 입력값 초기화
+
       linenQty.value = "1";
       linenSelect.value = "";
     };
   }
 
-  /* ===========================================
-     🛠 헬퍼 및 폼 제출
-  =========================================== */
 
-  function normalizeLinenName(name) {
-    if (!name) return "";
-    const clean = name.replace(/\s+/g, "").trim();
-    for (const official of OFFICIAL_LINENS) {
-      if (clean.includes(official.replace(/\s+/g, ""))) return official;
-    }
-    return name;
-  }
-
+  /* 기본 날짜 */
   if (dateEl && !dateEl.value) {
     const d = new Date();
-    const yyyy = d.getFullYear();
-    const mm = String(d.getMonth()+1).padStart(2,"0");
-    const dd = String(d.getDate()).padStart(2,"0");
-    dateEl.value = `${yyyy}-${mm}-${dd}`;
+    dateEl.value =
+      `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
   }
 
-  async function uploadAllImages(docId, files){
+
+  /* 이미지 업로드 */
+  async function uploadImages(id, files){
     const urls = [];
-    for (let i=0; i<files.length; i++){
+    for (let i=0;i<files.length;i++) {
       const f = files[i];
-      const path = `returns/${docId}/${Date.now()}_${i}_${f.name}`;
-      const sref = ref(storage, path);
+      const sref = ref(storage, `returns/${id}/${Date.now()}_${i}_${f.name}`);
       await uploadBytes(sref, f);
-      const url = await getDownloadURL(sref);
-      urls.push(url);
+      urls.push(await getDownloadURL(sref));
     }
     return urls;
   }
 
+
+  /* 제출 */
   if (form) {
-    form.addEventListener("submit", async (e) => {
+    form.onsubmit = async (e) => {
       e.preventDefault();
 
-      const buildingId = buildingEl.value.trim();
-      const date = dateEl.value.trim();
-      const staffName = staffEl.value.trim();
-      const desc = descEl.value.trim();
+      const buildingId = buildingEl.value;
+      const date = dateEl.value;
+      const staffName = staffEl.value;
+      const desc = descEl.value;
 
       let items = [];
       try {
-        const sourceData = linenPayloadEl && linenPayloadEl.value ? JSON.parse(linenPayloadEl.value) : linens;
-        items = sourceData.map(x => ({
-          linenType: normalizeLinenName(String(x.type)),
-          defectCount: Number(x.qty)
-        }));
-      } catch(err){
-        console.warn("린넨 데이터 처리 실패:", err);
-      }
+        items = JSON.parse(linenPayloadEl.value || "[]")
+          .map(x => ({ linenType:x.type, defectCount:Number(x.qty) }));
+      } catch {}
 
-      if (!buildingId) return alert("건물을 선택해주세요.");
-      if (!date) return alert("날짜를 입력해주세요.");
-      if (!staffName) return alert("담당자 이름을 입력해주세요.");
-      if (!items.length) return alert("린넨을 최소 1개 이상 추가해주세요.");
+      if (!buildingId) return alert("건물 선택");
+      if (!date) return alert("날짜 입력");
+      if (!staffName) return alert("담당자 입력");
+      if (!items.length) return alert("린넨 추가 필요");
 
       const userEmail = auth?.currentUser?.email || null;
 
@@ -245,21 +210,22 @@ async function loadModule() {
       try {
         const docRef = await addDoc(collection(db, "returns"), payload);
 
-        const files = photoInput.files || [];
+        const files = photoInput.files;
         if (files.length > 0) {
-          const urls = await uploadAllImages(docRef.id, files);
+          const urls = await uploadImages(docRef.id, files);
           await updateDoc(doc(db, "returns", docRef.id), {
             imageUrls: urls,
             updatedAt: serverTimestamp()
           });
         }
 
-        alert("✅ 반품이 성공적으로 등록되었습니다.");
+        alert("등록 완료");
         location.href = "history_dashboard.html";
+
       } catch (err) {
         console.error(err);
-        alert("등록 중 오류가 발생했습니다: " + (err.message || err));
+        alert("오류: " + err.message);
       }
-    });
+    };
   }
 }

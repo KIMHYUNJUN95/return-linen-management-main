@@ -16,7 +16,6 @@ import {
   doc,
   serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-// ✅ [추가됨] Storage 관련 함수 Import
 import { 
   getStorage, 
   ref, 
@@ -29,7 +28,7 @@ const firebaseConfig = JSON.parse(window.__firebase_config);
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
-const storage = getStorage(app); // ✅ [추가됨] 스토리지 초기화
+const storage = getStorage(app); 
 
 // DOM Elements
 const pendingList = document.getElementById("pendingList");
@@ -44,14 +43,13 @@ const btnDelete = document.getElementById("btnDeleteIssue");
 const typeBtns = document.querySelectorAll(".type-btn");
 const formBuilding = document.getElementById("formBuilding");
 const formRoom = document.getElementById("formRoom");
-// HTML에 formCustomer가 있다면 아래 주석 해제하여 사용 권장 (현재 JS엔 빠져있어 추가하지 않음)
 const formCustomer = document.getElementById("formCustomer"); 
 const formRating = document.getElementById("formRating");
 const ratingGroup = document.getElementById("ratingGroup");
 const formCleaner = document.getElementById("formCleaner");
 const formContent = document.getElementById("formContent");
 const formAction = document.getElementById("formAction");
-const formPhoto = document.getElementById("formPhoto"); // ✅ [추가됨] 사진 Input
+const formPhoto = document.getElementById("formPhoto");
 
 let currentType = "airbnb"; // default
 let editingId = null; // 수정 시 ID 저장
@@ -100,8 +98,11 @@ typeBtns.forEach(btn => {
     btn.classList.add("active");
     currentType = btn.dataset.value;
     
-    // Airbnb가 아니면 별점 숨김
-    if (currentType === "airbnb") {
+    // ✅ [수정됨] 버튼 클릭 시 점수 옵션도 같이 업데이트
+    updateRatingOptions(currentType);
+    
+    // 평점 입력창 보이기/숨기기
+    if (currentType === "airbnb" || currentType === "booking") {
       ratingGroup.style.display = "block";
     } else {
       ratingGroup.style.display = "none";
@@ -109,7 +110,7 @@ typeBtns.forEach(btn => {
   });
 });
 
-// ✅ [추가됨] 사진 확대 모달 제어용 전역 함수 (모듈 스코프 탈출)
+// 사진 확대 모달 제어용 전역 함수
 window.openZoom = function(url) {
   const zoomImg = document.getElementById("zoomImg");
   const photoModal = document.getElementById("photoModal");
@@ -123,10 +124,40 @@ window.openZoom = function(url) {
 // 🛠 Functions
 // ========================================
 
+// ✅ [추가됨] 점수 옵션을 동적으로 변경하는 함수
+function updateRatingOptions(type) {
+  formRating.innerHTML = ""; // 기존 옵션 초기화
+
+  if (type === "booking") {
+    // Booking.com: 1~10점
+    formRating.innerHTML = `
+      <option value="1">⭐ 1점 (매우 나쁨)</option>
+      <option value="2">⭐ 2점</option>
+      <option value="3">⭐ 3점</option>
+      <option value="4">⭐ 4점</option>
+      <option value="5">⭐ 5점</option>
+      <option value="6">⭐ 6점</option>
+      <option value="7">⭐ 7점</option>
+      <option value="8">⭐ 8점</option>
+      <option value="9">⭐ 9점</option>
+      <option value="10">⭐ 10점 (최고)</option>
+    `;
+  } else {
+    // Airbnb (기본): 1~5점
+    formRating.innerHTML = `
+      <option value="1">⭐ 1점 (심각)</option>
+      <option value="2">⭐⭐ 2점 (나쁨)</option>
+      <option value="3">⭐⭐⭐ 3점 (보통)</option>
+      <option value="4">⭐⭐⭐⭐ 4점 (좋음)</option>
+      <option value="5">⭐⭐⭐⭐⭐ 5점 (완벽)</option>
+    `;
+  }
+}
+
 function createIssueCard(id, data) {
   const div = document.createElement("div");
   div.className = `issue-card ${data.status}`;
-  // 주의: 사진 클릭 시에는 부모의 onclick(수정 모달 열기)이 실행되지 않도록 이벤트 버블링을 막아야 함
+  
   div.onclick = (e) => {
       // 이미지를 클릭한 게 아닐 때만 수정 모달 열기
       if(e.target.tagName !== 'IMG') {
@@ -136,16 +167,17 @@ function createIssueCard(id, data) {
 
   // 소스 뱃지 & 평점 표시
   let sourceBadge = "";
-  if (data.source === "airbnb") {
-    const stars = "⭐".repeat(data.rating || 5);
-    sourceBadge = `<span class="card-source airbnb">AIRBNB</span> <span class="rating-star">${stars}</span>`;
+  if (data.source === "airbnb" || data.source === "booking") {
+    const stars = "⭐".repeat(data.rating || 0);
+    const label = data.source === "airbnb" ? "AIRBNB" : "BOOKING";
+    // source 클래스에 따라 색상 자동 적용됨 (CSS)
+    sourceBadge = `<span class="card-source ${data.source}">${label}</span> <span class="rating-star">${stars}</span>`;
   } else {
     sourceBadge = `<span class="card-source direct">DIRECT</span>`;
   }
 
   const dateStr = data.timestamp ? new Date(data.timestamp.seconds * 1000).toLocaleDateString() : "-";
 
-  // 조치 내용 표시
   let actionHtml = "";
   if (data.actionTaken) {
     actionHtml = `<div style="margin-top:10px; padding:10px; background:#F1F5F9; font-size:0.9rem; color:#475569;">
@@ -153,7 +185,6 @@ function createIssueCard(id, data) {
     </div>`;
   }
 
-  // ✅ [추가됨] 사진 미리보기 HTML 생성
   let photoHtml = "";
   if (data.photoUrl) {
     photoHtml = `
@@ -164,7 +195,6 @@ function createIssueCard(id, data) {
     `;
   }
 
-  // 고객명 표시 (데이터에 있다면)
   const customerHtml = data.customer ? `<span class="card-customer" style="margin-left:8px; color:#2C3E50; font-weight:700;">${data.customer}</span>` : "";
 
   div.innerHTML = `
@@ -188,17 +218,18 @@ function createIssueCard(id, data) {
 function openModal(id = null, data = null) {
   editingId = id;
   
-  // 파일 입력 초기화 (항상)
   if(formPhoto) formPhoto.value = "";
 
   if (data) {
     // Edit Mode
     currentType = data.source;
     updateTypeButtons();
+    // ✅ [수정됨] 기존 데이터의 타입에 맞춰 점수 옵션 세팅
+    updateRatingOptions(currentType); 
     
     formBuilding.value = data.building;
     formRoom.value = data.room;
-    if(formCustomer) formCustomer.value = data.customer || ""; // 고객명 연동
+    if(formCustomer) formCustomer.value = data.customer || "";
     formRating.value = data.rating || 5;
     formCleaner.value = data.cleaner || "";
     formContent.value = data.content;
@@ -210,6 +241,9 @@ function openModal(id = null, data = null) {
     // New Mode
     currentType = "airbnb";
     updateTypeButtons();
+    // ✅ [수정됨] 기본값 Airbnb에 맞춰 점수 옵션(1~5) 세팅
+    updateRatingOptions(currentType);
+    
     formBuilding.value = "아라키초A";
     formRoom.value = "";
     if(formCustomer) formCustomer.value = "";
@@ -234,10 +268,9 @@ function updateTypeButtons() {
     if(btn.dataset.value === currentType) btn.classList.add("active");
     else btn.classList.remove("active");
   });
-  ratingGroup.style.display = (currentType === "airbnb") ? "block" : "none";
+  ratingGroup.style.display = (currentType === "airbnb" || currentType === "booking") ? "block" : "none";
 }
 
-// ✅ [추가됨] 이미지 업로드 헬퍼 함수
 async function uploadImage(file) {
     try {
         const fileName = `${Date.now()}_${file.name}`;
@@ -257,19 +290,17 @@ async function saveIssue() {
   const cleaner = formCleaner.value.trim();
   const action = formAction.value.trim();
   const customer = formCustomer ? formCustomer.value.trim() : "";
-  const photoFile = formPhoto ? formPhoto.files[0] : null; // 파일 가져오기
+  const photoFile = formPhoto ? formPhoto.files[0] : null;
   
   if (!room || !content) {
     alert("호수와 내용을 입력해주세요.");
     return;
   }
 
-  // 저장 중 표시 (버튼 비활성화)
   btnSave.innerText = "저장 중...";
   btnSave.disabled = true;
 
   try {
-    // ✅ [추가됨] 사진 업로드 로직
     let photoUrl = null;
     if (photoFile) {
         photoUrl = await uploadImage(photoFile);
@@ -281,27 +312,23 @@ async function saveIssue() {
       source: currentType,
       building,
       room,
-      customer, // 고객명 추가
+      customer,
       content,
       cleaner,
       actionTaken: action,
       status: status,
-      rating: (currentType === "airbnb") ? parseInt(formRating.value) : null,
+      rating: (currentType === "airbnb" || currentType === "booking") ? parseInt(formRating.value) : null,
       updatedAt: serverTimestamp()
     };
 
-    // 사진이 새로 업로드된 경우에만 payload에 추가
     if (photoUrl) {
         payload.photoUrl = photoUrl;
     }
 
     if (editingId) {
-      // Update
-      // 주의: 수정 시 사진을 새로 안 올리면 기존 photoUrl 유지됨 (Firestore 특성)
       await updateDoc(doc(db, "cs_issues", editingId), payload);
       alert("수정되었습니다.");
     } else {
-      // Create
       payload.timestamp = serverTimestamp();
       await addDoc(collection(db, "cs_issues"), payload);
       alert("등록되었습니다.");
@@ -311,7 +338,6 @@ async function saveIssue() {
     console.error("Error saving issue:", e);
     alert("저장 중 오류가 발생했습니다: " + e.message);
   } finally {
-    // 버튼 복구
     btnSave.innerText = "저장하기";
     btnSave.disabled = false;
   }

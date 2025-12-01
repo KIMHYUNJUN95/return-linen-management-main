@@ -76,8 +76,11 @@
     .card-customer { font-size: 0.85rem; font-weight: 700; color: var(--color-primary); margin-left: 8px; } /* 고객명 스타일 */
 
     .card-source { font-size: 0.75rem; font-weight: 700; padding: 2px 6px; color: #fff; background: var(--color-text-secondary); }
-    .card-source.airbnb { background: #FF5A5F; } /* Airbnb Color */
-    .card-source.direct { background: #2C3E50; } /* Direct Color */
+    
+    /* 🎨 소스별 색상 정의 */
+    .card-source.airbnb { background: #FF5A5F; } /* Airbnb Red */
+    .card-source.booking { background: #003580; } /* ✅ [추가됨] Booking.com Blue */
+    .card-source.direct { background: #2C3E50; } /* Direct Navy */
 
     .card-content { font-size: 1rem; font-weight: 600; color: var(--color-text-primary); margin-bottom: 0.5rem; line-height: 1.4; }
     
@@ -108,8 +111,11 @@
     /* Toggle Type Buttons */
     .type-toggle { display: flex; gap: 10px; margin-bottom: 1rem; }
     .type-btn { flex: 1; padding: 12px; border: 1px solid var(--color-border); background: #fff; font-weight: 700; color: var(--color-text-secondary); cursor: pointer; transition: 0.2s; text-align: center; }
+    
+    /* 활성화 상태 색상 */
     .type-btn.active { background: var(--color-primary); color: #fff; border-color: var(--color-primary); }
     .type-btn[data-value="airbnb"].active { background: #FF5A5F; border-color: #FF5A5F; }
+    .type-btn[data-value="booking"].active { background: #003580; border-color: #003580; } /* ✅ [추가됨] Booking Blue */
 
     /* Action Section in Modal */
     .action-section { margin-top: 2rem; padding-top: 1.5rem; border-top: 2px dashed var(--color-border); background: #FFFBEB; padding: 1rem; margin-left: -1rem; margin-right: -1rem; }
@@ -194,7 +200,7 @@
         <ul class="menu-list" role="menu">
           <li><a href="board.html">게시판</a></li>
           <li><a href="chat.html" data-menu="chat">채팅</a></li>
-          <li><a href="incoming_form.html">입고등록</a></li>
+          <li><a href="incoming_form.html">교환품 등록</a></li>
           <li><a href="return_form.html">반품등록</a></li>
           <li><a href="history_dashboard.html">내역관리</a></li>
           <li><a href="inventory.html">재고관리</a></li>
@@ -208,7 +214,7 @@
           <li><a id="installHaruBtn">앱 설치</a></li>
           <li><a href="schedule_dashboard.html">작업 스케줄러</a></li>
           
-          <!-- ✅ CS 관리 메뉴 추가 -->
+          <!-- ✅ CS 관리 메뉴 -->
           <li><a href="cs_dashboard.html" style="color:#e74c3c; font-weight:700;">CS 관리</a></li>
 
           <li class="super-admin-only" style="display:none;"><a href="admin.html" class="admin-link">관리자 설정</a></li>
@@ -245,11 +251,13 @@
     <div class="modal-card">
       <div class="modal-title">이슈 기록</div>
       
-      <!-- 구분 선택 (Airbnb / Direct) -->
+      <!-- 구분 선택 (Airbnb / Booking.com / Direct) -->
       <div class="form-group">
         <label class="form-label">SOURCE (유입 경로)</label>
         <div class="type-toggle">
-          <button type="button" class="type-btn active" data-value="airbnb">Airbnb (평점)</button>
+          <button type="button" class="type-btn active" data-value="airbnb">Airbnb</button>
+          <!-- ✅ [추가됨] Booking.com 버튼 -->
+          <button type="button" class="type-btn" data-value="booking">Booking.com</button>
           <button type="button" class="type-btn" data-value="direct">직접 컴플레인</button>
         </div>
       </div>
@@ -273,22 +281,27 @@
           <label class="form-label">ROOM (호수)</label>
           <input type="text" id="formRoom" class="form-input" placeholder="예: 201">
         </div>
-        <!-- ✅ [추가됨] 고객명 입력란 -->
         <div class="form-group" style="flex:1.5; min-width:140px;">
           <label class="form-label">CUSTOMER (고객명)</label>
           <input type="text" id="formCustomer" class="form-input" placeholder="예: HONG GIL DONG">
         </div>
       </div>
 
-      <!-- 평점 (Airbnb일 때만 보임) -->
+      <!-- 평점 (Airbnb/Booking.com일 때만 보임) -->
       <div class="form-group" id="ratingGroup">
         <label class="form-label">RATING (평점)</label>
+        <!-- ✅ [수정됨] 1점 ~ 10점까지 선택 가능하도록 확장 -->
         <select id="formRating" class="form-select" style="font-weight:700; color:#F59E0B;">
-          <option value="1">⭐ 1점 (심각)</option>
-          <option value="2">⭐⭐ 2점 (나쁨)</option>
-          <option value="3">⭐⭐⭐ 3점 (보통)</option>
-          <option value="4">⭐⭐⭐⭐ 4점 (좋음)</option>
-          <option value="5">⭐⭐⭐⭐⭐ 5점 (완벽)</option>
+          <option value="1">⭐ 1점 (매우 나쁨)</option>
+          <option value="2">⭐ 2점</option>
+          <option value="3">⭐ 3점</option>
+          <option value="4">⭐ 4점</option>
+          <option value="5">⭐ 5점</option>
+          <option value="6">⭐ 6점</option>
+          <option value="7">⭐ 7점</option>
+          <option value="8">⭐ 8점</option>
+          <option value="9">⭐ 9점</option>
+          <option value="10">⭐ 10점 (최고)</option>
         </select>
       </div>
 
@@ -304,7 +317,7 @@
         <textarea id="formContent" class="form-textarea" placeholder="컴플레인 내용이나 리뷰 내용을 입력하세요."></textarea>
       </div>
 
-      <!-- ✅ [추가됨] 사진 첨부 -->
+      <!-- 사진 첨부 -->
       <div class="form-group">
         <label class="form-label">PHOTO (증빙 사진)</label>
         <input type="file" id="formPhoto" class="form-input" accept="image/*">

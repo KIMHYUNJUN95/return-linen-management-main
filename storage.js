@@ -2,7 +2,8 @@
 // 🚀 Firebase 초기 설정 파일 (통합 버전)
 // ==============================
 
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+// ✅ [수정됨] getApps 추가 (중복 실행 방지용)
+import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getFirestore } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 import { getStorage } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
 import { getAuth } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
@@ -25,8 +26,9 @@ const firebaseConfig = configFromHTML || {
   measurementId: "G-D6BDRRKD9Y"
 };
 
-// ✅ Firebase 초기화
-const app = initializeApp(firebaseConfig);
+// ✅ Firebase 초기화 (중복 방지 로직 적용)
+// 이미 초기화된 앱이 있으면(getApps().length > 0) 기존 앱을 가져오고, 없으면 새로 초기화합니다.
+const app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
 
 // ✅ Firestore
 const db = getFirestore(app);

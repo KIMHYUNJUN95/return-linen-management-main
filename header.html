@@ -1,12 +1,7 @@
-﻿<!-- ========================================
-     HARU Header (Tokyo Monochrome - Center Menu)
-     ======================================== -->
-<header class="main-header">
+﻿<header class="main-header">
   <div class="header-inner">
-    <!-- 1. 좌측: 로고 -->
     <div class="logo">HARU</div>
 
-    <!-- 2. 중앙: 메뉴 버튼 (모바일/PC 모두 중앙 고정) -->
     <div class="menu-wrap">
       <button class="menu-toggle" aria-haspopup="true" aria-expanded="false">
         <span class="menu-label">MENU</span>
@@ -16,11 +11,10 @@
         </div>
       </button>
 
-      <!-- 드롭다운 메뉴 -->
       <ul class="menu-list" role="menu">
         <li><a href="board.html">게시판</a></li>
         <li><a href="chat.html" data-menu="chat">채팅</a></li>
-        <li><a href="incoming_form.html">입고등록</a></li>
+        <li><a href="incoming_form.html">교환품 등록</a></li>
         <li><a href="return_form.html">반품등록</a></li>
         <li><a href="history_dashboard.html">내역관리</a></li>
         <li><a href="inventory.html">재고관리</a></li>
@@ -34,7 +28,6 @@
         <li><a id="installHaruBtn">앱 설치</a></li>
         <li><a href="schedule_dashboard.html">작업 스케줄러</a></li>
         
-        <!-- ✅ [추가됨] CS 관리 메뉴 (강조) -->
         <li><a href="cs_dashboard.html" style="color:#e74c3c; font-weight:700;">CS 관리</a></li>
 
         <li class="super-admin-only" style="display:none;">
@@ -46,7 +39,6 @@
       </ul>
     </div>
 
-    <!-- 3. 우측: 로그아웃 버튼 -->
     <button id="logoutBtn" class="logout-btn">SIGN OUT</button>
   </div>
 </header>
@@ -277,3 +269,20 @@
     }
   }
 </style>
+
+<script>
+  (function() {
+    // 기존에 설정된 아이콘이 있는지 확인
+    var link = document.querySelector("link[rel~='icon']");
+    if (!link) {
+      link = document.createElement('link');
+      link.rel = 'icon';
+      document.head.appendChild(link);
+    }
+    // 아이콘 경로가 설정되어 있지 않거나 에러가 나는 경우를 대비해 투명 이미지(Data URI) 적용
+    // 실제 아이콘 파일이 준비되면 아래 href를 실제 파일 경로(예: '/images/favicon.ico')로 바꾸면 됩니다.
+    if (!link.href || link.href === window.location.href) {
+        link.href = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
+    }
+  })();
+</script>

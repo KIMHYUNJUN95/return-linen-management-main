@@ -18,7 +18,8 @@
     main {
       max-width: 1200px;
       margin: 0 auto;
-      padding: 40px 24px;
+      /* 🛑 [수정됨] 상단 여백을 40px -> 100px로 늘려 헤더 가림 현상 해결 */
+      padding: 100px 24px 40px; 
     }
 
     /* 헤더 섹션 */
@@ -444,5 +445,19 @@
   <script type="module" src="scrollTop.js"></script>
   <script type="module" src="notice_popup.js"></script>
 
+  <!-- ✅ Favicon 404 에러 방지 스크립트 -->
+  <script>
+    (function() {
+      var link = document.querySelector("link[rel~='icon']");
+      if (!link) {
+        link = document.createElement('link');
+        link.rel = 'icon';
+        document.head.appendChild(link);
+      }
+      if (!link.href || link.href === window.location.href) {
+          link.href = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
+      }
+    })();
+  </script>
 </body>
 </html>

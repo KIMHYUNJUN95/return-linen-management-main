@@ -3,9 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>HARU 입고 등록</title>
+  <title>HARU 교환품 등록</title>
   
-  <!-- 공통 스타일 -->
   <link rel="stylesheet" href="common.css" />
 
   <style>
@@ -98,6 +97,7 @@
       -webkit-appearance: none; /* iOS 둥근 모서리/그림자 제거 */
       appearance: none;
       box-sizing: border-box; /* 패딩 포함 크기 계산 */
+      vertical-align: middle; /* 인라인 요소 정렬 보정 */
     }
 
     /* 날짜 입력창 전용 스타일 (아이콘 공간 확보 등) */
@@ -128,12 +128,21 @@
       gap: 20px;
     }
 
-    /* 린넨 추가 섹션 */
+    /* 🛑 [강력 수정] 린넨 추가 섹션 높이 맞춤 */
     .linen-control-row {
       display: flex;
       gap: 12px;
-      align-items: flex-end;
+      align-items: center; /* 수직 중앙 정렬 */
       margin-bottom: 20px;
+    }
+
+    /* 강제로 높이를 44px로 고정하여 1px의 오차도 없앱니다 */
+    .linen-control-row select,
+    .linen-control-row input[type="number"],
+    .linen-control-row button {
+      height: 44px !important;
+      line-height: normal; /* 높이 계산 오류 방지 */
+      margin: 0;
     }
 
     .linen-control-row select {
@@ -159,6 +168,7 @@
       border-radius: 0;
       white-space: nowrap;
       box-sizing: border-box;
+      vertical-align: middle;
     }
 
     .btn-primary {
@@ -291,19 +301,17 @@
   </style>
 </head>
 <body>
-  <!-- ✅ 헤더 로드 -->
   <div id="header-placeholder"></div>
 
   <main>
     <div class="incoming-container">
       
       <div class="page-header">
-        <h2>입고 등록</h2>
+        <h2>교환품 등록</h2>
       </div>
 
       <form id="incomingForm">
 
-        <!-- 1. 기본 정보 -->
         <div class="form-section">
           <h3>기본 정보</h3>
           <div class="form-grid">
@@ -334,7 +342,6 @@
           </div>
         </div>
 
-        <!-- 2. 린넨 추가 -->
         <div class="form-section">
           <h3>린넨 목록</h3>
           
@@ -357,11 +364,9 @@
           <div class="linen-list" id="linenList">
             <div class="linen-empty">목록이 비어있습니다.</div>
           </div>
-          <!-- 데이터 페이로드 -->
           <input type="hidden" id="linenPayload" name="linenPayload" />
         </div>
 
-        <!-- 3. 사진 및 비고 -->
         <div class="form-section">
           <h3>상세 정보</h3>
           
@@ -377,7 +382,6 @@
           <textarea id="desc" placeholder="특이사항이 있다면 기록해주세요."></textarea>
         </div>
 
-        <!-- 등록 버튼 -->
         <button type="submit" class="btn btn-primary" style="height: 50px; font-size: 15px; width: 100%;">등록 완료</button>
 
       </form>
@@ -388,7 +392,6 @@
     © 2025 HARU SYSTEM · TOKYO
   </footer>
 
-  <!-- ✅ 기능 스크립트 -->
   <script type="module" src="incoming_form.js"></script>
   <script type="module" src="scrollTop.js"></script>
   <script type="module" src="notice_popup.js"></script>

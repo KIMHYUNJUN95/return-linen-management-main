@@ -3,18 +3,18 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>HARU 반품 등록</title>
+  <title>HARU 반품등록</title>
   
-  <!-- 공통 스타일 -->
   <link rel="stylesheet" href="common.css" />
 
   <style>
     /* -------------------------------
        🎨 Page Specific Styles
        Theme: Tokyo Day Bright (Minimal)
+       (입고 등록 디자인과 통일됨)
        ------------------------------- */
     
-    /* ✅ 핵심 수정: 모든 요소의 크기 계산을 테두리 포함으로 변경 */
+    /* 모든 요소에 box-sizing 적용 */
     *, *::before, *::after {
       box-sizing: border-box;
     }
@@ -22,6 +22,7 @@
     body {
       background-color: var(--bg-base); /* Soft Gray */
       color: var(--haru-navy);
+      font-family: 'Noto Sans KR', sans-serif;
     }
 
     main {
@@ -31,6 +32,7 @@
       padding-bottom: 80px;
     }
 
+    /* 컨테이너 이름만 변경 (Design은 동일) */
     .return-container {
       width: 100%;
       max-width: 900px;
@@ -53,11 +55,11 @@
       letter-spacing: -0.02em;
     }
 
-    /* 폼 섹션 카드 (White Panel) */
+    /* 폼 섹션 카드 */
     .form-section {
       background: #FFFFFF;
       border: 1px solid #E2E8F0;
-      border-radius: 0; /* 건축적 미니멀리즘 */
+      border-radius: 0;
       padding: 32px;
       margin-bottom: 24px;
       box-shadow: 0 10px 30px rgba(0,0,0,0.03);
@@ -85,23 +87,22 @@
 
     input, select, textarea {
       width: 100%;
-      max-width: 100%; /* 화면 밖으로 나가는 것 방지 */
+      max-width: 100%;
       height: 44px; /* 높이 통일 */
       padding: 0 12px;
       border: 1px solid #CBD5E1;
       background: #F8FAFC;
-      border-radius: 0; /* 각지게 */
+      border-radius: 0;
       font-size: 14px;
       color: var(--haru-navy);
       transition: all 0.2s;
-      
-      /* ✅ 핵심 수정: 모바일 기본 스타일 제거 및 박스 크기 고정 */
-      -webkit-appearance: none; /* iOS 둥근 모서리/그림자 제거 */
+      -webkit-appearance: none;
       appearance: none;
-      box-sizing: border-box; /* 패딩 포함 크기 계산 */
+      box-sizing: border-box;
+      vertical-align: middle;
     }
 
-    /* 날짜 입력창 전용 스타일 */
+    /* 날짜 입력창 */
     input[type="date"] {
       display: flex;
       align-items: center;
@@ -128,12 +129,21 @@
       gap: 20px;
     }
 
-    /* 린넨 추가 섹션 */
+    /* 🛑 [핵심] 린넨 추가 섹션 높이 맞춤 (입고 등록과 동일) */
     .linen-control-row {
       display: flex;
       gap: 12px;
-      align-items: flex-end;
+      align-items: center; /* 수직 중앙 정렬 */
       margin-bottom: 20px;
+    }
+
+    /* 강제 높이 고정으로 PC화면 정렬 완벽 보정 */
+    .linen-control-row select,
+    .linen-control-row input[type="number"],
+    .linen-control-row button {
+      height: 44px !important;
+      line-height: normal;
+      margin: 0;
     }
 
     .linen-control-row select {
@@ -144,7 +154,7 @@
       max-width: 120px;
     }
 
-    /* 버튼 스타일 (Sharp) */
+    /* 버튼 스타일 */
     .btn {
       display: inline-flex;
       align-items: center;
@@ -158,13 +168,15 @@
       transition: all 0.2s;
       border-radius: 0;
       white-space: nowrap;
-      box-sizing: border-box; /* 버튼도 크기 고정 */
+      box-sizing: border-box;
+      vertical-align: middle;
     }
 
     .btn-primary {
       background: var(--haru-navy);
       color: #FFFFFF;
       border: 1px solid var(--haru-navy);
+      width: 100%; /* 하단 등록 버튼 */
     }
     .btn-primary:hover {
       background: #000000;
@@ -218,6 +230,10 @@
       text-align: center;
       color: #CBD5E1;
       font-size: 13px;
+    }
+
+    .actions-cell {
+      text-align: right;
     }
 
     .btn-del {
@@ -291,7 +307,6 @@
   </style>
 </head>
 <body>
-  <!-- ✅ 헤더 로드 -->
   <div id="header-placeholder"></div>
 
   <main>
@@ -303,12 +318,11 @@
 
       <form id="returnForm">
 
-        <!-- 1. 기본 정보 -->
         <div class="form-section">
           <h3>기본 정보</h3>
           <div class="form-grid">
             <div>
-              <label for="building">건물</label>
+              <label for="building">건물 선택</label>
               <select id="building" required>
                 <option value="">건물을 선택하세요</option>
                 <option value="아라키초A">아라키초A</option>
@@ -323,20 +337,19 @@
             </div>
 
             <div>
-              <label for="date">반품 날짜</label>
+              <label for="date">날짜</label>
               <input type="date" id="date" required />
             </div>
 
             <div>
-              <label for="staff">담당자</label>
-              <input type="text" id="staff" placeholder="이름을 입력하세요" required />
+              <label for="staff">담당자 이름</label>
+              <input type="text" id="staff" placeholder="담당자 이름 입력" required />
             </div>
           </div>
         </div>
 
-        <!-- 2. 린넨 추가 -->
         <div class="form-section">
-          <h3>린넨 목록</h3>
+          <h3>린넨 추가</h3>
           
           <div class="linen-control-row">
             <select id="linenSelect">
@@ -355,118 +368,52 @@
           </div>
 
           <div class="linen-list" id="linenList">
-            <div class="linen-empty">목록이 비어있습니다.</div>
+            <div class="linen-empty">추가된 린넨이 없습니다.</div>
           </div>
           <input type="hidden" id="linenPayload" name="linenPayload" />
         </div>
 
-        <!-- 3. 사진 및 비고 -->
         <div class="form-section">
-          <h3>상세 정보</h3>
-          
-          <label>사진 첨부</label>
+          <h3>비고 / 특이사항</h3>
+          <textarea id="desc" placeholder="특이사항을 입력하세요 (선택)"></textarea>
+        </div>
+
+        <div class="form-section">
+          <h3>사진 등록</h3>
           <div class="photo-upload-box" onclick="document.getElementById('photo').click()">
             <span style="font-size:24px; color:#CBD5E1;">＋</span>
             <div style="font-size:12px; color:#64748B; margin-top:8px;">클릭하여 사진 업로드</div>
           </div>
           <input type="file" id="photo" accept="image/*" multiple style="display:none;" />
           <div class="photo-preview" id="photoPreview"></div>
-
-          <label for="desc" style="margin-top:20px;">특이사항 (선택)</label>
-          <textarea id="desc" placeholder="파손 부위나 특이사항이 있다면 기록해주세요."></textarea>
         </div>
 
-        <!-- 등록 버튼 -->
-        <button type="submit" class="btn btn-primary" style="height: 50px; font-size: 15px;">등록 완료</button>
-
+        <button type="submit" class="btn btn-primary" style="height: 50px; font-size: 15px;">등록하기</button>
       </form>
     </div>
   </main>
 
   <footer>
-    © 2025 HARU SYSTEM · TOKYO
+    © 2025 HARU · by KIM HYUN JUN
   </footer>
 
-  <!-- UI 관련 인라인 스크립트 (디자인 적용) -->
-  <script>
-    const photoInput = document.getElementById("photo");
-    const preview = document.getElementById("photoPreview");
-    
-    photoInput.addEventListener("change", () => {
-      preview.innerHTML = "";
-      [...photoInput.files].forEach(file => {
-        const img = document.createElement("img");
-        img.src = URL.createObjectURL(file);
-        preview.appendChild(img);
-      });
-    });
-
-    const linens = [];
-    const selectEl = document.getElementById("linenSelect");
-    const qtyEl = document.getElementById("linenQty");
-    const addBtn = document.getElementById("btnAddLinen");
-    const listWrap = document.getElementById("linenList");
-    const payloadInput = document.getElementById("linenPayload");
-
-    function renderLinens() {
-      if (linens.length === 0) {
-        listWrap.innerHTML = '<div class="linen-empty">목록이 비어있습니다.</div>';
-        return;
-      }
-      // 디자인에 맞춘 테이블 생성
-      const rows = linens.map((ln, idx) => `
-        <tr>
-          <td style="font-weight:600;">${ln.type}</td>
-          <td>${ln.qty}</td>
-          <td style="text-align:right;">
-            <button type="button" class="btn btn-del" data-index="${idx}">삭제</button>
-          </td>
-        </tr>`).join("");
-      
-      listWrap.innerHTML = `
-        <table>
-          <thead><tr><th>품목명</th><th>수량</th><th></th></tr></thead>
-          <tbody>${rows}</tbody>
-        </table>`;
-      
-      listWrap.querySelectorAll(".btn-del").forEach(btn => {
-        btn.addEventListener("click", () => {
-          const i = Number(btn.dataset.index);
-          linens.splice(i, 1);
-          renderLinens();
-        });
-      });
-    }
-
-    addBtn.addEventListener("click", () => {
-      const type = selectEl.value;
-      const qty = parseInt(qtyEl.value);
-      if (!type) return alert("린넨 종류를 선택하세요.");
-      if (!qty || qty < 1) return alert("수량은 1 이상이어야 합니다.");
-      
-      const exist = linens.find(l => l.type === type);
-      if (exist) {
-        exist.qty += qty;
-      } else {
-        linens.push({ type, qty });
-      }
-      renderLinens();
-      qtyEl.value = "1";
-      selectEl.value = "";
-    });
-
-    document.getElementById("returnForm").addEventListener("submit", () => {
-      payloadInput.value = JSON.stringify(linens);
-    });
-
-    renderLinens();
-  </script>
-
-  <!-- ✅ 기능 스크립트 -->
   <script type="module" src="return_form.js"></script>
   <script type="module" src="scrollTop.js"></script>
   <script type="module" src="notice_popup.js"></script>
 
+  <script>
+    (function() {
+      var link = document.querySelector("link[rel~='icon']");
+      if (!link) {
+        link = document.createElement('link');
+        link.rel = 'icon';
+        document.head.appendChild(link);
+      }
+      if (!link.href || link.href === window.location.href) {
+          link.href = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
+      }
+    })();
+  </script>
 
 </body>
 </html>
