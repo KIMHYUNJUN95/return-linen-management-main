@@ -98,10 +98,8 @@ typeBtns.forEach(btn => {
     btn.classList.add("active");
     currentType = btn.dataset.value;
     
-    // ✅ [수정됨] 버튼 클릭 시 점수 옵션도 같이 업데이트
     updateRatingOptions(currentType);
     
-    // 평점 입력창 보이기/숨기기
     if (currentType === "airbnb" || currentType === "booking") {
       ratingGroup.style.display = "block";
     } else {
@@ -110,7 +108,6 @@ typeBtns.forEach(btn => {
   });
 });
 
-// 사진 확대 모달 제어용 전역 함수
 window.openZoom = function(url) {
   const zoomImg = document.getElementById("zoomImg");
   const photoModal = document.getElementById("photoModal");
@@ -124,9 +121,8 @@ window.openZoom = function(url) {
 // 🛠 Functions
 // ========================================
 
-// ✅ [추가됨] 점수 옵션을 동적으로 변경하는 함수
 function updateRatingOptions(type) {
-  formRating.innerHTML = ""; // 기존 옵션 초기화
+  formRating.innerHTML = ""; 
 
   if (type === "booking") {
     // Booking.com: 1~10점
@@ -159,18 +155,15 @@ function createIssueCard(id, data) {
   div.className = `issue-card ${data.status}`;
   
   div.onclick = (e) => {
-      // 이미지를 클릭한 게 아닐 때만 수정 모달 열기
       if(e.target.tagName !== 'IMG') {
           openModal(id, data);
       }
   };
 
-  // 소스 뱃지 & 평점 표시
   let sourceBadge = "";
   if (data.source === "airbnb" || data.source === "booking") {
     const stars = "⭐".repeat(data.rating || 0);
     const label = data.source === "airbnb" ? "AIRBNB" : "BOOKING";
-    // source 클래스에 따라 색상 자동 적용됨 (CSS)
     sourceBadge = `<span class="card-source ${data.source}">${label}</span> <span class="rating-star">${stars}</span>`;
   } else {
     sourceBadge = `<span class="card-source direct">DIRECT</span>`;
@@ -221,10 +214,8 @@ function openModal(id = null, data = null) {
   if(formPhoto) formPhoto.value = "";
 
   if (data) {
-    // Edit Mode
     currentType = data.source;
     updateTypeButtons();
-    // ✅ [수정됨] 기존 데이터의 타입에 맞춰 점수 옵션 세팅
     updateRatingOptions(currentType); 
     
     formBuilding.value = data.building;
@@ -238,10 +229,8 @@ function openModal(id = null, data = null) {
     if (btnDelete) btnDelete.style.display = "block";
 
   } else {
-    // New Mode
     currentType = "airbnb";
     updateTypeButtons();
-    // ✅ [수정됨] 기본값 Airbnb에 맞춰 점수 옵션(1~5) 세팅
     updateRatingOptions(currentType);
     
     formBuilding.value = "아라키초A";
@@ -297,6 +286,13 @@ async function saveIssue() {
     return;
   }
 
+  // ✅ [중요 수정] 현재 로그인한 사용자 정보 가져오기
+  const currentUser = auth.currentUser;
+  if (!currentUser) {
+      alert("로그인이 필요합니다.");
+      return;
+  }
+
   btnSave.innerText = "저장 중...";
   btnSave.disabled = true;
 
@@ -318,7 +314,11 @@ async function saveIssue() {
       actionTaken: action,
       status: status,
       rating: (currentType === "airbnb" || currentType === "booking") ? parseInt(formRating.value) : null,
-      updatedAt: serverTimestamp()
+      updatedAt: serverTimestamp(),
+      
+      // ✅ [필수 추가] 보안 규칙(isOwner)을 통과하기 위한 작성자 정보
+      uid: currentUser.uid,
+      authorEmail: currentUser.email
     };
 
     if (photoUrl) {
@@ -336,7 +336,12 @@ async function saveIssue() {
     closeModal();
   } catch (e) {
     console.error("Error saving issue:", e);
-    alert("저장 중 오류가 발생했습니다: " + e.message);
+    // 보안 규칙 위반 시 알림 명확화
+    if (e.code === 'permission-denied') {
+        alert("수정 권한이 없습니다. (본인이 작성한 글만 수정 가능)");
+    } else {
+        alert("저장 중 오류가 발생했습니다: " + e.message);
+    }
   } finally {
     btnSave.innerText = "저장하기";
     btnSave.disabled = false;
@@ -353,6 +358,10 @@ async function deleteIssue() {
     closeModal();
   } catch (e) {
     console.error("Error deleting issue:", e);
-    alert("삭제 중 오류가 발생했습니다.");
+    if (e.code === 'permission-denied') {
+        alert("삭제 권한이 없습니다. (본인이 작성한 글만 삭제 가능)");
+    } else {
+        alert("삭제 중 오류가 발생했습니다.");
+    }
   }
 }
