@@ -3,7 +3,8 @@
 // ========================================
 
 import { initHeaderMenu } from "./header.js";
-// ✅ [수정됨] storage.js에서 통합된 객체 가져오기
+// ✅ [수정됨] messaging, getToken 제거 (storage.js 변경 대응)
+// 이제 storage.js는 db, auth, storage만 내보냅니다.
 import { db, auth, storage } from "./storage.js";
 import {
   collection,
@@ -63,7 +64,7 @@ onAuthStateChanged(auth, (user) => {
     loadMessages();
   } else {
     alert("로그인이 필요한 서비스입니다.");
-    // location.href = "login.html"; // 필요 시 주석 해제
+    // location.href = "index.html"; // 필요 시 주석 해제
   }
 });
 
@@ -97,7 +98,7 @@ if (chatForm) {
       }
 
       // Firestore 저장
-      // ✅ [추가됨] 이메일 정보 추가 저장
+      // ✅ 이메일 정보 추가 저장 (보안 규칙 호환)
       await addDoc(collection(db, "chat"), {
         text,
         imageUrl,
@@ -196,7 +197,7 @@ function loadMessages() {
     // 스크롤 최하단으로 이동
     chatMessages.scrollTop = chatMessages.scrollHeight;
 
-    // ✅ 새 메시지 알림 (뱃지)
+    // ✅ 새 메시지 알림 (뱃지) - 채팅방 밖일 때만 표시
     if (newestTimestamp > lastMessageTimestamp && !location.pathname.includes("chat.html")) {
       showChatBadge();
     }
