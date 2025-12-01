@@ -24,6 +24,15 @@
       --color-danger: #E74C3C;
       --color-warning: #F59E0B;
       
+      /* Header Variables */
+      --tk-black: #111111;
+      --tk-gray: #888888;
+      --tk-light-gray: #f4f4f4;
+      --tk-white: #ffffff;
+      --tk-border: #e0e0e0;
+      --tk-accent: #000000;
+      --haru-navy: #2C3E50;
+
       --space-4: 1rem;
       --space-6: 2rem;
     }
@@ -64,6 +73,8 @@
 
     .card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.5rem; }
     .card-location { font-size: 0.85rem; font-weight: 700; color: var(--color-text-primary); text-transform: uppercase; }
+    .card-customer { font-size: 0.85rem; font-weight: 700; color: var(--color-primary); margin-left: 8px; } /* 고객명 스타일 */
+
     .card-source { font-size: 0.75rem; font-weight: 700; padding: 2px 6px; color: #fff; background: var(--color-text-secondary); }
     .card-source.airbnb { background: #FF5A5F; } /* Airbnb Color */
     .card-source.direct { background: #2C3E50; } /* Direct Color */
@@ -74,6 +85,12 @@
     .cleaner-info { display: flex; align-items: center; gap: 4px; font-weight: 600; color: var(--color-primary); }
 
     .rating-star { color: #F59E0B; font-weight: 800; font-size: 1.1rem; }
+
+    /* Photo Preview in Card */
+    .card-photo-preview {
+      width: 60px; height: 60px; object-fit: cover; border-radius: 4px; border: 1px solid #E2E8F0; margin-top: 10px; cursor: pointer; transition: transform 0.2s;
+    }
+    .card-photo-preview:hover { transform: scale(1.05); }
 
     /* Modal Form */
     .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); backdrop-filter: blur(3px); z-index: 2000; display: none; align-items: center; justify-content: center; }
@@ -109,47 +126,39 @@
     }
     .btn-delete:hover { background: var(--color-danger); color: #fff; }
 
-    /* 🔹 Header CSS (Grid System) */
-    .main-header {
-      position: fixed; top: 0; left: 0; width: 100%; height: 60px;
-      background: rgba(255, 255, 255, 0.95);
-      border-bottom: 1px solid var(--color-border);
-      z-index: 1000;
-      backdrop-filter: blur(5px);
-    }
-    .header-inner {
-      width: 100%; max-width: 1400px; height: 100%; margin: 0 auto; padding: 0 24px;
-      display: grid !important;
-      grid-template-columns: 1fr auto 1fr !important;
-      align-items: center !important;
-    }
-    .logo { justify-self: start !important; font-family: 'Noto Sans KR', sans-serif; font-weight: 700; font-size: 18px; color: #111; letter-spacing: 0.15em; text-transform: uppercase; }
+    /* 🔹 Header CSS (Grid System - Forced) */
+    .main-header { position: fixed; top: 0; left: 0; width: 100%; height: 60px; background: rgba(255, 255, 255, 0.95); border-bottom: 1px solid var(--tk-border); z-index: 1000; backdrop-filter: blur(5px); }
+    .header-inner { width: 100%; max-width: 1400px; height: 100%; margin: 0 auto; padding: 0 24px; display: grid !important; grid-template-columns: 1fr auto 1fr !important; align-items: center !important; }
+    .logo { justify-self: start !important; font-family: 'Noto Sans KR', sans-serif; font-weight: 700; font-size: 18px; color: var(--tk-black); letter-spacing: 0.15em; text-transform: uppercase; }
     .menu-wrap { justify-self: center !important; position: relative; display: flex; align-items: center; }
-    .logout-btn { justify-self: end !important; display: block !important; background: transparent; border: none; color: #111; font-size: 11px; font-weight: 500; letter-spacing: 0.1em; cursor: pointer; text-transform: uppercase; padding: 4px 0; transition: opacity 0.3s; }
+    .logout-btn { justify-self: end !important; display: block !important; background: transparent; border: none; color: var(--tk-black); font-size: 11px; font-weight: 500; letter-spacing: 0.1em; cursor: pointer; text-transform: uppercase; padding: 4px 0; transition: opacity 0.3s; }
     .logout-btn:hover { opacity: 0.6; }
     .menu-toggle { background: transparent; border: none; cursor: pointer; display: flex; align-items: center; gap: 8px; padding: 8px; transition: opacity 0.3s; }
-    .menu-label { font-size: 12px; font-weight: 600; color: #111; letter-spacing: 0.1em; }
+    .menu-toggle:hover { opacity: 0.6; }
+    .menu-label { font-size: 12px; font-weight: 600; color: var(--tk-black); letter-spacing: 0.1em; }
     .hamburger-lines { display: flex; flex-direction: column; gap: 4px; }
-    .line { width: 18px; height: 1.5px; background-color: #111; display: block; transition: transform 0.3s ease; }
+    .line { width: 18px; height: 1.5px; background-color: var(--tk-black); display: block; transition: transform 0.3s ease; }
     .menu-toggle[aria-expanded="true"] .line1 { transform: rotate(45deg) translate(2px, 2px); }
     .menu-toggle[aria-expanded="true"] .line2 { transform: rotate(-45deg) translate(2px, -2px); width: 18px; }
     .menu-list {
       display: none; position: absolute; top: 100%; left: 50%; transform: translateX(-50%); width: 220px;
-      background: #fff; border: 1px solid var(--color-border); padding: 12px 0;
+      background: var(--tk-white); border: 1px solid var(--tk-border); padding: 12px 0;
       flex-direction: column; box-shadow: 0 10px 40px rgba(0, 0, 0, 0.05); list-style: none; z-index: 1001; margin-top: 10px;
     }
     .menu-list.open { display: flex; animation: fadeInDropdown 0.2s ease-out; }
     @keyframes fadeInDropdown { from { opacity: 0; transform: translate(-50%, -10px); } to { opacity: 1; transform: translate(-50%, 0); } }
-    .menu-list li a { display: block; padding: 10px 24px; font-size: 13px; color: #888; text-decoration: none; transition: all 0.2s; border-left: 2px solid transparent; }
-    .menu-list li a:hover { background: #fafafa; color: #111; border-left-color: #111; padding-left: 30px; }
+    .menu-list li a { display: block; padding: 10px 24px; font-size: 13px; color: var(--tk-gray); text-decoration: none; transition: all 0.2s; border-left: 2px solid transparent; }
+    .menu-list li a:hover { background: #fafafa; color: var(--tk-black); border-left-color: var(--tk-black); padding-left: 30px; }
+    .menu-list li a.admin-link { color: #e74c3c; font-weight: 600; }
 
     @media (max-width: 768px) {
       .main-header { height: 50px; }
       .header-inner { padding: 0 16px; }
       .logo { font-size: 16px; }
       .menu-label { font-size: 11px; }
+      .menu-toggle { gap: 6px; }
       .logout-btn { font-size: 10px; }
-      .menu-list { position: fixed; top: 50px; left: 0; right: 0; width: 100vw; transform: none; margin-top: 0; border: none; border-bottom: 1px solid var(--color-border); box-shadow: 0 5px 10px rgba(0,0,0,0.05); }
+      .menu-list { position: fixed; top: 50px; left: 0; right: 0; width: 100vw; transform: none; margin-top: 0; border: none; border-bottom: 1px solid var(--tk-border); box-shadow: 0 5px 10px rgba(0,0,0,0.05); }
       .menu-list.open { animation: fadeInMobile 0.2s ease-out; }
       @keyframes fadeInMobile { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
       .menu-list li a { padding: 14px 24px; font-size: 14px; }
@@ -173,7 +182,10 @@
   <!-- 🔹 Header Inlined -->
   <header class="main-header">
     <div class="header-inner">
+      <!-- 1. 좌측 -->
       <div class="logo">HARU</div>
+
+      <!-- 2. 중앙 -->
       <div class="menu-wrap">
         <button class="menu-toggle" aria-haspopup="true" aria-expanded="false">
           <span class="menu-label">MENU</span>
@@ -195,11 +207,16 @@
           <li><a href="profile.html">내 정보</a></li>
           <li><a id="installHaruBtn">앱 설치</a></li>
           <li><a href="schedule_dashboard.html">작업 스케줄러</a></li>
+          
+          <!-- ✅ CS 관리 메뉴 추가 -->
           <li><a href="cs_dashboard.html" style="color:#e74c3c; font-weight:700;">CS 관리</a></li>
+
           <li class="super-admin-only" style="display:none;"><a href="admin.html" class="admin-link">관리자 설정</a></li>
           <li class="super-admin-only" style="display:none;"><a href="admin_users.html" class="admin-link">사용자 관리</a></li>
         </ul>
       </div>
+
+      <!-- 3. 우측 -->
       <button id="logoutBtn" class="logout-btn">SIGN OUT</button>
     </div>
   </header>
@@ -237,9 +254,9 @@
         </div>
       </div>
 
-      <!-- 건물 & 호수 -->
-      <div style="display:flex; gap:10px;">
-        <div class="form-group" style="flex:1;">
+      <!-- 건물 & 호수 & 고객명 -->
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <div class="form-group" style="flex:1; min-width:140px;">
           <label class="form-label">BUILDING (건물)</label>
           <select id="formBuilding" class="form-select">
             <option value="아라키초A">아라키초A</option>
@@ -252,9 +269,14 @@
             <option value="오쿠보4">오쿠보4</option>
           </select>
         </div>
-        <div class="form-group" style="flex:1;">
+        <div class="form-group" style="flex:1; min-width:100px;">
           <label class="form-label">ROOM (호수)</label>
           <input type="text" id="formRoom" class="form-input" placeholder="예: 201">
+        </div>
+        <!-- ✅ [추가됨] 고객명 입력란 -->
+        <div class="form-group" style="flex:1.5; min-width:140px;">
+          <label class="form-label">CUSTOMER (고객명)</label>
+          <input type="text" id="formCustomer" class="form-input" placeholder="예: HONG GIL DONG">
         </div>
       </div>
 
@@ -270,7 +292,7 @@
         </select>
       </div>
 
-      <!-- 이전 담당자 (책임 소재) -->
+      <!-- 이전 담당자 -->
       <div class="form-group">
         <label class="form-label">PREVIOUS CLEANER (이전 청소 담당자)</label>
         <input type="text" id="formCleaner" class="form-input" placeholder="담당자 이름 입력">
@@ -282,19 +304,32 @@
         <textarea id="formContent" class="form-textarea" placeholder="컴플레인 내용이나 리뷰 내용을 입력하세요."></textarea>
       </div>
 
-      <!-- 조치 내용 (입력하면 해결 처리됨) -->
+      <!-- ✅ [추가됨] 사진 첨부 -->
+      <div class="form-group">
+        <label class="form-label">PHOTO (증빙 사진)</label>
+        <input type="file" id="formPhoto" class="form-input" accept="image/*">
+      </div>
+
+      <!-- 조치 내용 -->
       <div class="action-section">
         <div class="action-title">💡 ACTION TAKEN (조치 내용)</div>
         <textarea id="formAction" class="form-textarea" placeholder="어떻게 해결했나요? (내용 입력 시 '조치 완료'로 저장됨)" style="background:#fff;"></textarea>
       </div>
 
       <div class="modal-footer">
-        <!-- ✅ [추가됨] 삭제 버튼 -->
+        <!-- 삭제 버튼 -->
         <button id="btnDeleteIssue" class="btn btn-delete" style="display:none;">삭제</button>
         
         <button id="btnCloseModal" class="btn btn-cancel">취소</button>
         <button id="btnSaveIssue" class="btn btn-save">저장하기</button>
       </div>
+    </div>
+  </div>
+
+  <!-- 🖼 사진 확대 모달 -->
+  <div id="photoModal" class="modal-overlay" onclick="this.style.display='none'">
+    <div class="modal-card" style="background:transparent; box-shadow:none; display:flex; align-items:center; justify-content:center; padding:0;">
+      <img id="zoomImg" src="" style="max-width:100%; max-height:80vh; border-radius:8px; border:2px solid #fff;">
     </div>
   </div>
 
