@@ -154,7 +154,7 @@ function parseSnap(snap, type) {
   return temp;
 }
 
-/* ✅ 병렬 로드 및 필터링 */
+/* ✅ 병렬 로드 및 필터링 (스마트 리미트 적용) */
 async function loadHistory() {
   if(!cardBody) return;
   showLoading();
@@ -164,6 +164,14 @@ async function loadHistory() {
   const buildingFilter = document.getElementById("filterBuilding")?.value;
   const startDate = document.getElementById("startDate")?.value;
   const endDate = document.getElementById("endDate")?.value;
+
+  // 🛑 [수정됨] 날짜 검색 여부에 따라 가져올 데이터 개수 조절
+  // 날짜를 지정하면 기간 내 데이터를 다 봐야 하므로 제한을 2000개로 늘림
+  // 평소에는 300개만 보여줌 (기존 100개는 너무 적음)
+  let queryLimit = 300; 
+  if (startDate || endDate) {
+      queryLimit = 2000; 
+  }
 
   const jobs = [
     { db, col: "incoming", type: "입고" },
@@ -176,7 +184,7 @@ async function loadHistory() {
         const q = query(
           collection(job.db, job.col),
           orderBy("date", "desc"),
-          limit(100)
+          limit(queryLimit) // ✅ 동적 제한 적용
         );
         const snap = await getDocs(q);
         let parsed = parseSnap(snap, job.type);
