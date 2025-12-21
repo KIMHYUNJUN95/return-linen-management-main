@@ -236,13 +236,7 @@ window.addEventListener("DOMContentLoaded", async () => {
 
     createNoticeModal();
 
-    // 제목에 [중요] 말머리는 데이터 그대로 유지 (디자인으로 커버)
-    document.getElementById("noticeTitleGlobal").textContent = latest.title; 
-    // 만약 DB 제목에 '[중요]'가 없다면 아래처럼 강제로 붙여도 되지만, 
-    // 깔끔한 디자인을 위해 원본 제목을 우선 사용하거나, 필요시:
-    // document.getElementById("noticeTitleGlobal").textContent = "[NOTICE] " + latest.title;
-    // 여기서는 기존 로직대로 '[중요]'가 포함된 제목이라 가정하고 그대로 둡니다.
-    // (기존 코드: "[중요] " + latest.title 였으므로 유지)
+    // 제목에 [중요] 말머리 추가
     document.getElementById("noticeTitleGlobal").textContent = "[중요] " + latest.title;
 
     document.getElementById("noticeContentGlobal").textContent = latest.content;
