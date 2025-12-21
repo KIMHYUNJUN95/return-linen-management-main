@@ -197,6 +197,145 @@
       .stats-grid { grid-template-columns: 1fr; }
       .page-header { margin-top: 20px; }
     }
+
+    /* ========================================
+       🚨 점검 모드 모달 스타일
+    ======================================== */
+    .maintenance-modal-bg {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(4px);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 10000;
+    }
+
+    .maintenance-modal {
+      background: #FFFFFF;
+      width: 90%;
+      max-width: 500px;
+      padding: 40px;
+      border: 1px solid #E2E8F0;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.2);
+      animation: popIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .maintenance-modal h2 {
+      margin: 0 0 8px 0;
+      font-size: 24px;
+      font-weight: 800;
+      color: var(--haru-navy);
+    }
+
+    .maintenance-modal .subtitle {
+      font-size: 13px;
+      color: #94A3B8;
+      margin-bottom: 30px;
+      display: block;
+    }
+
+    .maintenance-status {
+      padding: 16px;
+      background: #F1F5F9;
+      border-left: 4px solid var(--haru-navy);
+      margin-bottom: 24px;
+      font-size: 14px;
+    }
+
+    .maintenance-status.active {
+      background: #FEF2F2;
+      border-left-color: #EF4444;
+      color: #991B1B;
+    }
+
+    .maintenance-status.inactive {
+      background: #F0FDF4;
+      border-left-color: #22C55E;
+      color: #166534;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--haru-navy);
+      margin-bottom: 8px;
+    }
+
+    .form-group input, .form-group textarea {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid #E2E8F0;
+      font-size: 14px;
+      font-family: inherit;
+      transition: border-color 0.2s;
+    }
+
+    .form-group input:focus, .form-group textarea:focus {
+      outline: none;
+      border-color: var(--haru-navy);
+    }
+
+    .form-group textarea {
+      resize: vertical;
+      min-height: 80px;
+    }
+
+    .modal-buttons {
+      display: flex;
+      gap: 12px;
+      margin-top: 30px;
+    }
+
+    .modal-buttons button {
+      flex: 1;
+      padding: 14px;
+      font-size: 13px;
+      font-weight: 700;
+      border: none;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .btn-start {
+      background: #EF4444;
+      color: white;
+    }
+
+    .btn-start:hover {
+      background: #DC2626;
+    }
+
+    .btn-end {
+      background: #22C55E;
+      color: white;
+    }
+
+    .btn-end:hover {
+      background: #16A34A;
+    }
+
+    .btn-cancel {
+      background: #F1F5F9;
+      color: var(--haru-navy);
+    }
+
+    .btn-cancel:hover {
+      background: #E2E8F0;
+    }
+
+    @keyframes popIn {
+      from { opacity: 0; transform: scale(0.95) translateY(20px); }
+      to { opacity: 1; transform: scale(1) translateY(0); }
+    }
   </style>
 </head>
 <body>
@@ -257,6 +396,14 @@
         <div class="card-btn">VIEW STATS</div>
       </a>
 
+      <!-- 🚨 웹 점검 모드 -->
+      <div class="admin-card" id="maintenanceCard">
+        <span class="card-type">MAINTENANCE</span>
+        <h3 class="admin-title">웹 점검 모드</h3>
+        <p class="admin-desc">시스템 점검 시 일반 사용자 접속을 차단합니다.</p>
+        <button class="card-btn" id="maintenanceBtn">설정</button>
+      </div>
+
       <!-- 시스템 설정 (기능 준비중) -->
       <div class="admin-card">
         <span class="card-type">SYSTEM</span>
@@ -284,11 +431,41 @@
     </div>
   </main>
 
+  <!-- 🚨 점검 모드 모달 -->
+  <div class="maintenance-modal-bg" id="maintenanceModal">
+    <div class="maintenance-modal">
+      <h2>웹 점검 모드</h2>
+      <span class="subtitle">System Maintenance Control</span>
+
+      <div class="maintenance-status" id="statusBox">
+        현재 상태: <strong id="statusText">정상 운영 중</strong>
+      </div>
+
+      <div class="form-group">
+        <label for="endDate">점검 종료 일시</label>
+        <input type="datetime-local" id="endDate" />
+      </div>
+
+      <div class="form-group">
+        <label for="maintenanceMsg">점검 안내 메시지</label>
+        <textarea id="maintenanceMsg" placeholder="사용자에게 표시될 점검 안내 메시지를 입력하세요.">시스템 점검 중입니다.
+잠시 후 다시 이용해 주세요.</textarea>
+      </div>
+
+      <div class="modal-buttons">
+        <button class="btn-start" id="btnStartMaintenance">점검 시작</button>
+        <button class="btn-end" id="btnEndMaintenance" style="display:none;">점검 종료</button>
+        <button class="btn-cancel" id="btnCancelModal">닫기</button>
+      </div>
+    </div>
+  </div>
+
   <footer>
     © 2025 HARU SYSTEM · TOKYO
   </footer>
 
   <!-- ✅ 기능 스크립트 -->
+  <script type="module" src="maintenance_guard.js"></script>
   <script type="module" src="admin.js"></script>
   <script type="module" src="scrollTop.js"></script>
   <script type="module" src="notice_popup.js"></script>
