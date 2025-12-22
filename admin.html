@@ -204,12 +204,12 @@
     .maintenance-modal-bg {
       position: fixed;
       inset: 0;
-      background: rgba(0, 0, 0, 0.6);
+      background: var(--modal-backdrop);
       backdrop-filter: blur(4px);
       display: none;
       justify-content: center;
       align-items: center;
-      z-index: 10000;
+      z-index: var(--z-modal);
     }
 
     .maintenance-modal {
