@@ -143,12 +143,42 @@
       text-transform: uppercase;
       letter-spacing: 0.05em;
       font-family: var(--font-en);
+      margin-right: 12px;
     }
 
     .refresh-btn:hover {
       background: var(--haru-navy-dark);
       transform: translateY(-2px);
       box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+
+    .logout-btn {
+      margin-top: 30px;
+      padding: 14px 32px;
+      background: #E2E8F0;
+      color: var(--haru-navy);
+      border: 1px solid #CBD5E1;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      font-family: var(--font-en);
+    }
+
+    .logout-btn:hover {
+      background: #CBD5E1;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+
+    .button-group {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      margin-top: 30px;
+      flex-wrap: wrap;
     }
 
     @media (max-width: 640px) {
@@ -192,9 +222,14 @@
       </div>
     </div>
 
-    <button class="refresh-btn" onclick="location.reload()">
-      새로고침
-    </button>
+    <div class="button-group">
+      <button class="refresh-btn" onclick="location.reload()">
+        새로고침
+      </button>
+      <button class="logout-btn" id="logoutBtn">
+        로그아웃
+      </button>
+    </div>
 
     <p class="footer-note">
       불편을 드려 죄송합니다.<br/>
@@ -210,6 +245,10 @@
       doc,
       getDoc
     } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+    import {
+      getAuth,
+      signOut
+    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
     // Firebase Config
     let firebaseConfig = {
@@ -234,6 +273,7 @@
     // Firebase Initialize
     let app = null;
     let db = null;
+    let auth = null;
 
     try {
       if (!getApps().length) {
@@ -242,9 +282,27 @@
         app = getApps()[0];
       }
       db = getFirestore(app);
+      auth = getAuth(app);
     } catch (e) {
       console.error("Firebase Init Error:", e);
     }
+
+    // 로그아웃 버튼 이벤트
+    document.getElementById("logoutBtn").addEventListener("click", async () => {
+      if (!auth) {
+        alert("로그아웃 기능을 사용할 수 없습니다.");
+        return;
+      }
+
+      try {
+        await signOut(auth);
+        alert("로그아웃되었습니다.");
+        window.location.href = "index.html";
+      } catch (error) {
+        console.error("로그아웃 오류:", error);
+        alert("로그아웃 중 오류가 발생했습니다.");
+      }
+    });
 
     // 점검 정보 로드
     async function loadMaintenanceInfo() {
