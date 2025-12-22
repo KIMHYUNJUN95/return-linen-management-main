@@ -32,11 +32,50 @@
   /* Typography */
   --font-body: 'Noto Sans KR', sans-serif;
   --font-en: 'Inter', sans-serif;
+
+  /* Font Sizes (Unified Typography Scale) */
+  --text-xs: 12px;
+  --text-sm: 13px;
+  --text-base: 15px;
+  --text-lg: 18px;
+  --text-xl: 20px;
+  --text-2xl: 24px;
+  --text-3xl: 28px;
+  --text-4xl: 32px;
+
+  /* Spacing Scale */
+  --space-1: 0.25rem;  /* 4px */
+  --space-2: 0.5rem;   /* 8px */
+  --space-3: 0.75rem;  /* 12px */
+  --space-4: 1rem;     /* 16px */
+  --space-5: 1.5rem;   /* 24px */
+  --space-6: 2rem;     /* 32px */
+  --space-8: 3rem;     /* 48px */
+  --space-10: 4rem;    /* 64px */
+
+  /* Z-index Scale (Standardized) */
+  --z-base: 1;
+  --z-header: 1000;
+  --z-modal: 2000;
+  --z-toast: 3000;
+  --z-tooltip: 4000;
+
+  /* Component Sizes */
+  --input-height: 44px;
+  --button-height: 44px;
+  --header-height-desktop: 70px;
+  --header-height-mobile: 60px;
+
+  /* Modal */
+  --modal-backdrop: rgba(44, 62, 80, 0.6);
+  --modal-padding-desktop: 40px;
+  --modal-padding-mobile: 24px;
 }
 
 /* 3. Reset & Base Styles */
 *, *::before, *::after {
   box-sizing: border-box;
+  border-radius: 0px !important; /* Architectural sharp edges (Tokyo Day Bright theme) */
 }
 
 html, body {
@@ -54,6 +93,7 @@ body {
   display: flex;
   flex-direction: column;
   min-height: 100vh;
+  padding-top: var(--header-height-desktop); /* Header height */
 }
 
 main {
@@ -61,7 +101,7 @@ main {
   width: 100%;
   max-width: 1200px;
   margin: 0 auto;
-  padding: 24px; /* 콘텐츠 여백 */
+  padding: var(--space-6) var(--space-5); /* 32px top/bottom, 24px left/right */
 }
 
 a {
@@ -82,9 +122,11 @@ ul {
 
 /* Header (Glassmorphism) */
 .main-header {
-  position: sticky;
+  position: fixed;
   top: 0;
-  z-index: 1000;
+  left: 0;
+  right: 0;
+  z-index: var(--z-header);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -92,8 +134,8 @@ ul {
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   border-bottom: 1px solid var(--border-color);
-  padding: 0 24px;
-  height: 70px;
+  padding: 0 var(--space-5);
+  height: var(--header-height-desktop);
   box-shadow: var(--shadow-sm);
   transition: all 0.3s ease;
 }
@@ -241,15 +283,22 @@ ul {
 
 input, select, textarea {
   width: 100%;
-  padding: 12px 16px;
+  height: var(--input-height);
+  padding: 0 var(--space-4);
   background: #F8FAFC;
   border: 1px solid var(--border-color);
-  border-radius: 6px;
   color: var(--haru-navy);
-  font-size: 15px;
+  font-size: var(--text-base);
   font-family: var(--font-body);
   transition: all 0.2s ease;
-  margin-bottom: 12px;
+  margin-bottom: var(--space-3);
+}
+
+textarea {
+  height: auto;
+  min-height: 120px;
+  padding: var(--space-3) var(--space-4);
+  resize: vertical;
 }
 
 input::placeholder, textarea::placeholder {
@@ -263,39 +312,197 @@ input:focus, select:focus, textarea:focus {
   box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.1);
 }
 
-/* Buttons */
-button {
-  font-family: var(--font-body);
-}
+/* ========================================
+   🎯 Button Components (Unified System)
+   ======================================== */
 
-/* Green Action Button (유지보수, 등록 등) */
-button.btn-green {
-  background-color: var(--haru-navy); /* 메인 컬러와 통일성을 위해 네이비 추천 or Green 유지 */
-  /* 원래 Green 유지 요청 시 아래 사용 */
-  background-color: var(--haru-green);
-  color: white;
+/* Base Button */
+.btn, button {
+  font-family: var(--font-body);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: var(--button-height);
+  padding: 0 var(--space-5);
+  font-size: var(--text-base);
   font-weight: 600;
-  font-size: 15px;
-  padding: 12px 24px;
-  border: none;
-  border-radius: 6px;
+  border: 1px solid var(--border-color);
+  background: var(--bg-card);
+  color: var(--haru-navy);
   cursor: pointer;
-  width: 100%;
-  transition: all 0.2s;
+  transition: all 0.2s ease;
   box-shadow: var(--shadow-sm);
 }
 
-button.btn-green:hover {
-  background-color: #219150;
+.btn:hover, button:hover {
   transform: translateY(-1px);
   box-shadow: var(--shadow-md);
 }
 
-button.btn-green:disabled {
+.btn:disabled, button:disabled {
   background-color: #CBD5E1;
+  color: #94A3B8;
   cursor: not-allowed;
   transform: none;
   box-shadow: none;
+}
+
+/* Primary Button (Navy) */
+.btn-primary {
+  background-color: var(--haru-navy);
+  color: white;
+  border-color: var(--haru-navy);
+}
+
+.btn-primary:hover {
+  background-color: var(--haru-navy-dark);
+  border-color: var(--haru-navy-dark);
+}
+
+/* Green Action Button (등록, 완료 등) */
+.btn-green {
+  background-color: var(--haru-green);
+  color: white;
+  border-color: var(--haru-green);
+}
+
+.btn-green:hover {
+  background-color: #219150;
+  border-color: #219150;
+}
+
+/* Gold Accent Button */
+.btn-gold {
+  background-color: var(--haru-gold);
+  color: white;
+  border-color: var(--haru-gold);
+}
+
+.btn-gold:hover {
+  background-color: var(--haru-gold-hover);
+  border-color: var(--haru-gold-hover);
+}
+
+/* Red Danger Button (삭제 등) */
+.btn-danger {
+  background-color: var(--haru-red);
+  color: white;
+  border-color: var(--haru-red);
+}
+
+.btn-danger:hover {
+  background-color: #c0392b;
+  border-color: #c0392b;
+}
+
+/* Full Width Button */
+.btn-full {
+  width: 100%;
+}
+
+/* Small Button */
+.btn-sm {
+  height: 36px;
+  padding: 0 var(--space-3);
+  font-size: var(--text-sm);
+}
+
+/* Large Button */
+.btn-lg {
+  height: 52px;
+  padding: 0 var(--space-6);
+  font-size: var(--text-lg);
+}
+
+/* ========================================
+   🪟 Modal Components (Unified)
+   ======================================== */
+
+.modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: var(--modal-backdrop);
+  z-index: var(--z-modal);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-4);
+}
+
+.modal-content {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  box-shadow: var(--shadow-float);
+  padding: var(--modal-padding-desktop);
+  max-width: 600px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  animation: modalSlideIn 0.3s ease-out;
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-5);
+  padding-bottom: var(--space-3);
+  border-bottom: 2px solid var(--border-color);
+}
+
+.modal-title {
+  font-size: var(--text-2xl);
+  font-weight: 700;
+  color: var(--haru-navy);
+  margin: 0;
+}
+
+.modal-close {
+  background: transparent;
+  border: none;
+  color: #94A3B8;
+  font-size: var(--text-2xl);
+  cursor: pointer;
+  padding: 0;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.2s;
+}
+
+.modal-close:hover {
+  color: var(--haru-red);
+  background: transparent;
+  transform: none;
+  box-shadow: none;
+}
+
+.modal-body {
+  margin-bottom: var(--space-5);
+}
+
+.modal-footer {
+  display: flex;
+  gap: var(--space-3);
+  justify-content: flex-end;
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--border-color);
+}
+
+@keyframes modalSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* ========================================
@@ -371,23 +578,90 @@ footer strong {
   to { opacity: 1; transform: translateY(0); }
 }
 
-/* Mobile Responsive */
+/* ========================================
+   📱 Mobile Responsive (Standardized)
+   ======================================== */
+
 @media (max-width: 768px) {
+  /* Body */
+  body {
+    padding-top: var(--header-height-mobile);
+  }
+
+  /* Main Content */
   main {
-    padding: 16px;
+    padding: var(--space-4);
   }
-  
+
+  /* Sections */
   .section {
-    padding: 24px 20px;
+    padding: var(--space-5) var(--space-4);
+    margin-bottom: var(--space-4);
   }
-  
+
+  .section h2 {
+    font-size: var(--text-lg);
+    margin-bottom: var(--space-4);
+  }
+
+  /* Header */
+  .main-header {
+    height: var(--header-height-mobile);
+    padding: 0 var(--space-4);
+  }
+
+  .main-header .logo {
+    font-size: 18px;
+  }
+
+  /* Menu */
   .menu-list {
     width: 200px;
-    right: 16px;
+    right: var(--space-4);
   }
-  
-  .main-header {
-    height: 60px;
-    padding: 0 16px;
+
+  /* Modals */
+  .modal-content {
+    padding: var(--modal-padding-mobile);
+  }
+
+  .modal-title {
+    font-size: var(--text-xl);
+  }
+
+  .modal-footer {
+    flex-direction: column;
+  }
+
+  .modal-footer .btn {
+    width: 100%;
+  }
+
+  /* Buttons - Ensure touch targets */
+  .btn, button {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  .btn-sm {
+    min-height: 40px;
+  }
+
+  /* Inputs - Prevent zoom on iOS */
+  input, select, textarea {
+    font-size: 16px;
+  }
+
+  /* Typography */
+  h1 {
+    font-size: var(--text-2xl);
+  }
+
+  h2 {
+    font-size: var(--text-xl);
+  }
+
+  h3 {
+    font-size: var(--text-lg);
   }
 }

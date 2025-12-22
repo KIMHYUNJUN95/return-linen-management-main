@@ -34,15 +34,15 @@
       color: var(--haru-navy);
       font-family: 'Noto Sans KR', sans-serif;
       margin: 0;
-      padding-top: 60px; /* 헤더 공간 확보 */
+      padding-top: var(--header-height-desktop); /* 헤더 공간 확보 */
     }
 
     /* 🔹 Header CSS (Unified Grid System) */
     .main-header {
-      position: fixed; top: 0; left: 0; width: 100%; height: 60px;
+      position: fixed; top: 0; left: 0; width: 100%; height: var(--header-height-desktop);
       background: rgba(255, 255, 255, 0.95);
       border-bottom: 1px solid var(--tk-border);
-      z-index: 1000;
+      z-index: var(--z-header);
       backdrop-filter: blur(5px);
     }
 
@@ -78,12 +78,13 @@
     .menu-list li a.admin-link { color: #e74c3c; font-weight: 600; }
 
     @media (max-width: 768px) {
-      .main-header { height: 50px; }
+      body { padding-top: var(--header-height-mobile); }
+      .main-header { height: var(--header-height-mobile); }
       .header-inner { padding: 0 16px; }
       .logo { font-size: 16px; }
       .menu-label { font-size: 11px; }
       .logout-btn { font-size: 10px; }
-      .menu-list { position: fixed; top: 50px; left: 0; right: 0; width: 100vw; transform: none; margin-top: 0; border: none; border-bottom: 1px solid var(--tk-border); box-shadow: 0 5px 10px rgba(0,0,0,0.05); }
+      .menu-list { position: fixed; top: var(--header-height-mobile); left: 0; right: 0; width: 100vw; transform: none; margin-top: 0; border: none; border-bottom: 1px solid var(--tk-border); box-shadow: 0 5px 10px rgba(0,0,0,0.05); }
       .menu-list.open { animation: fadeInMobile 0.2s ease-out; }
       @keyframes fadeInMobile { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
       .menu-list li a { padding: 14px 24px; font-size: 14px; }

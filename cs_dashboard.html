@@ -38,7 +38,7 @@
     }
 
     * { box-sizing: border-box; border-radius: 0px !important; }
-    body { background-color: var(--color-bg-main); color: var(--color-text-primary); font-family: 'Inter', 'Noto Sans KR', sans-serif; margin: 0; padding-top: 60px; }
+    body { background-color: var(--color-bg-main); color: var(--color-text-primary); font-family: 'Inter', 'Noto Sans KR', sans-serif; margin: 0; padding-top: var(--header-height-desktop); }
 
     #bg-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; opacity: 0.3; pointer-events: none; }
 
@@ -133,7 +133,7 @@
     .btn-delete:hover { background: var(--color-danger); color: #fff; }
 
     /* 🔹 Header CSS (Grid System - Forced) */
-    .main-header { position: fixed; top: 0; left: 0; width: 100%; height: 60px; background: rgba(255, 255, 255, 0.95); border-bottom: 1px solid var(--tk-border); z-index: 1000; backdrop-filter: blur(5px); }
+    .main-header { position: fixed; top: 0; left: 0; width: 100%; height: var(--header-height-desktop); background: rgba(255, 255, 255, 0.95); border-bottom: 1px solid var(--tk-border); z-index: var(--z-header); backdrop-filter: blur(5px); }
     .header-inner { width: 100%; max-width: 1400px; height: 100%; margin: 0 auto; padding: 0 24px; display: grid !important; grid-template-columns: 1fr auto 1fr !important; align-items: center !important; }
     .logo { justify-self: start !important; font-family: 'Noto Sans KR', sans-serif; font-weight: 700; font-size: 18px; color: var(--tk-black); letter-spacing: 0.15em; text-transform: uppercase; }
     .menu-wrap { justify-self: center !important; position: relative; display: flex; align-items: center; }
@@ -158,13 +158,14 @@
     .menu-list li a.admin-link { color: #e74c3c; font-weight: 600; }
 
     @media (max-width: 768px) {
-      .main-header { height: 50px; }
+      body { padding-top: var(--header-height-mobile); }
+      .main-header { height: var(--header-height-mobile); }
       .header-inner { padding: 0 16px; }
       .logo { font-size: 16px; }
       .menu-label { font-size: 11px; }
       .menu-toggle { gap: 6px; }
       .logout-btn { font-size: 10px; }
-      .menu-list { position: fixed; top: 50px; left: 0; right: 0; width: 100vw; transform: none; margin-top: 0; border: none; border-bottom: 1px solid var(--tk-border); box-shadow: 0 5px 10px rgba(0,0,0,0.05); }
+      .menu-list { position: fixed; top: var(--header-height-mobile); left: 0; right: 0; width: 100vw; transform: none; margin-top: 0; border: none; border-bottom: 1px solid var(--tk-border); box-shadow: 0 5px 10px rgba(0,0,0,0.05); }
       .menu-list.open { animation: fadeInMobile 0.2s ease-out; }
       @keyframes fadeInMobile { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
       .menu-list li a { padding: 14px 24px; font-size: 14px; }

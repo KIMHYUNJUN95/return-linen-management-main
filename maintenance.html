@@ -24,7 +24,7 @@
     }
 
     * { box-sizing: border-box; border-radius: 0px !important; }
-    body { background-color: var(--color-bg-main); color: var(--color-text-primary); font-family: 'Inter', 'Noto Sans KR', sans-serif; margin: 0; line-height: 1.5; padding-top: 60px; }
+    body { background-color: var(--color-bg-main); color: var(--color-text-primary); font-family: 'Inter', 'Noto Sans KR', sans-serif; margin: 0; line-height: 1.5; padding-top: var(--header-height-desktop); }
 
     #bg-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; opacity: 0.3; pointer-events: none; }
 
@@ -114,7 +114,7 @@
     .btn-submit:disabled { background: var(--color-border); cursor: not-allowed; }
 
     /* 🔹 Header Styles Inlined */
-    .main-header { position: fixed; top: 0; left: 0; width: 100%; height: 60px; background: rgba(255, 255, 255, 0.95); border-bottom: 1px solid #e0e0e0; z-index: 1000; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(5px); }
+    .main-header { position: fixed; top: 0; left: 0; width: 100%; height: var(--header-height-desktop); background: rgba(255, 255, 255, 0.95); border-bottom: 1px solid #e0e0e0; z-index: var(--z-header); display: flex; align-items: center; justify-content: center; backdrop-filter: blur(5px); }
     .header-inner { width: 100%; max-width: 1400px; padding: 0 24px; display: flex; justify-content: space-between; align-items: center; }
     .logo { font-family: 'Noto Sans KR', sans-serif; font-weight: 700; font-size: 18px; color: #111; letter-spacing: 0.15em; text-transform: uppercase; }
     .menu-wrap { position: relative; display: flex; align-items: center; }
@@ -131,11 +131,12 @@
     .logout-btn { background: transparent; border: none; color: #111; font-size: 11px; font-weight: 500; letter-spacing: 0.1em; cursor: pointer; text-transform: uppercase; border-bottom: 1px solid transparent; padding: 4px 0; margin-left: 40px; transition: border-color 0.3s; }
     .logout-btn:hover { border-bottom-color: #111; }
     @media (max-width: 768px) {
-        .main-header { height: 50px; }
+        body { padding-top: var(--header-height-mobile); }
+        .main-header { height: var(--header-height-mobile); }
         .header-inner { padding: 0 16px; }
         .logo { font-size: 16px; }
         .logout-btn, .menu-toggle .menu-label { display: none; }
-        .menu-list { position: fixed; top: 50px; left: 0; right: 0; width: 100%; border: none; border-bottom: 1px solid #e0e0e0; box-shadow: 0 5px 10px rgba(0,0,0,0.05); }
+        .menu-list { position: fixed; top: var(--header-height-mobile); left: 0; right: 0; width: 100%; border: none; border-bottom: 1px solid #e0e0e0; box-shadow: 0 5px 10px rgba(0,0,0,0.05); }
         .menu-list li a { padding: 14px 24px; font-size: 14px; }
     }
     @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
