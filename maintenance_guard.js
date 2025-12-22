@@ -142,6 +142,8 @@ function showAdminNotice(data) {
   // 이미 알림이 있으면 추가하지 않음
   if (document.getElementById("adminMaintenanceNotice")) return;
 
+  const noticeHeight = 50; // 알림 바 높이
+
   const notice = document.createElement("div");
   notice.id = "adminMaintenanceNotice";
   notice.style.cssText = `
@@ -158,6 +160,7 @@ function showAdminNotice(data) {
     z-index: 99999;
     box-shadow: 0 4px 12px rgba(0,0,0,0.2);
     animation: slideDown 0.3s ease-out;
+    height: ${noticeHeight}px;
   `;
 
   const endTime = data.endTime ? new Date(data.endTime).toLocaleString("ko-KR") : "미정";
@@ -170,19 +173,24 @@ function showAdminNotice(data) {
     일반 사용자 접속 차단 중
   `;
 
-  // 애니메이션 추가
+  // 애니메이션 및 헤더 위치 조정
   const style = document.createElement("style");
   style.textContent = `
     @keyframes slideDown {
       from { transform: translateY(-100%); }
       to { transform: translateY(0); }
     }
+    /* 헤더를 알림 바 아래로 이동 */
+    .main-header {
+      top: ${noticeHeight}px !important;
+    }
   `;
   document.head.appendChild(style);
   document.body.appendChild(notice);
 
-  // body에 padding 추가 (알림바가 컨텐츠 가리지 않도록)
-  document.body.style.paddingTop = (parseInt(document.body.style.paddingTop) || 0) + 50 + "px";
+  // body padding 조정 (헤더 높이 + 알림 바 높이)
+  const currentPadding = parseInt(getComputedStyle(document.body).paddingTop) || 0;
+  document.body.style.paddingTop = (currentPadding + noticeHeight) + "px";
 }
 
 // ----------------------------------------
