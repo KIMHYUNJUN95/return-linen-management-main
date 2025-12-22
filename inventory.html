@@ -4,6 +4,17 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>HARU · 재고 관리</title>
+
+  <!-- PWA Meta Tags -->
+  <meta name="theme-color" content="#2C3E50" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="HARU" />
+  <link rel="manifest" href="/manifest.json" />
+  <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+  <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192.png" />
+  <link rel="icon" type="image/png" sizes="512x512" href="/icons/icon-512.png" />
+
   <link rel="stylesheet" href="common.css"/>
   
   <!-- Fonts -->
@@ -480,6 +491,9 @@
   <script type="module" src="scrollTop.js"></script>
   <script type="module" src="maintenance_guard.js"></script>
   <script type="module" src="notice_popup.js"></script>
+
+  <!-- PWA 초기화 스크립트 -->
+  <script src="/pwa-init.js"></script>
 
 </body>
 </html>

@@ -4,7 +4,17 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>HARU - Tokyo Winter Glass</title>
-  
+
+  <!-- PWA Meta Tags -->
+  <meta name="theme-color" content="#2C3E50" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="HARU" />
+  <link rel="manifest" href="/manifest.json" />
+  <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+  <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192.png" />
+  <link rel="icon" type="image/png" sizes="512x512" href="/icons/icon-512.png" />
+
   <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -337,6 +347,9 @@
   <!-- ✅ [수정됨] Header는 삭제하고 Auth 로직만 연결 -->
   <!-- signup.js를 auth.js로 변경하여 로그인 로직 연결 -->
   <script type="module" src="auth.js"></script>
+
+  <!-- PWA 초기화 스크립트 -->
+  <script src="/pwa-init.js"></script>
 
 </body>
 </html>
